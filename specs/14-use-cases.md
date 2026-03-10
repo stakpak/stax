@@ -1,0 +1,210 @@
+# 14 — Use Cases
+
+## Overview
+
+This document illustrates how stax is used in real-world scenarios. Each use case focuses on packaging and consumption patterns, not orchestration internals.
+
+---
+
+## 1. Solo developer — portable local agent
+
+A developer packages their personal agent configuration and materializes it on multiple machines.
+
+```typescript
+import { defineAgent } from 'stax';
+import claudeCode from '@stax/claude-code';
+
+export default defineAgent({
+  name: 'my-dev-agent',
+  version: '1.0.0',
+  description: 'My personal development agent',
+  adapter: claudeCode({ model: 'claude-sonnet-4-1' }),
+  prompt: './SYSTEM_PROMPT.md',
+  rules: './rules/',
+  skills: './skills/',
+  mcp: './mcp-servers.ts',
+  secrets: [
+    { key: 'ANTHROPIC_API_KEY', required: true },
+    { key: 'GITHUB_TOKEN', required: true }
+  ]
+});
+```
+
+```bash
+stax build
+stax push ghcr.io/myuser/my-dev-agent:1.0.0
+stax materialize ghcr.io/myuser/my-dev-agent:1.0.0 --out ~/.config/my-agent
+```
+
+---
+
+## 2. Organization — shared standards package
+
+An organization publishes coding standards, MCP servers, skills, and knowledge as a reusable package.
+
+```typescript
+import { definePackage } from 'stax';
+
+export default definePackage({
+  name: 'acme-standards',
+  version: '2.0.0',
+  description: 'ACME engineering standards for all agents',
+  author: 'acme',
+  mcp: './mcp-servers.ts',
+  rules: './rules/',
+  skills: './skills/',
+  knowledge: './knowledge/',
+  secrets: [
+    { key: 'GITHUB_TOKEN', required: true },
+    { key: 'JIRA_TOKEN', required: true }
+  ]
+});
+```
+
+Team agents compose from it and override where needed.
+
+---
+
+## 3. Persona replication — same agent, many identities
+
+A company publishes multiple persona variants of one base agent.
+
+```bash
+stax build --all-personas
+stax push --all-personas ghcr.io/myorg/agents/engineer
+```
+
+Result:
+
+```text
+ghcr.io/myorg/agents/engineer:1.0.0-maya-chen
+ghcr.io/myorg/agents/engineer:1.0.0-alex-rivera
+ghcr.io/myorg/agents/engineer:1.0.0-jordan-park
+```
+
+Only the persona layer changes; all other layers are deduplicated by digest.
+
+---
+
+## 4. Multi-runtime delivery — same brain, different adapters
+
+A team ships the same logical agent to Claude Code and Codex by changing only the adapter.
+
+This allows one canonical brain with runtime-specific materialization behavior.
+
+---
+
+## 5. Community skill packs
+
+A community author publishes `k8s-tools` as a package containing skills, MCP, and rules. Any compatible agent can consume it.
+
+This enables a public package ecosystem similar to npm packages or Helm charts.
+
+---
+
+## 6. Versioned evolution and rollback
+
+Agents are tagged and pinned by digest.
+
+```text
+ghcr.io/myorg/agents/backend-engineer:1.0.0
+ghcr.io/myorg/agents/backend-engineer:1.1.0
+ghcr.io/myorg/agents/backend-engineer:2.0.0
+ghcr.io/myorg/agents/backend-engineer@sha256:abc...
+```
+
+Consumers pin digests for reproducibility and roll back by selecting an older digest.
+
+---
+
+## 7. Referrers for signatures, evals, approvals, and memory
+
+OCI referrers attach additional metadata to an immutable agent artifact:
+
+```text
+backend-engineer:3.1.0
+├── [referrer] signature
+├── [referrer] evaluation report
+├── [referrer] approval record
+└── [referrer] memory snapshot
+```
+
+This allows supply-chain tooling and runtime feedback without rebuilding the base artifact.
+
+---
+
+## 8. CI/CD pipeline
+
+```yaml
+name: Publish Agent
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm install
+      - run: npx stax build --all-personas
+      - run: npx stax push --all-personas ghcr.io/${{ github.repository }}
+```
+
+---
+
+## 9. Air-gapped enterprise registry
+
+An enterprise keeps all packages and agents in a private registry with signed artifacts and pinned digests.
+
+Benefits:
+
+- no public registry dependency at runtime
+- review and approval before promotion
+- deterministic internal builds
+
+---
+
+## 10. Regulated environments
+
+A regulated team uses:
+
+- signed packages
+- approval referrers
+- strict secret validation
+- locked package digests
+- reproducible builds
+
+This supports auditable deployment and review workflows.
+
+---
+
+## 11. Workspace-scoped memory
+
+A platform attaches one memory snapshot per workspace using referrers. The base agent stays immutable while each workspace accumulates its own learned context.
+
+---
+
+## 12. Runtime compatibility fallback
+
+An artifact prefers `claude-code` but includes a generic fallback in `adapterFallback`. A consumer that cannot materialize the primary adapter falls back to the generic one and emits warnings for unsupported features.
+
+---
+
+## Summary
+
+| Use case | Key value |
+|----------|-----------|
+| Solo developer | Portability across machines |
+| Organization | Shared standards and workflows |
+| Persona replication | Efficient variants via OCI dedup |
+| Multi-runtime | Same brain, different targets |
+| Community ecosystem | Reusable skill and tool packs |
+| Versioned evolution | Reproducibility and rollback |
+| Referrer metadata | Signatures, evals, approvals, memory |
+| CI/CD | Automated build and publish |
+| Air-gapped enterprise | Controlled internal distribution |
+| Regulated workflows | Auditability and trust |
+| Workspace memory | Scoped learning without mutating base artifacts |
+| Compatibility fallback | Graceful runtime degradation |

@@ -1,0 +1,109 @@
+# 16 — Surfaces
+
+## Overview
+
+Surfaces are named Markdown documents whose file identity matters to a runtime.
+
+Unlike the single `prompt` layer, surfaces exist so stax can represent runtimes that expect multiple distinct instruction files with stable names and locations, such as:
+
+- OpenClaw workspace files (`AGENTS.md`, `SOUL.md`, `TOOLS.md`, `IDENTITY.md`, `USER.md`, `HEARTBEAT.md`, `BOOTSTRAP.md`)
+- Claude Code instruction files that may need deterministic composition into `CLAUDE.md`
+
+Surfaces are packaged as a deterministic tarball layer.
+
+## Why surfaces exist
+
+A single prompt is not enough for runtimes that separate:
+
+- operating instructions
+- persona / soul
+- tool notes
+- user profile
+- heartbeat / bootstrap instructions
+
+Surfaces let stax preserve those distinctions without forcing an adapter to guess how to split or merge one large prompt.
+
+## Authoring
+
+An agent MAY declare:
+
+```typescript
+export default defineAgent({
+  name: 'assistant',
+  version: '1.0.0',
+  adapter: openclaw({}),
+  surfaces: './surfaces/'
+});
+```
+
+### Directory structure
+
+```text
+surfaces/
+├── instructions.md
+├── persona.md
+├── tools.md
+├── identity.md
+├── user.md
+├── heartbeat.md
+└── bootstrap.md
+```
+
+All files are optional.
+
+## Canonical roles
+
+Canonical basenames and their semantics:
+
+| File | Role | Typical runtime mapping |
+|------|------|--------------------------|
+| `instructions.md` | Core operating instructions | `AGENTS.md`, `CLAUDE.md` |
+| `persona.md` | Soul, tone, boundaries | `SOUL.md`, embedded persona section |
+| `tools.md` | Tool guidance and local conventions | `TOOLS.md`, embedded tool section |
+| `identity.md` | Agent display identity | `IDENTITY.md`, embedded identity section |
+| `user.md` | User profile and preferred address | `USER.md`, embedded user section |
+| `heartbeat.md` | Heartbeat-specific guidance | `HEARTBEAT.md`, embedded or omitted |
+| `bootstrap.md` | One-time bootstrap ritual | `BOOTSTRAP.md`, embedded or omitted |
+
+Consumers MUST ignore unknown extra files unless an adapter explicitly recognizes them.
+
+## Validation
+
+- Surface files MUST be Markdown files ending in `.md`
+- Canonical files SHOULD use the exact basenames above
+- Duplicate normalized paths MUST be rejected
+- Builders MUST preserve file bytes exactly
+
+## OCI layer
+
+Surfaces are packaged as:
+
+```text
+application/vnd.stax.surfaces.v1.tar+gzip
+```
+
+Builders SHOULD annotate the layer with `dev.stax.surfaces.count`.
+
+## Relationship to prompt
+
+- `prompt` is a single canonical system prompt document
+- `surfaces` are multiple named documents intended for runtime-specific exact file mapping
+
+A runtime MAY use:
+
+- only `prompt`
+- only `surfaces`
+- both
+
+If both exist, adapters define precedence. In general:
+
+- runtimes with one prompt surface MAY merge `prompt` + `surfaces`
+- runtimes with multiple named files SHOULD preserve `surfaces` as separate files
+
+## Relationship to persona
+
+`persona` remains the structured JSON identity layer.
+
+`surfaces/persona.md` is the runtime-facing Markdown representation of persona-like guidance when a runtime expects a distinct file such as `SOUL.md`.
+
+Adapters MAY synthesize `surfaces/persona.md` from the persona layer when a user did not provide one, but MUST warn in `exact` mode because synthesized content is not byte-preserving.
