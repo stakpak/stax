@@ -20,6 +20,7 @@ stax is to agents what the OCI Image Spec is to containers, what `package.json` 
   - [Adapters](#adapters)
   - [Packages](#packages)
 - [Quick Start](#quick-start)
+- [Workspace Sources](#workspace-sources)
 - [Agent Manifest Reference](#agent-manifest-reference)
 - [Layer Specifications](#layer-specifications)
   - [Persona](#persona)
@@ -47,11 +48,12 @@ AI agents today are configured through scattered files — markdown prompts, JSO
 
 stax solves this by providing:
 
-- **One format** to describe an agent's entire brain — persona, prompts, tools, skills, rules, knowledge, and memory
+- **One format** to describe an agent's entire brain — persona, prompts, tools, skills, rules, knowledge, memory, and named runtime surfaces
 - **OCI-based distribution** using the same registries and tooling as container images (GHCR, Docker Hub, ECR, ACR)
 - **Runtime adapters** that translate a single agent definition into runtime-specific formats
-- **A package ecosystem** for sharing reusable agent configurations across teams and communities
-- **Content-addressable storage** that deduplicates shared layers across agent variants
+- **Runtime profiles** for portable non-secret runtime configuration such as OpenClaw profiles
+- **Workspace source artifacts** for cacheable shared repo/workspace snapshots
+- **Content-addressable storage** that deduplicates shared layers across agent variants and source snapshots
 
 ### The Boundary Principle
 
@@ -59,6 +61,8 @@ stax solves this by providing:
 > Everything about **"how many, where, with what limits, alongside what, and how to update me"** is extrinsic and belongs to the consumer.
 
 This is exactly how Docker images work: `ENTRYPOINT` and `ENV` are in the image. `--memory`, `--cpus`, `replicas`, and `resources.limits` are in `docker-compose.yml` or the Kubernetes pod spec. stax follows the same pattern for agents.
+
+For agents that need a real codebase or working tree, stax now prefers **separate cacheable workspace source artifacts** instead of embedding a Git repository in every agent artifact.
 
 ---
 
@@ -120,11 +124,26 @@ Runtime-specific bridges that wrap agent definitions for each target:
 - `@stax/cursor` — Cursor IDE
 - `@stax/windsurf` — Windsurf IDE
 - `@stax/openclaw` — OpenClaw workspaces
+- `@stax/openclaw/profile` — OpenClaw runtime profiles
 - `@stax/generic` — Custom runtimes
 
 ### Packages
 
 Reusable configuration bundles — the npm packages of the agent world. A package can contain MCP servers, skills, rules, knowledge, surfaces, and secret declarations. Agents depend on packages. Packages depend on other packages. The ecosystem grows through composition.
+
+### Runtime Profiles
+
+Some runtimes need a separate user- or machine-scoped configuration artifact. stax models that explicitly with runtime profile artifacts such as `@stax/openclaw/profile`, instead of forcing runtime config into the agent brain.
+
+### Workspace Sources
+
+When many agents need the same repository or working tree, stax prefers a **separate source artifact** that is cached once and referenced by many agents:
+
+- agent artifact = the brain
+- source artifact = the code/workspace snapshot
+- runtime profile = runtime-scoped config
+
+This keeps agent artifacts small while making multi-agent setup fast and cache-friendly.
 
 ---
 
@@ -206,6 +225,16 @@ export default defineAgent({
     { key: 'SLACK_WEBHOOK', required: false, kind: 'url' },
   ],
 
+  workspaceSources: [
+    {
+      id: 'backend-repo',
+      ref: 'ghcr.io/myorg/sources/backend@sha256:abcdef123456...',
+      mountPath: '/workspace/backend',
+      writable: true,
+      required: true,
+    },
+  ],
+
   packages: [
     'ghcr.io/myorg/packages/github-workflow:2.0.0',
     'ghcr.io/myorg/packages/org-standards@sha256:0123456789abcdef...',
@@ -234,7 +263,46 @@ stax pull ghcr.io/myorg/agents/backend-engineer:3.1.0
 
 # Inspect artifact metadata
 stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0
+
+# Build a cacheable source artifact from a repo snapshot
+stax build-source ./repo --git-url https://github.com/myorg/backend.git --commit abc123
+
+# Push the source artifact separately for reuse across many agents
+stax push ghcr.io/myorg/sources/backend:abc123
 ```
+
+---
+
+## Workspace Sources
+
+When an agent always works on a repository, do **not** embed the full Git repo inside the brain artifact.
+
+Instead, publish a separate **workspace source artifact** and reference it from the agent manifest.
+
+```typescript
+workspaceSources: [
+  {
+    id: 'backend',
+    ref: 'ghcr.io/acme/sources/backend@sha256:abc123...',
+    mountPath: '/workspace/backend',
+    writable: true,
+    required: true,
+  },
+]
+```
+
+Why this is better:
+
+- the source artifact is cached once by digest
+- many agents can reuse the same source snapshot
+- agent artifacts stay small and stable
+- source and brain can be versioned independently
+
+Use this for:
+
+- shared GitHub repositories
+- monorepo snapshots
+- air-gapped/offline prepared source snapshots
 
 ---
 
@@ -635,6 +703,8 @@ Agents are packaged as OCI artifacts using the [OCI Image Spec v1.1](https://git
 |------|-----------|
 | Agent | `application/vnd.stax.agent.v1` |
 | Package | `application/vnd.stax.package.v1` |
+| Runtime profile | `application/vnd.stax.profile.v1` |
+| Workspace source | `application/vnd.stax.source.v1` |
 
 ### Layer Media Types
 
@@ -650,6 +720,7 @@ Agents are packaged as OCI artifacts using the [OCI Image Spec v1.1](https://git
 | Surfaces | `application/vnd.stax.surfaces.v1.tar+gzip` |
 | Secrets | `application/vnd.stax.secrets.v1+json` |
 | Packages | `application/vnd.stax.packages.v1+json` |
+| Source snapshot | `application/vnd.stax.source.snapshot.v1.tar+gzip` |
 
 ### Layer Ordering
 
@@ -689,6 +760,10 @@ Author one agent definition and deploy it to Claude Code, Codex, and Cursor simu
 ### Community Ecosystem
 
 Publish and consume reusable skill packs, rule sets, and knowledge bases. The package system enables a growing ecosystem of shared agent configurations.
+
+### Shared Source Snapshots
+
+When multiple agents work on the same repository, publish one source artifact and let all agents reference it through `workspaceSources`. Consumers can cache the source by digest and materialize many writable workspaces from the same cached base snapshot.
 
 ### CI/CD Pipeline
 
@@ -759,6 +834,7 @@ The complete specification is maintained in the [`specs/`](./specs/) directory:
 | 19 | [Adapter: `@stax/openclaw`](./specs/19-adapter-openclaw.md) | Exact OpenClaw workspace adapter contract |
 | 20 | [Adapter: `@stax/codex`](./specs/20-adapter-codex.md) | Exact Codex adapter contract |
 | 21 | [Profile: `@stax/openclaw/profile`](./specs/21-openclaw-profile.md) | Portable OpenClaw runtime-profile artifact |
+| 22 | [Workspace Sources](./specs/22-workspace-sources.md) | Cacheable source artifacts and agent references for shared Git/workspace snapshots |
 
 ---
 
