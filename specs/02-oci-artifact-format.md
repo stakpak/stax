@@ -4,13 +4,14 @@
 
 A stax artifact is an OCI image manifest with a custom `artifactType`, a stax config blob, and zero or more typed layers.
 
-stax defines three primary artifact types:
+stax defines four primary artifact types:
 
 | What | artifactType |
 |------|--------------|
 | Agent | `application/vnd.stax.agent.v1` |
 | Package | `application/vnd.stax.package.v1` |
 | Runtime profile | `application/vnd.stax.profile.v1` |
+| Workspace source | `application/vnd.stax.source.v1` |
 
 A consumer MUST treat stax artifacts as **configuration artifacts**, not runtime images.
 
@@ -36,7 +37,9 @@ application/vnd.stax.config.v1+json
 | Surfaces | `application/vnd.stax.surfaces.v1.tar+gzip` | `0..1` |
 | Secrets | `application/vnd.stax.secrets.v1+json` | `0..1` |
 | Packages | `application/vnd.stax.packages.v1+json` | `0..1` |
+| Source snapshot | `application/vnd.stax.source.snapshot.v1.tar+gzip` | source artifact only |
 | Runtime profile config | `application/vnd.stax.profile.config.v1+json` | profile artifact config only |
+| Source artifact config | `application/vnd.stax.source.config.v1+json` | source artifact config only |
 
 An artifact MUST NOT contain more than one layer of the same stax media type.
 
@@ -190,11 +193,13 @@ The config blob MUST:
 
 - use canonical JSON serialization
 - include `specVersion`
-- identify `kind` as `agent`, `package`, or `profile`
+- identify `kind` as `agent`, `package`, `profile`, or `source`
 - include the resolved package references that participated in the build when applicable
 - include adapter metadata for agents
 
 Runtime profile artifacts such as `@stax/openclaw/profile` use `application/vnd.stax.profile.v1` and SHOULD store their primary payload in the config blob with media type `application/vnd.stax.profile.config.v1+json`.
+
+Workspace source artifacts use `application/vnd.stax.source.v1` and SHOULD store source metadata in the config blob with media type `application/vnd.stax.source.config.v1+json`, plus one source layer with media type `application/vnd.stax.source.snapshot.v1.tar+gzip`.
 
 ## Referrer conventions
 
@@ -207,7 +212,75 @@ stax does not require referrers, but standardizes common ones so tools can inter
 | `application/vnd.stax.approval.v1` | Human approval records |
 | `application/vnd.stax.memory-snapshot.v1` | Runtime memory snapshots |
 
-Referrer payload schemas are intentionally minimal in `1.0.0`; consumers MAY attach them using OCI 1.1 referrers with their own config schema, but SHOULD use the artifact types above.
+### Signature referrer baseline
+
+A `application/vnd.stax.signature.v1` referrer config blob SHOULD contain at minimum:
+
+```json
+{
+  "specVersion": "1.0.0",
+  "signer": "identity-of-signer",
+  "signedAt": "2026-03-10T12:00:00Z",
+  "algorithm": "ecdsa-p256-sha256"
+}
+```
+
+The actual signature payload SHOULD be stored as a layer with media type `application/vnd.stax.signature.payload.v1`. The format of the payload is implementation-defined in `1.0.0`, but consumers SHOULD prefer established formats such as Sigstore bundles or Notary v2 signatures.
+
+### Signature verification policy
+
+Consumers SHOULD support a verification policy with the following modes:
+
+- `none` (default) — signatures are not checked
+- `warn` — warn if no valid signature is found, but proceed
+- `require` — fail materialization if no valid signature is found
+
+Consumers operating in regulated environments SHOULD default to `warn` or `require`.
+
+Consumers MUST NOT strip or modify signature referrers when copying artifacts between registries unless explicitly instructed.
+
+### Evaluation referrer baseline
+
+A `application/vnd.stax.evaluation.v1` referrer config blob SHOULD contain at minimum:
+
+```json
+{
+  "specVersion": "1.0.0",
+  "evaluationId": "eval_2026_03_10_001",
+  "suite": "code-review-benchmark",
+  "version": "1.2.0",
+  "runAt": "2026-03-10T14:00:00Z",
+  "summary": {
+    "passed": 42,
+    "failed": 3,
+    "skipped": 1,
+    "score": 0.93
+  }
+}
+```
+
+Required fields: `evaluationId`, `suite`, `runAt`. All other fields are OPTIONAL.
+
+The evaluation payload (detailed results, logs, traces) SHOULD be stored as a layer with media type `application/vnd.stax.evaluation.payload.v1+json`. The structure of the payload is implementation-defined in `1.0.0`.
+
+### Approval referrer baseline
+
+A `application/vnd.stax.approval.v1` referrer config blob SHOULD contain at minimum:
+
+```json
+{
+  "specVersion": "1.0.0",
+  "approvalId": "apr_2026_03_10_001",
+  "approver": "identity-of-approver",
+  "decision": "approved",
+  "approvedAt": "2026-03-10T15:00:00Z",
+  "reason": "Passed security review and benchmark suite."
+}
+```
+
+Required fields: `approvalId`, `approver`, `decision`, `approvedAt`. The `decision` field MUST be one of `approved`, `rejected`, or `conditional`.
+
+An optional approval payload MAY be stored as a layer with media type `application/vnd.stax.approval.payload.v1+json` for additional context such as review checklists or conditions.
 
 ## OCI indexes
 

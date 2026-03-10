@@ -44,11 +44,32 @@ tags:
 ## Scope semantics
 
 - `always` — always included
-- `glob` — included when relevant files match `globs`
+- `glob` — included when relevant files match any pattern in `globs`
 - `auto` — consumer MAY include automatically based on context, triggers, or heuristics
 - `manual` — only included when a user or tool explicitly selects it
 
 Consumers MUST treat unknown scopes as validation errors.
+
+### Glob pattern syntax
+
+`globs` patterns MUST use gitignore-style syntax as defined by the `.gitignore` specification:
+
+- `*` matches any sequence of non-separator characters
+- `**` matches any sequence of characters including separators
+- `?` matches any single non-separator character
+- `[abc]` matches any character in the set
+- Patterns are matched against file paths relative to the workspace root
+- A leading `!` negates the pattern
+
+### Rule ordering when multiple rules match
+
+When multiple rules apply to the same context, consumers MUST apply them in this order:
+
+1. `scope: always` rules first, ordered by `priority` ascending, then by normalized archive path ascending
+2. `scope: glob` rules that match the current file(s), in the same sub-order
+3. `scope: auto` rules selected by the consumer, in the same sub-order
+
+Rules with lower `priority` values run earlier. If two rules have the same `priority`, they are ordered by normalized archive path (lexicographic, byte-wise).
 
 ## Merge semantics
 

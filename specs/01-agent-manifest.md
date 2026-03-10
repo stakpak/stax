@@ -2,7 +2,7 @@
 
 ## Overview
 
-The agent manifest is the root definition of an agent. It declares identity, optional layer sources, runtime hints, package dependencies, secret requirements, and the adapter used to materialize the agent for a runtime.
+The agent manifest is the root definition of an agent. It declares identity, optional layer sources, runtime hints, package dependencies, secret requirements, optional workspace source dependencies, and the adapter used to materialize the agent for a runtime.
 
 Agents are authored in TypeScript using `defineAgent()` and compiled to JSON for the OCI config blob.
 
@@ -13,6 +13,12 @@ A project MUST contain exactly one root agent definition file, typically `agent.
 All relative paths in the agent definition are resolved relative to the directory containing `agent.ts`.
 
 Resolved paths MUST remain within the project root unless the builder is explicitly run with an escape hatch such as `--allow-outside-root`.
+
+Path resolution rules:
+
+- Builders MUST resolve symlinks before checking containment. If the resolved target is outside the project root, the builder MUST reject the path.
+- Paths containing `..` segments MUST be normalized before containment checking. A path that escapes the project root after normalization MUST be rejected.
+- `--allow-outside-root` MUST NOT be the default. Builders SHOULD warn prominently when this flag is used.
 
 ## defineAgent()
 
@@ -75,6 +81,16 @@ export default defineAgent({
     { key: 'SLACK_WEBHOOK', required: false, kind: 'url' },
   ],
 
+  workspaceSources: [
+    {
+      id: 'backend-repo',
+      ref: 'ghcr.io/myorg/sources/backend@sha256:abcdef123456...',
+      mountPath: '/workspace/backend',
+      writable: true,
+      required: true,
+    },
+  ],
+
   packages: [
     'ghcr.io/myorg/packages/github-workflow:2.0.0',
     'ghcr.io/myorg/packages/org-standards@sha256:0123456789abcdef...',
@@ -118,6 +134,9 @@ interface AgentDefinition {
   // Secret declarations
   secrets?: SecretDeclaration[];
 
+  // Shared workspace/source dependencies
+  workspaceSources?: WorkspaceSourceReference[];
+
   // Package references
   packages?: PackageReference[];
 }
@@ -153,6 +172,15 @@ interface SecretDeclaration {
 }
 
 type PackageReference = string;
+
+interface WorkspaceSourceReference {
+  id: string;
+  ref: string;                         // OCI ref to a source artifact
+  mountPath: string;                   // Where the consumer should materialize it
+  writable?: boolean;                  // Default: false
+  required?: boolean;                  // Default: true
+  subpath?: string;                    // Optional subdirectory inside the source artifact
+}
 
 interface AdapterConfig {
   type: string;                         // Adapter identifier, e.g. "claude"
@@ -200,7 +228,18 @@ interface MaterializationTarget {
 - `persona`, `prompt`, and `mcp` MUST resolve to files
 - `skills`, `rules`, `knowledge`, `memory`, and `surfaces` MUST resolve to directories
 - Missing optional paths MUST be treated as validation errors if declared explicitly
-- Symlink targets MUST be rejected during packaging
+- Symlinks MUST be rejected — builders MUST NOT follow or package symlinks in any source path (see also [03 — Layers](./03-layers.md) which applies the same rule at the archive level)
+
+### Workspace sources
+
+Each entry in `workspaceSources` MUST:
+
+- have a unique `id`
+- reference an OCI source artifact by digest or exact tag
+- specify an absolute `mountPath`
+- use a `mountPath` that does not collide with another workspace source entry
+
+Consumers SHOULD cache workspace source artifacts by digest and SHOULD reuse the same cached source across many agents. See [22 — Workspace Sources](./22-workspace-sources.md).
 
 ### Packages
 
@@ -216,11 +255,13 @@ Semver ranges, globs, and floating selectors such as `^1`, `~2`, or `latest` SHO
 
 `adapterFallback` provides alternate adapter configs in descending preference order.
 
-Consumers SHOULD:
+Consumers MUST:
 
-1. Try the primary `adapter`
-2. Fall back to the first compatible `adapterFallback` entry
-3. Fail with a clear compatibility error if none are supported
+1. Try the primary `adapter`. An adapter is compatible if the consumer supports its `type`, `runtime`, and `adapterVersion` major version.
+2. If the primary adapter is not compatible, try each `adapterFallback` entry in array order, stopping at the first compatible entry.
+3. Fail with exit code 5 (materialization compatibility error) if no adapter is compatible. The error message MUST list the attempted adapter types and versions.
+
+Consumers MUST NOT select a fallback adapter if the primary adapter is compatible, even if the fallback would produce a "better" result.
 
 ## Compiled config blob
 
@@ -273,6 +314,15 @@ If `surfaces` are present, the config blob SHOULD record that fact so consumers 
       }
     }
   },
+  "workspaceSources": [
+    {
+      "id": "backend-repo",
+      "ref": "ghcr.io/myorg/sources/backend@sha256:abcdef123456...",
+      "mountPath": "/workspace/backend",
+      "writable": true,
+      "required": true
+    }
+  ],
   "packages": [
     "ghcr.io/myorg/packages/github-workflow:2.0.0"
   ]
@@ -290,6 +340,7 @@ If `surfaces` are present, the config blob SHOULD record that fact so consumers 
 | Layer paths and surfaces | Defines the agent brain and exact runtime-facing documents |
 | Runtime hints | Communicates requirements and recommendations |
 | Secret declarations | Declares needed secret keys |
+| Workspace source references | Declares shared repo/workspace dependencies |
 | Package references | Defines composition |
 
 ### Out of the manifest

@@ -104,6 +104,36 @@ Recommended policy:
 2. produce a new snapshot with `parentSnapshot` set to the previous snapshot id
 3. publish the new snapshot as a referrer
 
+### Conflict avoidance
+
+When multiple agents or sessions may write memory concurrently, consumers SHOULD:
+
+- Use `parentSnapshot` as an optimistic concurrency token — if another snapshot with the same `parentSnapshot` already exists, the consumer has a conflict
+- On conflict, consumers SHOULD either:
+  - retry by re-reading the latest snapshot and producing a new one based on it
+  - write a new snapshot with a distinct `scope.id` (e.g., session-scoped) to avoid collision
+- Consumers MUST NOT silently overwrite snapshots produced by other writers
+
+### Snapshot metadata config blob
+
+A memory snapshot referrer's config blob MUST contain:
+
+```json
+{
+  "specVersion": "1.0.0",
+  "snapshotId": "mem_2026_03_10_120000Z",
+  "scope": {
+    "type": "workspace",
+    "id": "acme/backend"
+  },
+  "sourceArtifact": "ghcr.io/acme/agents/backend-engineer@sha256:abc...",
+  "parentSnapshot": "mem_2026_03_09_080000Z",
+  "createdAt": "2026-03-10T12:00:00Z"
+}
+```
+
+All fields except `parentSnapshot` are REQUIRED. `parentSnapshot` is `null` for the first snapshot in a lineage.
+
 ## Privacy and retention
 
 Consumers are responsible for:

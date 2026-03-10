@@ -25,6 +25,7 @@ The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHOULD**, **SHOULD NOT**, 
 - **Authoring formats** for agents, packages, personas, prompt surfaces, MCP, rules, skills, knowledge, memory, and secrets
 - **A compiled config blob** stored in OCI
 - **Runtime profile artifacts** for portable non-secret runtime configuration when appropriate
+- **Source artifacts** for cacheable workspace snapshots shared across many agents
 - **Typed OCI layers** for each brain concern
 - **Deterministic build rules** for packaged directories and compiled JSON
 - **Package dependency and merge rules**
@@ -71,6 +72,9 @@ A reusable OCI artifact that contributes canonical layers such as MCP, skills, r
 ### Runtime profile artifact
 A separate OCI artifact for runtime-scoped, non-secret configuration that should not live inside an agent brain. For example: portable OpenClaw `openclaw.json` defaults packaged via `@stax/openclaw/profile`.
 
+### Source artifact
+A separate OCI artifact containing a cacheable workspace snapshot, typically derived from a Git repository or source archive. Agents reference source artifacts instead of embedding full repos in every brain artifact.
+
 ### Config blob
 The OCI `config` object for an agent or package. This is the canonical compiled manifest and includes identity, adapter metadata, runtime hints, package references, and references to optional layers.
 
@@ -94,6 +98,21 @@ The process of turning a canonical stax artifact into runtime-native files and s
 - A consumer SHOULD ignore unknown additive fields within the same supported major version unless a layer spec says the field is strict.
 - Removing or changing the meaning of an existing field is a breaking change and requires a new major spec version.
 - Adding optional fields is non-breaking.
+
+### Forward compatibility
+
+- A consumer encountering an unknown OCI layer media type within a stax artifact MUST skip the layer and SHOULD warn. Unknown layers MUST NOT cause a build or materialization failure.
+- A consumer encountering unknown fields in a config blob or JSON layer MUST ignore them and SHOULD warn, unless the field is in a namespace the consumer explicitly manages.
+- Builders SHOULD NOT strip unknown fields from JSON layers or config blobs when re-packaging or copying artifacts.
+
+### Deprecation process
+
+To deprecate a field or feature in a future minor version:
+
+1. The spec MUST document the field as deprecated with a target removal version
+2. Builders SHOULD warn when deprecated fields are used
+3. Deprecated fields MUST NOT be removed until a new major spec version
+4. Consumers MUST continue to accept deprecated fields for the entire major version
 
 ### Adapter compatibility
 
@@ -174,3 +193,4 @@ A single implementation MAY satisfy one, two, or all three roles.
 | [19 — Adapter: `@stax/openclaw`](./19-adapter-openclaw.md) | Exact OpenClaw workspace adapter contract |
 | [20 — Adapter: `@stax/codex`](./20-adapter-codex.md) | Exact Codex adapter contract |
 | [21 — Profile: `@stax/openclaw/profile`](./21-openclaw-profile.md) | Portable OpenClaw runtime-profile artifact for `openclaw.json`-style config |
+| [22 — Workspace Sources](./22-workspace-sources.md) | Cacheable source artifacts and agent references for shared Git/workspace snapshots |

@@ -115,7 +115,7 @@ An agent's brain is composed of typed, independently versioned layers:
 
 Runtime-specific bridges that wrap agent definitions for each target:
 
-- `@stax/claude` — Claude Code
+- `@stax/claude-code` — Claude Code (`@stax/claude` is a compatibility alias)
 - `@stax/codex` — OpenAI Codex
 - `@stax/cursor` — Cursor IDE
 - `@stax/windsurf` — Windsurf IDE
@@ -124,7 +124,7 @@ Runtime-specific bridges that wrap agent definitions for each target:
 
 ### Packages
 
-Reusable configuration bundles — the npm packages of the agent world. A package can contain MCP servers, skills, rules, knowledge, and secret declarations. Agents depend on packages. Packages depend on other packages. The ecosystem grows through composition.
+Reusable configuration bundles — the npm packages of the agent world. A package can contain MCP servers, skills, rules, knowledge, surfaces, and secret declarations. Agents depend on packages. Packages depend on other packages. The ecosystem grows through composition.
 
 ---
 
@@ -162,7 +162,7 @@ my-agent/
 ```typescript
 // agent.ts
 import { defineAgent } from 'stax';
-import claude from '@stax/claude';
+import claudeCode from '@stax/claude-code';
 
 export default defineAgent({
   name: 'backend-engineer',
@@ -170,7 +170,7 @@ export default defineAgent({
   description: 'Senior backend engineer specializing in distributed systems',
   tags: ['backend', 'architecture', 'code-review'],
 
-  adapter: claude({
+  adapter: claudeCode({
     model: 'claude-opus-4-1',
     modelParams: { temperature: 0.3 },
   }),
@@ -755,6 +755,10 @@ The complete specification is maintained in the [`specs/`](./specs/) directory:
 | 14 | [Use Cases](./specs/14-use-cases.md) | Real-world usage scenarios |
 | 15 | [Materialization](./specs/15-materialization.md) | Consumer contract for translating artifacts to runtime-native files |
 | 17 | [Runtime File Contracts](./specs/17-runtime-file-contracts.md) | Exact file ownership and target mappings for each runtime |
+| 18 | [Adapter: `@stax/claude-code`](./specs/18-adapter-claude-code.md) | Exact Claude Code adapter contract |
+| 19 | [Adapter: `@stax/openclaw`](./specs/19-adapter-openclaw.md) | Exact OpenClaw workspace adapter contract |
+| 20 | [Adapter: `@stax/codex`](./specs/20-adapter-codex.md) | Exact Codex adapter contract |
+| 21 | [Profile: `@stax/openclaw/profile`](./specs/21-openclaw-profile.md) | Portable OpenClaw runtime-profile artifact |
 
 ---
 

@@ -146,6 +146,15 @@ export default definePersona({
 });
 ```
 
+### Inheritance validation
+
+Builders MUST validate the compiled persona after inheritance resolution, not before. This means:
+
+- The final spread-merged object MUST pass all validation rules (non-empty `name`, `displayName`, `role`, etc.)
+- If a base persona defines a field and the child re-declares it, the child's value wins (standard spread semantics)
+- Builders MUST NOT validate `_`-prefixed base files as standalone personas — they are imported fragments only
+- If a base file exports a value that is not a valid `PersonaDefinition` partial, builders SHOULD warn at import time
+
 ## Prompt templating
 
 Prompts MAY reference persona fields using `{{ ... }}` expressions.
@@ -174,6 +183,14 @@ You are {{persona.displayName}}, a {{persona.role}}.
 ```
 
 Array values SHOULD be rendered as comma-separated lists unless a consumer exposes a richer formatting mode.
+
+### Escaping
+
+- To emit a literal `{{`, authors MUST write `\{{`
+- To emit a literal `}}` inside non-template text, no escaping is needed — `}}` is only special immediately after a `{{` expression
+- If a persona field value contains `}}`, consumers MUST NOT interpret it as a template close delimiter; the close delimiter is the first `}}` after the opening `{{}}`
+- Consumers MUST NOT support nested expressions, function calls, conditionals, or loops in `1.0.0`
+- Unrecognized expressions (e.g., `{{unknown.field}}`) MUST resolve to an empty string in default mode and MUST cause a validation error in strict mode
 
 ## Layer mapping
 

@@ -33,6 +33,22 @@ stax build --refresh-lock
 
 Output: artifact stored in the local cache (`~/.stax/cache/`).
 
+### `stax build-source`
+
+Build a cacheable workspace source artifact from a Git repo or prepared directory tree.
+
+```bash
+stax build-source ./repo
+stax build-source ./repo --git-url https://github.com/acme/backend.git --commit abc123
+stax build-source ./repo --sparse services/api --sparse packages/shared
+```
+
+A conforming implementation SHOULD:
+
+- strip `.git/` and other VCS metadata
+- record source metadata in the source artifact config blob
+- emit a deterministic source snapshot layer
+
 ### `stax validate`
 
 Validate definitions without producing an artifact.
@@ -112,6 +128,8 @@ Pull an artifact from a registry into the local cache.
 stax pull ghcr.io/myorg/agents/backend-engineer:3.1.0
 stax pull ghcr.io/myorg/agents/backend-engineer@sha256:abc...
 ```
+
+Consumers SHOULD cache source artifacts by digest in the same local cache and reuse them across multiple agent materializations.
 
 ### `stax extract`
 

@@ -84,7 +84,7 @@ Supported variables in `SKILL.md` body:
 - Substitution is textual only
 - Missing positional arguments resolve to an empty string
 - Consumers MUST NOT evaluate shell expressions during substitution
-- To emit a literal `$ARGUMENTS`, consumers SHOULD support escaping as `\$ARGUMENTS`
+- To emit a literal `$ARGUMENTS`, consumers MUST support escaping as `\$ARGUMENTS`. The same escaping MUST apply to `\$ARGUMENTS[N]`, `\${STAX_SKILL_DIR}`, and `\${STAX_WORKSPACE}`
 
 ## Collision semantics
 

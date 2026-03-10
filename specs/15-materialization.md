@@ -13,7 +13,7 @@ Consumers SHOULD support two materialization modes:
 - `portable` — best-effort translation into a runtime
 - `exact` — only succeed if the adapter can write the runtime's documented file contract without lossy synthesis
 
-In `exact` mode, a consumer MUST fail if the runtime file contract cannot be represented faithfully.
+In `exact` mode, a consumer MUST fail if the runtime file contract cannot be represented faithfully. Consumers SHOULD check the adapter's `exactMode` flag (see [12 — Adapters](./12-adapters.md)) — if `exactMode` is not `true`, the consumer MUST warn that exact materialization may be incomplete and SHOULD fail unless overridden.
 
 ## Materialization pipeline
 
@@ -22,11 +22,12 @@ A conforming consumer SHOULD execute materialization in this order:
 1. **Load artifact** — read the OCI manifest and config blob
 2. **Validate compatibility** — check `specVersion`, artifact type, adapter support, and layer constraints
 3. **Resolve packages** — if consuming source projects, resolve package dependencies; if consuming built artifacts, read the resolved packages layer
-4. **Merge canonical layers** — apply package merge semantics from [05 — Packages](./05-packages.md)
-5. **Render prompt templates** — substitute persona values into prompt text
-6. **Translate canonical layers** — map prompt, persona, surfaces, rules, skills, MCP, and adapter config into runtime-native outputs
-7. **Validate required secrets** — ensure all required secrets are available before launch when the consumer is preparing an executable environment
-8. **Emit outputs** — write files, directories, and settings or return a machine-readable plan
+4. **Resolve workspace sources** — pull and prepare any referenced source artifacts described in [22 — Workspace Sources](./22-workspace-sources.md)
+5. **Merge canonical layers** — apply package merge semantics from [05 — Packages](./05-packages.md)
+6. **Render prompt templates** — substitute persona values into prompt text
+7. **Translate canonical layers** — map prompt, persona, surfaces, rules, skills, MCP, and adapter config into runtime-native outputs
+8. **Validate required secrets** — ensure all required secrets are available before launch when the consumer is preparing an executable environment
+9. **Emit outputs** — write files, directories, settings, and prepared workspaces or return a machine-readable plan
 
 ## Canonical materialized model
 
@@ -38,6 +39,7 @@ interface MaterializedAgent {
   prompt?: string;                    // rendered prompt
   persona?: PersonaDefinition;
   surfaces?: MaterializedSurface[];
+  workspaceSources?: MaterializedWorkspaceSource[];
   mcp?: McpConfig;
   skills?: MaterializedSkill[];
   rules?: MaterializedRule[];

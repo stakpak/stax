@@ -10,6 +10,7 @@ A package MAY contain any combination of:
 - Skills
 - Rules
 - Knowledge
+- Surfaces
 - Secrets
 - Dependencies on other packages
 
@@ -32,6 +33,7 @@ export default definePackage({
   skills: './skills/',
   rules: './rules/',
   knowledge: './knowledge/',
+  surfaces: './surfaces/',
 
   packages: ['ghcr.io/myorg/packages/git-utils:1.0.0'],
 
@@ -70,12 +72,27 @@ Resolution rules:
 1. The current artifact's direct `packages` list is traversed in source order
 2. Each package is resolved to an exact digest
 3. Transitive dependencies are resolved recursively
-4. A previously resolved `(ref, digest)` pair MUST be deduplicated
-5. Circular dependencies MUST fail validation
+4. A previously resolved `(ref, digest)` pair MUST be deduplicated — if the same ref resolves to the same digest at a different point in the tree, it is visited only once
+5. Circular dependencies MUST fail validation. The error message MUST include the cycle path (e.g., `A → B → C → A`)
+6. The dependency graph MUST NOT exceed a depth of **32** levels. Builders MUST fail with a clear error if this limit is reached
 
 ### Conflict policy
 
-If the same package reference resolves to different digests in one dependency graph, the builder MUST fail with a dependency conflict error unless a lockfile pins one exact digest and all references are compatible with that resolution.
+If the same package reference resolves to different digests in one dependency graph (diamond dependency), the builder MUST:
+
+1. Check `stax.lock` — if the lockfile pins an exact digest for the conflicting reference and all declarations are tag-based (not digest-pinned to a different value), the locked digest wins
+2. If no lockfile resolution is possible, fail with a dependency conflict error that identifies:
+   - the conflicting package reference
+   - the two (or more) digests it resolved to
+   - the dependency paths that produced each resolution
+
+Builders SHOULD suggest resolution strategies in the error output, such as:
+- pinning a specific digest in the agent's `packages` list
+- running `stax build --refresh-lock` to resolve to the latest compatible version
+
+### Floating version resolution
+
+Package references in `packages` arrays in `definePackage()` follow the same rules as agent manifests: semver ranges and `latest` SHOULD NOT appear in committed source files. Builders MAY allow them interactively but MUST resolve and pin them in `stax.lock`.
 
 ## Merge semantics
 
@@ -95,6 +112,7 @@ Precedence order:
 | Skills | top-level skill directory | skill name | Higher precedence replaces the entire skill directory |
 | Rules | rule file | rule `id` if present, else archive path | Higher precedence replaces matching rule; otherwise append in precedence order |
 | Knowledge | archive path | normalized path | Higher precedence replaces matching path |
+| Surfaces | surface file | basename | Higher precedence replaces the entire file |
 | Secrets | secret key | `key` | Higher precedence replaces entire declaration |
 
 ### Rationale
@@ -180,6 +198,7 @@ my-package/
 ├── skills/
 ├── rules/
 ├── knowledge/
+├── surfaces/
 ├── .staxignore
 └── stax.lock
 ```

@@ -125,9 +125,29 @@ If a higher-precedence source defines `github`, it replaces the entire lower-pre
 }
 ```
 
+## Disabled servers
+
+When `enabled: false`:
+
+- Builders MUST still include the server in the packaged MCP layer (so consumers can re-enable it)
+- Consumers MUST NOT start or configure disabled servers by default
+- Consumers MAY expose a mechanism to override `enabled` at materialization time
+- During package merging, `enabled` follows the same replace semantics as all other server fields — the highest-precedence definition wins
+
+## Command resolution
+
+For stdio servers, the `command` field specifies the executable name or path.
+
+- Builders MUST NOT resolve or validate `command` at build time — resolution is a consumer responsibility
+- Consumers MUST resolve `command` using the runtime environment's `PATH` (or equivalent) at materialization or launch time
+- Consumers SHOULD warn if a `command` cannot be found in the current environment
+- Consumers MUST NOT shell-expand or interpret `command` or `args` values — they are passed directly to process creation APIs (e.g., `execvp`, `child_process.spawn`)
+- On Windows, consumers SHOULD handle `.cmd` / `.exe` extension resolution transparently when the bare command name is provided (e.g., `npx` → `npx.cmd`)
+- Consumers SHOULD NOT assume a POSIX shell environment; `command` values that rely on shell features (pipes, redirects, subshells) are NOT portable and builders SHOULD warn if `command` contains shell metacharacters
+
 ## Consumer translation expectations
 
-Consumers translating MCP SHOULD:
+Consumers translating MCP MUST:
 
 1. validate that required secrets exist before launch
 2. omit disabled servers by default

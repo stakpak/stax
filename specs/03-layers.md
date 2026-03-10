@@ -20,10 +20,11 @@ This document defines layer construction, validation, deterministic packaging ru
 | Surfaces | `application/vnd.stax.surfaces.v1.tar+gzip` | Tarball | No |
 | Secrets | `application/vnd.stax.secrets.v1+json` | Canonical JSON | No |
 | Packages | `application/vnd.stax.packages.v1+json` | Canonical JSON | No |
+| Source snapshot | `application/vnd.stax.source.snapshot.v1.tar+gzip` | Tarball | No |
 
 ## Deterministic build rules
 
-All conforming builders MUST apply the following rules to tar-backed layers (`skills`, `rules`, `knowledge`, `memory`).
+All conforming builders MUST apply the following rules to tar-backed layers (`skills`, `rules`, `knowledge`, `memory`, `surfaces`, and `source snapshots`).
 
 ### Archive entry rules
 
@@ -195,6 +196,25 @@ Example:
   ]
 }
 ```
+
+## Source snapshot layer
+
+The source snapshot layer is used only in `application/vnd.stax.source.v1` artifacts.
+
+It contains a deterministic tarball of a prepared workspace snapshot, typically derived from:
+
+- a Git checkout at a pinned commit
+- a sparse checkout
+- a source archive expanded into a directory tree
+
+Validation rules:
+
+- `.git/` MUST NOT be included
+- VCS metadata directories such as `.hg/` and `.svn/` SHOULD NOT be included
+- paths MUST be safe and deterministic under the same tar rules as other archive layers
+- builders SHOULD emit annotations describing source type, commit, and file count where available
+
+Consumers SHOULD cache source snapshot layers by digest and SHOULD reuse the same cached snapshot across many agents.
 
 ## Layer size limits
 

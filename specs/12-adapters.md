@@ -52,6 +52,24 @@ interface MaterializationTarget {
 
 Consumers MUST treat unknown `config` fields as adapter-specific. Consumers SHOULD ignore unknown additive fields within a supported `adapterVersion` major.
 
+### `modelParams` validation
+
+`modelParams` is a pass-through bag of model configuration (temperature, top_p, max_tokens, etc.). Adapters and consumers MUST apply the following rules:
+
+- Adapters SHOULD document which `modelParams` keys they support and their valid ranges
+- Consumers MUST validate `modelParams` values against the target model's constraints when known (e.g., `temperature` MUST be a number between 0 and 2 for most models)
+- Consumers MUST reject `modelParams` keys that contain non-alphanumeric characters other than `_` and `-`
+- Consumers MUST warn on unrecognized `modelParams` keys rather than silently ignoring them
+- Builders SHOULD validate `modelParams` types at build time (e.g., `temperature` is a number, not a string)
+
+### `exactMode` semantics
+
+The `exactMode` field in `AdapterFeatureMap` indicates whether the adapter supports exact runtime file materialization — writing files byte-for-byte into the runtime's documented directory structure.
+
+- `exactMode: true` — the adapter declares that its `targets` list is complete and covers the runtime's full file contract. Consumers operating in `exact` materialization mode (see [15 — Materialization](./15-materialization.md)) SHOULD prefer adapters with `exactMode: true`
+- `exactMode: false` or omitted — the adapter provides best-effort targets. Consumers operating in `exact` mode MUST warn or fail if `exactMode` is not `true`
+- `exactMode` is an adapter-level declaration about capability, not a consumer-level mode selector. The consumer's materialization mode (`portable` vs `exact`) determines behavior; `exactMode` on the adapter tells the consumer whether exact materialization is feasible
+
 ### Adapter versioning
 
 `adapterVersion` MUST be a valid semver string. Consumers SHOULD interpret it as follows:
@@ -186,6 +204,20 @@ generic({
   config: {}
 });
 ```
+
+## Feature value semantics
+
+The `AdapterFeatureMap` uses three translation strategies. Their meanings are:
+
+| Value | Meaning | When to use |
+|-------|---------|-------------|
+| `native` | The runtime has a first-class mechanism for this feature. The consumer writes it to a dedicated file or setting. | Claude Code rules → `.claude/rules/`, Cursor rules → `.cursor/rules/` |
+| `embedded` | The runtime has no dedicated mechanism. The consumer embeds the content into another surface, typically the prompt or instruction file. | Persona → embedded as text in `CLAUDE.md` |
+| `translated` | The runtime has a mechanism, but the canonical format requires structural transformation (not just file placement). | MCP canonical JSON → `.mcp.json` with different key names; surfaces → renamed workspace files |
+| `unsupported` | The runtime cannot represent this feature at all. The consumer MUST warn and MAY omit it. | Skills on a runtime with no skill support |
+| `consumer-only` | The feature is meaningful but resolution happens entirely at the consumer layer, not in the adapter. | Secrets — the adapter declares needs, the consumer resolves values |
+
+Adapter authors MUST use `embedded` when content is inlined into a prompt-like file, and `translated` when content is written to a dedicated file but requires structural changes.
 
 ## Compatibility behavior
 

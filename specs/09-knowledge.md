@@ -69,9 +69,12 @@ Example:
 ### Manifest rules
 
 - Paths MUST be relative to the `knowledge/` root
+- Paths MUST use `/` as the separator, MUST NOT begin with `/` or `./`, and MUST NOT contain `..` segments
 - Unknown metadata keys MAY be included
 - Consumers MAY ignore unknown metadata keys
 - The manifest MUST NOT reference files outside the layer
+- Builders MUST validate that every path in the `files` object corresponds to a file that exists in the `knowledge/` directory at build time. If a referenced file does not exist, the builder MUST fail with a validation error listing the missing paths
+- Consumers encountering a manifest entry for a file not present in the archive MUST ignore the entry and SHOULD warn
 
 ## Referencing knowledge in an agent
 
@@ -87,6 +90,13 @@ export default defineAgent({
 Knowledge is packaged as `application/vnd.stax.knowledge.v1.tar+gzip`.
 
 Builders SHOULD annotate the layer with `dev.stax.knowledge.files`.
+
+## Safety rules
+
+- Builders MUST warn when the uncompressed knowledge layer exceeds 100 MB
+- Builders MUST warn when any single file exceeds 10 MB
+- `knowledge.manifest.json` MUST NOT reference files outside the `knowledge/` directory (paths with `..` or absolute paths MUST be rejected)
+- If `knowledge.manifest.json` references a file that does not exist in the archive, builders SHOULD warn; consumers MUST ignore the missing entry
 
 ## Consumer behavior
 
