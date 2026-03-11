@@ -213,6 +213,198 @@ If a required OpenClaw surface is missing in `exact` mode, the consumer SHOULD e
 
 `~/.openclaw/openclaw.json` is intentionally excluded from agent artifacts, but MAY be packaged separately via [21 — Profile: `@stax/openclaw/profile`](./21-openclaw-profile.md).
 
+## Cursor
+
+The file-contract details below are based on Cursor IDE documentation for rules, MCP, skills, and hooks.
+
+### Cursor scopes
+
+| Scope | Files |
+|------|-------|
+| Project | `.cursor/rules/*.mdc`, `.cursor/mcp.json`, `.cursor/skills/**`, `.cursor/hooks.json`, `AGENTS.md` |
+| User | `~/.cursor/rules/*.mdc`, `~/.cursor/mcp.json`, `~/.cursor/skills/**`, `~/.cursor/hooks.json` |
+| Legacy | `.cursorrules` (project root, deprecated) |
+
+### Cursor ownership classification
+
+| Path | Class | stax support |
+|------|-------|--------------|
+| `.cursor/rules/*.mdc` | `managed-project` | Yes |
+| `.cursor/mcp.json` | `managed-project` | Yes |
+| `.cursor/skills/**` | `managed-project` | Yes |
+| `AGENTS.md` | `managed-project` | Yes |
+| `.cursorrules` | `managed-project` | Yes (legacy) |
+| `~/.cursor/rules/*.mdc` | `managed-user` | Optional |
+| `~/.cursor/mcp.json` | `managed-user` | Optional |
+| `~/.cursor/skills/**` | `managed-user` | Optional |
+| `.cursor/hooks.json` | `local-override` | No by default |
+| `~/Library/Application Support/Cursor/` | `state` | No |
+
+### Cursor exact mapping rules
+
+In `exact` mode, `@stax/cursor` SHOULD materialize:
+
+| stax source | Exact target |
+|------------|--------------|
+| `surfaces/instructions.md` or merged prompt output | `AGENTS.md` |
+| canonical rules | `.cursor/rules/*.mdc` with trigger frontmatter |
+| MCP layer | `.cursor/mcp.json` |
+| skills | `.cursor/skills/**` |
+
+### Cursor files that MUST NOT be packaged
+
+- `~/Library/Application Support/Cursor/` (app state, caches, auth)
+- `.vscode/settings.json` (editor settings)
+- env values containing secrets in `.cursor/mcp.json`
+- auth tokens, session state, caches
+
+## GitHub Copilot
+
+The file-contract details below are based on GitHub Copilot documentation for custom instructions, MCP, skills, and agents.
+
+### Copilot scopes
+
+| Scope | Files |
+|------|-------|
+| Workspace | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, `.github/agents/*.agent.md`, `.github/skills/**`, `.github/prompts/*.prompt.md`, `.vscode/mcp.json`, `AGENTS.md` |
+| User | `~/.copilot/instructions/*.instructions.md`, `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/**` |
+
+### Copilot ownership classification
+
+| Path | Class | stax support |
+|------|-------|--------------|
+| `.github/copilot-instructions.md` | `managed-project` | Yes |
+| `.github/instructions/*.instructions.md` | `managed-project` | Yes |
+| `.vscode/mcp.json` | `managed-project` | Yes |
+| `.github/skills/**` | `managed-project` | Yes |
+| `AGENTS.md` | `managed-project` | Yes |
+| `.github/agents/*.agent.md` | `managed-project` | Optional |
+| `.github/prompts/*.prompt.md` | `managed-project` | No by default |
+| `~/.copilot/instructions/*.instructions.md` | `managed-user` | Optional |
+| `~/.copilot/skills/**` | `managed-user` | Optional |
+| VS Code user `settings.json` | `local-override` | No |
+
+### Copilot exact mapping rules
+
+In `exact` mode, `@stax/github-copilot` SHOULD materialize:
+
+| stax source | Exact target |
+|------------|--------------|
+| `surfaces/instructions.md` or merged prompt output | `.github/copilot-instructions.md` |
+| canonical rules (glob-scoped) | `.github/instructions/<rule-id>.instructions.md` with `applyTo` frontmatter |
+| canonical rules (always) | embedded in `.github/copilot-instructions.md` |
+| MCP layer | `.vscode/mcp.json` with `servers` root key and explicit `type` fields |
+| skills | `.github/skills/**` |
+
+### Copilot files that MUST NOT be packaged
+
+- VS Code user settings
+- auth tokens or GitHub credentials
+- `.github/prompts/*.prompt.md` (user-authored, not stax-managed)
+- `.github/agents/*.agent.md` unless explicitly opted in
+
+## Windsurf
+
+The file-contract details below are based on Windsurf (formerly Codeium) documentation for rules, workflows, and MCP.
+
+### Windsurf scopes
+
+| Scope | Files |
+|------|-------|
+| Project | `.windsurf/rules/*.md`, `.windsurf/workflows/*.md`, `AGENTS.md` |
+| User | `~/.codeium/windsurf/memories/global_rules.md`, `~/.codeium/windsurf/global_workflows/*.md`, `~/.codeium/windsurf/mcp_config.json` |
+| Legacy | `.windsurfrules` (project root, deprecated) |
+| System (enterprise) | `/Library/Application Support/Windsurf/rules/*.md` (macOS), `/etc/windsurf/rules/*.md` (Linux) |
+
+### Windsurf ownership classification
+
+| Path | Class | stax support |
+|------|-------|--------------|
+| `.windsurf/rules/*.md` | `managed-project` | Yes |
+| `.windsurf/workflows/*.md` | `managed-project` | Yes |
+| `AGENTS.md` | `managed-project` | Yes |
+| `.windsurfrules` | `managed-project` | Yes (legacy) |
+| `~/.codeium/windsurf/memories/global_rules.md` | `managed-user` | Optional |
+| `~/.codeium/windsurf/global_workflows/*.md` | `managed-user` | Optional |
+| `~/.codeium/windsurf/mcp_config.json` | `managed-user` | Optional (user-scoped only) |
+| `~/.codeium/windsurf/memories/` (auto-generated) | `state` | No |
+| `~/Library/Application Support/Windsurf/` | `state` | No |
+
+### Windsurf exact mapping rules
+
+In `exact` mode, `@stax/windsurf` SHOULD materialize:
+
+| stax source | Exact target |
+|------------|--------------|
+| `surfaces/instructions.md` or merged prompt output | `AGENTS.md` |
+| canonical rules | `.windsurf/rules/*.md` with trigger frontmatter |
+| skills (as workflows) | `.windsurf/workflows/*.md` |
+
+MCP is user-scoped only in Windsurf. The adapter MUST warn that project-level MCP is not supported.
+
+### Windsurf files that MUST NOT be packaged
+
+- `~/.codeium/windsurf/memories/` (auto-generated memories)
+- `~/Library/Application Support/Windsurf/` (app state, caches, auth)
+- `~/.codeium/.codeiumignore` (enterprise-specific)
+- auth tokens, credential files, session state
+
+## OpenCode
+
+The file-contract details below are based on [OpenCode](https://github.com/anomalyco/opencode) by Anomaly for config, instructions, skills, commands, and MCP.
+
+### OpenCode scopes
+
+| Scope | Files |
+|------|-------|
+| Project | `opencode.jsonc`, `AGENTS.md`, `.opencode/command/*.md`, `.opencode/skill/**/SKILL.md`, `.opencode/agent/*.md`, `.opencode/plugin/*.ts` |
+| User | `~/.config/opencode/opencode.jsonc`, `~/.config/opencode/AGENTS.md`, `~/.opencode/command/*.md`, `~/.opencode/skill/**/SKILL.md` |
+| Enterprise | `/Library/Application Support/opencode/` (macOS), `/etc/opencode/` (Linux), `C:\ProgramData\opencode\` (Windows) |
+| State | `~/.local/state/opencode/`, `~/.cache/opencode/`, `.opencode/plans/` |
+
+### OpenCode ownership classification
+
+| Path | Class | stax support |
+|------|-------|--------------|
+| `opencode.jsonc` | `managed-project` | Yes |
+| `AGENTS.md` | `managed-project` | Yes |
+| `.opencode/command/*.md` | `managed-project` | Yes |
+| `.opencode/skill/**/SKILL.md` | `managed-project` | Yes |
+| `.opencode/agent/*.md` | `managed-project` | Optional |
+| `~/.config/opencode/opencode.jsonc` | `managed-user` | Optional |
+| `~/.config/opencode/AGENTS.md` | `managed-user` | Optional |
+| `~/.opencode/command/*.md` | `managed-user` | Optional |
+| `~/.opencode/skill/**/SKILL.md` | `managed-user` | Optional |
+| `.opencode/plans/` | `state` | No |
+| `.opencode/node_modules/` | `state` | No |
+| `.opencode/package.json` | `state` | No |
+| `~/.local/state/opencode/` | `state` | No |
+| `~/.cache/opencode/` | `state` | No |
+| `*.local.md` files | `local-override` | No by default |
+
+### OpenCode exact mapping rules
+
+In `exact` mode, `@stax/opencode` SHOULD materialize:
+
+| stax source | Exact target |
+|------------|--------------|
+| `surfaces/instructions.md` or merged prompt output | `AGENTS.md` |
+| MCP layer | `opencode.jsonc` under `mcp` (local: `command` as string array, `environment` as object) |
+| adapter config (model, agents) | `opencode.jsonc` |
+| skills | `.opencode/skill/**/SKILL.md` |
+| skills (as commands) | `.opencode/command/*.md` |
+
+### OpenCode files that MUST NOT be packaged
+
+- `.opencode/plans/` (runtime-generated plan state)
+- `.opencode/node_modules/`, `.opencode/package.json`, `.opencode/bun.lock` (auto-generated plugin artifacts)
+- `~/.local/state/opencode/` (SQLite databases, runtime state)
+- `~/.local/share/opencode/` (binaries, logs)
+- `~/.cache/opencode/` (cached data)
+- OAuth tokens and auth state
+- API keys in `provider` config
+- `*.local.md` files (local instruction overrides)
+
 ## Exactness requirements
 
 To claim support for a runtime "correctly," an adapter SHOULD:

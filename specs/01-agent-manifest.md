@@ -2,7 +2,7 @@
 
 ## Overview
 
-The agent manifest is the root definition of an agent. It declares identity, optional layer sources, runtime hints, package dependencies, secret requirements, optional workspace source dependencies, and the adapter used to materialize the agent for a runtime.
+The agent manifest is the root definition of an agent artifact. It declares identity, optional layer sources, runtime hints, package dependencies, secret requirements, optional workspace source dependencies, and the adapter used to materialize or import the artifact for a target consumer environment.
 
 Agents are authored in TypeScript using `defineAgent()` and compiled to JSON for the OCI config blob.
 
@@ -183,7 +183,7 @@ interface WorkspaceSourceReference {
 }
 
 interface AdapterConfig {
-  type: string;                         // Adapter identifier, e.g. "claude"
+  type: string;                         // Adapter identifier, e.g. "claude-code"
   runtime: string;                      // Runtime family, e.g. "claude-code"
   adapterVersion: string;               // Adapter schema version
   model?: string;
@@ -283,7 +283,7 @@ If `surfaces` are present, the config blob SHOULD record that fact so consumers 
   "url": "https://github.com/myorg/backend-engineer",
   "tags": ["code-review", "architecture", "golang"],
   "adapter": {
-    "type": "claude",
+    "type": "claude-code",
     "runtime": "claude-code",
     "adapterVersion": "1.0.0",
     "model": "claude-opus-4-1",
@@ -338,7 +338,7 @@ If `surfaces` are present, the config blob SHOULD record that fact so consumers 
 | Identity fields | Defines what the artifact is |
 | Adapter and fallback | Declares intended runtimes |
 | Layer paths and surfaces | Defines the agent brain and exact runtime-facing documents |
-| Runtime hints | Communicates requirements and recommendations |
+| Runtime hints | Communicates non-binding requirements and recommendations |
 | Secret declarations | Declares needed secret keys |
 | Workspace source references | Declares shared repo/workspace dependencies |
 | Package references | Defines composition |

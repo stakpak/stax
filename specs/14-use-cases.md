@@ -192,6 +192,54 @@ An artifact prefers `claude-code` but includes a generic fallback in `adapterFal
 
 ---
 
+## 13. Remote hosted agent distribution
+
+A hosted agent platform accepts a stax artifact as the installable agent unit.
+
+The platform:
+
+- pulls the artifact by digest
+- verifies signatures and approvals
+- resolves packages and workspace sources
+- imports the canonical agent brain into its own execution system
+
+stax defines the distributed artifact. The hosted platform defines how that artifact is executed.
+
+---
+
+## 14. Autonomous cloud agent promotion
+
+A team publishes an autonomous cloud agent once and promotes the same digest across environments:
+
+```text
+dev -> staging -> production
+```
+
+No rebuild is required between environments. Promotion is done by policy, approval, and artifact selection.
+
+---
+
+## 15. Marketplace distribution
+
+A marketplace lists portable stax packages and agent artifacts. Consumers inspect metadata, verify trust signals, and install artifacts into supported runtimes or hosted platforms.
+
+This enables a neutral package ecosystem instead of one marketplace per runtime.
+
+---
+
+## 16. Private enterprise mirror
+
+An enterprise mirrors approved upstream stax artifacts into an internal registry and only allows installation from that mirror.
+
+This supports:
+
+- air-gapped environments
+- supply-chain review
+- publisher allowlists
+- deterministic rollback by digest
+
+---
+
 ## Summary
 
 | Use case | Key value |
@@ -208,3 +256,7 @@ An artifact prefers `claude-code` but includes a generic fallback in `adapterFal
 | Regulated workflows | Auditability and trust |
 | Workspace memory | Scoped learning without mutating base artifacts |
 | Compatibility fallback | Graceful runtime degradation |
+| Remote hosted distribution | One artifact consumed by cloud platforms |
+| Autonomous cloud promotion | Promote the same digest across environments |
+| Marketplace distribution | Neutral discovery and installation |
+| Private mirror | Controlled enterprise artifact flow |

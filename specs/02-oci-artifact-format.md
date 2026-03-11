@@ -13,15 +13,22 @@ stax defines four primary artifact types:
 | Runtime profile | `application/vnd.stax.profile.v1` |
 | Workspace source | `application/vnd.stax.source.v1` |
 
-A consumer MUST treat stax artifacts as **configuration artifacts**, not runtime images.
+A consumer MUST treat stax artifacts as **agent distribution artifacts**, not runtime images or executable containers.
 
 ## Media types
 
-### Config blob
+### Agent and package config blob
 
 ```text
 application/vnd.stax.config.v1+json
 ```
+
+### Specialized config blob media types
+
+| Config blob | Media type |
+|-------------|------------|
+| Runtime profile config | `application/vnd.stax.profile.config.v1+json` |
+| Source artifact config | `application/vnd.stax.source.config.v1+json` |
 
 ### Layers
 
@@ -38,8 +45,6 @@ application/vnd.stax.config.v1+json
 | Secrets | `application/vnd.stax.secrets.v1+json` | `0..1` |
 | Packages | `application/vnd.stax.packages.v1+json` | `0..1` |
 | Source snapshot | `application/vnd.stax.source.snapshot.v1.tar+gzip` | source artifact only |
-| Runtime profile config | `application/vnd.stax.profile.config.v1+json` | profile artifact config only |
-| Source artifact config | `application/vnd.stax.source.config.v1+json` | source artifact config only |
 
 An artifact MUST NOT contain more than one layer of the same stax media type.
 
@@ -108,7 +113,7 @@ An artifact MUST NOT contain more than one layer of the same stax media type.
     "org.opencontainers.image.description": "Senior backend engineer with Go expertise",
     "org.opencontainers.image.vendor": "myorg",
     "dev.stax.spec.version": "1.0.0",
-    "dev.stax.adapter.type": "claude",
+    "dev.stax.adapter.type": "claude-code",
     "dev.stax.adapter.runtime": "claude-code",
     "dev.stax.persona": "maya-chen"
   }

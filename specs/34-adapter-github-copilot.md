@@ -1,0 +1,198 @@
+# 34 — Adapter: `@stax/github-copilot`
+
+## Overview
+
+`@stax/github-copilot` is the canonical stax adapter for GitHub Copilot.
+
+GitHub Copilot spans both VS Code (local) and GitHub.com (hosted coding agent). Its configuration uses `.github/copilot-instructions.md` for repo-wide instructions, `.github/instructions/*.instructions.md` for path-scoped instructions, `.vscode/mcp.json` for MCP, and `.github/skills/` for skills.
+
+This adapter targets the documented Copilot file contract described in [17 — Runtime File Contracts](./17-runtime-file-contracts.md).
+
+## Scope model
+
+| Scope | Typical files |
+|------|---------------|
+| Workspace | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, `.github/agents/*.agent.md`, `.github/skills/**`, `.github/prompts/*.prompt.md`, `.vscode/mcp.json`, `AGENTS.md` |
+| User | `~/.copilot/instructions/*.instructions.md`, `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/**` |
+
+In stax `1.0.0`, `@stax/github-copilot` SHOULD default to **workspace scope**.
+
+## Adapter interface
+
+```typescript
+interface GithubCopilotAdapterOptions {
+  model?: string;
+  modelParams?: Record<string, unknown>;
+
+  scope?: 'workspace' | 'user';
+  exact?: boolean;
+
+  writeInstructions?: boolean;         // default: true
+  writePathInstructions?: boolean;     // default: true
+  writeMcp?: boolean;                  // default: true
+  writeSkills?: boolean;              // default: true
+  writeAgents?: boolean;              // default: false — subagent .agent.md files
+  writeAgentsMd?: boolean;            // default: true — AGENTS.md at root
+
+  config?: Record<string, unknown>;   // Copilot-specific settings
+}
+```
+
+The compiled adapter config SHOULD use:
+
+```json
+{
+  "type": "github-copilot",
+  "runtime": "github-copilot",
+  "adapterVersion": "1.0.0"
+}
+```
+
+## Exact target mapping
+
+### Workspace scope
+
+| stax source | Target |
+|------------|--------|
+| `surfaces/instructions.md` or composed prompt | `.github/copilot-instructions.md` |
+| rules (glob-scoped) | `.github/instructions/<rule-id>.instructions.md` |
+| rules (always) | embedded in `.github/copilot-instructions.md` |
+| MCP layer | `.vscode/mcp.json` |
+| skills | `.github/skills/` |
+
+### User scope
+
+| stax source | Target |
+|------------|--------|
+| `surfaces/instructions.md` or composed prompt | `~/.copilot/instructions/stax-instructions.instructions.md` |
+| rules (glob-scoped) | `~/.copilot/instructions/<rule-id>.instructions.md` |
+| MCP layer | user-level MCP config via VS Code settings |
+| skills | `~/.copilot/skills/` |
+
+## Instructions generation
+
+### Repo-wide instructions
+
+The adapter SHOULD write `.github/copilot-instructions.md` from the first available source:
+
+1. `surfaces/instructions.md`
+2. `prompt`
+3. synthesized composition
+
+This file is automatically included in all Copilot chat requests.
+
+### Path-specific instructions
+
+stax rules with `scope: 'glob'` SHOULD be translated to `.github/instructions/<rule-id>.instructions.md` files with the following frontmatter:
+
+```markdown
+---
+applyTo: '**/*.ts,**/*.tsx'
+---
+
+Rule content here.
+```
+
+### Frontmatter mapping
+
+| stax rule field | Copilot frontmatter field |
+|----------------|---------------------------|
+| `globs` | `applyTo` (comma-separated glob patterns) |
+| `scope: 'always'` | No frontmatter; embed in `copilot-instructions.md` |
+| `scope: 'glob'` | `applyTo` with glob patterns |
+| `scope: 'auto'` | `applyTo` with broad pattern or embed in instructions |
+| `scope: 'manual'` | Not supported; emit warning |
+
+### Lossy translations
+
+- stax `priority` and `severity` have no Copilot equivalent and MUST be dropped with a warning
+- stax `triggers` have no Copilot equivalent and MUST be dropped with a warning
+- stax `scope: 'manual'` rules cannot be represented; the adapter SHOULD embed them in instructions or warn
+
+### `AGENTS.md` support
+
+Copilot reads `AGENTS.md` at the workspace root (and subdirectories with `chat.useNestedAgentsMdFiles`). When `writeAgentsMd` is `true`, the adapter MAY also write `AGENTS.md` alongside `.github/copilot-instructions.md`.
+
+## MCP mapping
+
+Copilot uses `.vscode/mcp.json` for MCP server configuration.
+
+### Output format
+
+```json
+{
+  "servers": {
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${input:github-token}"
+      }
+    },
+    "remote-server": {
+      "type": "http",
+      "url": "https://mcp.example.com/mcp"
+    }
+  }
+}
+```
+
+### Key differences from other runtimes
+
+- the root key is `"servers"` (not `"mcpServers"`)
+- each server entry requires an explicit `"type"` field (`"stdio"`, `"http"`, or `"sse"`)
+- environment variables support VS Code variable syntax: `${input:id}`, `${workspaceFolder}`, `${userHome}`
+- an optional top-level `"inputs"` array defines user-prompted variables
+
+### Mapping rules
+
+- stdio servers map to `type: "stdio"`, `command`, `args`, and optional `env`
+- remote servers map to `type: "http"`, `url`, and optional `headers`
+- secret values SHOULD use `${input:variable}` syntax for user prompting
+- unsupported canonical MCP fields MUST trigger warnings
+
+## Skills mapping
+
+Copilot supports skills in `.github/skills/<name>/SKILL.md`, compatible with the stax skill format.
+
+- target directory: `.github/skills/` or `~/.copilot/skills/`
+- each top-level skill directory MUST be preserved
+- `SKILL.md` content SHOULD be preserved byte-for-byte
+- Copilot also reads `.claude/skills/` and `.agents/skills/` as compatible paths
+
+## Feature map
+
+```json
+{
+  "prompt": "native",
+  "persona": "embedded",
+  "rules": "translated",
+  "skills": "native",
+  "mcp": "translated",
+  "surfaces": "embedded",
+  "secrets": "consumer-only",
+  "toolPermissions": "unsupported",
+  "modelConfig": "native",
+  "exactMode": true
+}
+```
+
+## What the adapter MUST NOT own
+
+- VS Code user `settings.json` (machine-specific)
+- `.vscode/settings.json` copilot enable/disable keys (user preference)
+- auth tokens or GitHub credentials
+- `.github/prompts/*.prompt.md` (reusable prompt files are user-authored, not stax-managed)
+- `.github/agents/*.agent.md` by default (opt-in via `writeAgents`)
+
+## Exactness requirements
+
+An implementation claiming exact GitHub Copilot support SHOULD:
+
+1. write `.github/copilot-instructions.md` for repo-wide instructions
+2. write `.github/instructions/*.instructions.md` with correct `applyTo` frontmatter for glob-scoped rules
+3. write `.vscode/mcp.json` with `servers` root key and explicit `type` fields
+4. preserve skill directory structure exactly under `.github/skills/`
+5. avoid writing user preferences or auth files
+6. warn or fail when lossy translations occur in `exact` mode

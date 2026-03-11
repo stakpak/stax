@@ -6,6 +6,8 @@ Materialization is the consumer-side process of turning a canonical stax artifac
 
 This spec exists so that different consumers can produce predictably similar outputs from the same artifact.
 
+In `1.0.0`, materialization is primarily filesystem-oriented. Hosted-platform import flows and install-plan standardization are forward draft work described in [25 — Hosted Platform Adapter Contract](./25-hosted-platform-adapter-contract.md).
+
 ## Materialization modes
 
 Consumers SHOULD support two materialization modes:
@@ -72,7 +74,8 @@ Examples:
 - Claude Code: `CLAUDE.md`, `.mcp.json`, `.claude/settings.json`, `.claude/skills/`
 - OpenClaw: `<workspace>/AGENTS.md`, `<workspace>/SOUL.md`, `<workspace>/TOOLS.md`, `<workspace>/skills/`
 - Codex: `AGENTS.md`, `.codex/config.toml`
-- Cursor: `.cursor/rules/*.md`, `.cursor/mcp.json`
+
+Future non-`1.0.0` adapters MAY target other runtimes such as Cursor, Windsurf, or hosted platforms.
 
 ## Lossy translation
 

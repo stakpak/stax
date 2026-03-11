@@ -6,11 +6,13 @@ Adapters bridge stax's canonical format and runtime-specific configuration. Each
 
 1. typed authoring-time configuration
 2. materialization targets and feature metadata
-3. model and permission configuration for the target runtime
+3. model and permission configuration for the target runtime or target import surface
 
-Adapters do **not** directly run agents. They describe how a consumer should materialize an artifact for a runtime.
+Adapters do **not** directly run agents. They describe how a consumer should materialize, install, or import an artifact for a runtime, workspace, IDE, hosted platform, or cloud control plane.
 
 For runtimes with stable dot-directory contracts such as Claude Code and OpenClaw, adapters SHOULD declare exact file targets and scope (`user`, `project`, `workspace`, `local`) so consumers can write files in the exact locations the runtime expects.
+
+For hosted or remote agent systems, adapters MAY describe import payloads, API-facing settings, or compatibility targets instead of local filesystem outputs.
 
 ## Adapter output contract
 
@@ -18,7 +20,7 @@ All adapters MUST compile to the same shape.
 
 ```typescript
 interface AdapterConfig {
-  type: string;                         // e.g. "claude"
+  type: string;                         // e.g. "claude-code"
   runtime: string;                      // e.g. "claude-code"
   adapterVersion: string;               // schema version for this adapter payload
   model?: string;
@@ -49,6 +51,8 @@ interface MaterializationTarget {
   exact?: boolean;
 }
 ```
+
+`path` MAY represent a virtual or API-facing target identity for non-filesystem consumers, but filesystem-style targets remain the canonical model in `1.0.0`.
 
 Consumers MUST treat unknown `config` fields as adapter-specific. Consumers SHOULD ignore unknown additive fields within a supported `adapterVersion` major.
 
@@ -110,7 +114,7 @@ export default defineAgent({
 });
 ```
 
-## Official adapter examples
+## Current `1.0.0` adapter set
 
 ### `@stax/claude-code`
 
@@ -148,34 +152,9 @@ codex({
 
 Expected targets:
 
-- `AGENTS.md` and/or discovered nested `AGENTS.md` files
+- `AGENTS.md` at the selected project or user scope
 - `.codex/config.toml`
 - repository or user skill locations described in [20 — Adapter: `@stax/codex`](./20-adapter-codex.md)
-
-### `@stax/cursor`
-
-```typescript
-cursor({
-  model: 'claude-sonnet-4-1',
-});
-```
-
-Expected targets:
-
-- `.cursor/rules/*.md`
-- `.cursor/mcp.json`
-
-### `@stax/windsurf`
-
-```typescript
-windsurf({
-  model: 'claude-sonnet-4-1',
-});
-```
-
-Expected targets:
-
-- `.windsurf/rules/*.md`
 
 ### `@stax/openclaw`
 
@@ -205,13 +184,98 @@ generic({
 });
 ```
 
+`@stax/generic` is the escape hatch for remote, hosted, and cloud consumers that do not yet have a first-class exact adapter contract.
+
+### `@stax/cursor`
+
+```typescript
+cursor({
+  model: 'claude-sonnet-4',
+  writeRules: true,
+  writeMcp: true,
+  writeSkills: true,
+});
+```
+
+Expected targets:
+
+- `AGENTS.md` at project root
+- `.cursor/rules/*.mdc` with trigger frontmatter
+- `.cursor/mcp.json`
+- `.cursor/skills/`
+
+Cursor adapters SHOULD translate canonical rules to MDC frontmatter format with `alwaysApply`, `globs`, and `description` fields. See [33 — Adapter: `@stax/cursor`](./33-adapter-cursor.md).
+
+### `@stax/github-copilot`
+
+```typescript
+githubCopilot({
+  model: 'claude-sonnet-4',
+  writeInstructions: true,
+  writePathInstructions: true,
+  writeMcp: true,
+  writeSkills: true,
+});
+```
+
+Expected targets:
+
+- `.github/copilot-instructions.md` for repo-wide instructions
+- `.github/instructions/*.instructions.md` for path-scoped rules
+- `.vscode/mcp.json` with `servers` root key
+- `.github/skills/`
+
+Copilot adapters SHOULD translate glob-scoped rules to `.instructions.md` files with `applyTo` frontmatter. See [34 — Adapter: `@stax/github-copilot`](./34-adapter-github-copilot.md).
+
+### `@stax/windsurf`
+
+```typescript
+windsurf({
+  model: 'claude-sonnet-4',
+  writeRules: true,
+  writeInstructions: true,
+});
+```
+
+Expected targets:
+
+- `AGENTS.md` at project root
+- `.windsurf/rules/*.md` with trigger frontmatter
+- `.windsurf/workflows/*.md` for skills (translated)
+
+Windsurf adapters SHOULD translate canonical rules to Windsurf trigger frontmatter (`always_on`, `model_decision`, `glob`, `manual`). MCP is user-scoped only. See [35 — Adapter: `@stax/windsurf`](./35-adapter-windsurf.md).
+
+### `@stax/opencode`
+
+```typescript
+opencode({
+  model: 'anthropic/claude-sonnet-4-20250514',
+  agent: {
+    build: { model: 'anthropic/claude-sonnet-4-20250514' },
+  },
+});
+```
+
+Expected targets:
+
+- `AGENTS.md` for instructions
+- `opencode.jsonc` for config, model settings, and MCP
+- `.opencode/skill/**/SKILL.md` for skills (native)
+- `.opencode/command/*.md` for commands (translated)
+
+OpenCode adapters SHOULD write `opencode.jsonc` using JSONC format with `mcp` key for MCP servers (`type: "local"` with `command` as string array). See [36 — Adapter: `@stax/opencode`](./36-adapter-opencode.md).
+
+## Illustrative future adapters
+
+Hosted-platform adapters are directionally in scope for stax, but they are not defined as runtime-specific normative `1.0.0` adapters today. Until those contracts are specified, implementations SHOULD treat them as future targets or custom adapters rather than as current exact-conformance claims.
+
 ## Feature value semantics
 
 The `AdapterFeatureMap` uses three translation strategies. Their meanings are:
 
 | Value | Meaning | When to use |
 |-------|---------|-------------|
-| `native` | The runtime has a first-class mechanism for this feature. The consumer writes it to a dedicated file or setting. | Claude Code rules → `.claude/rules/`, Cursor rules → `.cursor/rules/` |
+| `native` | The runtime has a first-class mechanism for this feature. The consumer writes it to a dedicated file or setting. | Claude Code skills → `.claude/skills/`, OpenClaw surfaces → named workspace files |
 | `embedded` | The runtime has no dedicated mechanism. The consumer embeds the content into another surface, typically the prompt or instruction file. | Persona → embedded as text in `CLAUDE.md` |
 | `translated` | The runtime has a mechanism, but the canonical format requires structural transformation (not just file placement). | MCP canonical JSON → `.mcp.json` with different key names; surfaces → renamed workspace files |
 | `unsupported` | The runtime cannot represent this feature at all. The consumer MUST warn and MAY omit it. | Skills on a runtime with no skill support |

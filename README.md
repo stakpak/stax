@@ -1,12 +1,19 @@
 # stax
 
-**The packaging standard for AI agents.**
+**The distribution standard for AI agents.**
 
-stax defines how to describe, bundle, version, and distribute an agent's configuration as an [OCI artifact](https://github.com/opencontainers/image-spec). It does not run agents, orchestrate them, or manage their lifecycle — those are concerns for products built on top of this format.
+stax defines how to describe, bundle, version, verify, and distribute an agent artifact as an [OCI artifact](https://github.com/opencontainers/image-spec). It does not run agents, orchestrate them, or manage their lifecycle — those are concerns for products built on top of this format.
 
 stax is to agents what the OCI Image Spec is to containers, what `package.json` is to JavaScript packages, and what `Chart.yaml` is to Helm charts.
 
+Conceptually:
+
+- `stax build` is the agent equivalent of `docker build`
+- `stax push` is the agent equivalent of `docker push`
+- `stax pull` is the agent equivalent of `docker pull`
+
 > **Spec status:** the authoritative normative specification lives in [`specs/`](./specs). If this README and the spec documents differ, follow `specs/`.
+> Current `1.0.0` runtime-specific exact contracts are defined for Claude Code, Codex, and OpenClaw. Registry/discovery/install and hosted-platform flows are forward drafts, tracked in [99 — Roadmap and Draft Status](./specs/99-roadmap.md).
 
 ---
 
@@ -44,13 +51,13 @@ stax is to agents what the OCI Image Spec is to containers, what `package.json` 
 
 ## Why stax?
 
-AI agents today are configured through scattered files — markdown prompts, JSON configs, MCP server definitions, rules files — with no standard way to version, share, or distribute them. Every runtime (Claude Code, Codex, Cursor, Windsurf) has its own format. Moving an agent between tools means manual translation.
+AI agents today are configured through scattered files — markdown prompts, JSON configs, MCP server definitions, rules files — with no standard way to version, share, promote, or distribute them. Every runtime (Claude Code, Codex, Cursor, Windsurf), hosted platform, and cloud environment has its own format. Moving an agent between tools means manual translation.
 
 stax solves this by providing:
 
-- **One format** to describe an agent's entire brain — persona, prompts, tools, skills, rules, knowledge, memory, and named runtime surfaces
+- **One format** to describe an agent's entire distributable brain — persona, prompts, tools, skills, rules, knowledge, memory, and named runtime surfaces
 - **OCI-based distribution** using the same registries and tooling as container images (GHCR, Docker Hub, ECR, ACR)
-- **Runtime adapters** that translate a single agent definition into runtime-specific formats
+- **Runtime adapters** that translate a single agent definition into runtime-specific formats or consumer-specific import surfaces
 - **Runtime profiles** for portable non-secret runtime configuration such as OpenClaw profiles
 - **Workspace source artifacts** for cacheable shared repo/workspace snapshots
 - **Content-addressable storage** that deduplicates shared layers across agent variants and source snapshots
@@ -60,7 +67,7 @@ stax solves this by providing:
 > The package carries **"what I am and what I need to start"** — intrinsic properties.
 > Everything about **"how many, where, with what limits, alongside what, and how to update me"** is extrinsic and belongs to the consumer.
 
-This is exactly how Docker images work: `ENTRYPOINT` and `ENV` are in the image. `--memory`, `--cpus`, `replicas`, and `resources.limits` are in `docker-compose.yml` or the Kubernetes pod spec. stax follows the same pattern for agents.
+This is exactly how Docker images work: `ENTRYPOINT` and `ENV` are in the image. `--memory`, `--cpus`, `replicas`, and `resources.limits` are in `docker-compose.yml` or the Kubernetes pod spec. stax follows the same pattern for agents, whether they are consumed by local tools, hosted platforms, or cloud control planes.
 
 For agents that need a real codebase or working tree, stax now prefers **separate cacheable workspace source artifacts** instead of embedding a Git repository in every agent artifact.
 
@@ -71,7 +78,7 @@ For agents that need a real codebase or working tree, stax now prefers **separat
 ```
 ┌──────────────────────────────────────────────────┐
 │                      stax                        │
-│               (packaging standard)               │
+│              (distribution standard)             │
 │                                                  │
 │  TypeScript SDK  →  OCI Artifact  →  Registry    │
 │                                                  │
@@ -117,15 +124,17 @@ An agent's brain is composed of typed, independently versioned layers:
 
 ### Adapters
 
-Runtime-specific bridges that wrap agent definitions for each target:
+Runtime-specific bridges that wrap agent definitions for each target.
+
+Current `1.0.0` exact/runtime-specific docs exist for:
 
 - `@stax/claude-code` — Claude Code (`@stax/claude` is a compatibility alias)
 - `@stax/codex` — OpenAI Codex
-- `@stax/cursor` — Cursor IDE
-- `@stax/windsurf` — Windsurf IDE
 - `@stax/openclaw` — OpenClaw workspaces
 - `@stax/openclaw/profile` — OpenClaw runtime profiles
-- `@stax/generic` — Custom runtimes
+- `@stax/generic` — Custom or not-yet-standardized runtimes
+
+Future adapters may target tools such as Cursor, Windsurf, and hosted agent platforms, but those contracts are not yet normative in `1.0.0`.
 
 ### Packages
 
@@ -635,6 +644,8 @@ The OCI layer stores key names and metadata only — never secret values.
 | `stax verify <ref>` | Verify signatures or attestations via OCI referrers |
 | `stax login` | Authenticate with an OCI registry |
 
+Discovery, install, promotion, and mirror commands beyond this baseline live in the forward draft set, especially [32 — Distribution CLI Operations](./specs/32-distribution-cli-operations.md).
+
 ### Build Options
 
 ```bash
@@ -658,7 +669,7 @@ stax validate
 
 # Materialize for a specific runtime
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --out ./output
-stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --adapter cursor --out ./cursor-output
+stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --adapter codex --out ./codex-output
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --json
 ```
 
@@ -755,7 +766,7 @@ Create multiple persona variants (different names, personalities, communication 
 
 ### Multi-Runtime Deployment
 
-Author one agent definition and deploy it to Claude Code, Codex, and Cursor simultaneously. Each adapter translates the unified format into the runtime's native configuration.
+Author one agent definition and deploy it to Claude Code, Codex, and OpenClaw from the same canonical artifact. Each adapter translates the unified format into the runtime's native configuration.
 
 ### Community Ecosystem
 
@@ -810,6 +821,10 @@ jobs:
 
 The complete specification is maintained in the [`specs/`](./specs/) directory:
 
+- Specs `00`–`22` define the current `1.0.0` core and runtime-specific surface.
+- Specs `23`–`32` are forward design drafts and are not part of `1.0.0` conformance.
+- [99 — Roadmap and Draft Status](./specs/99-roadmap.md) is the status index for what is current versus draft.
+
 | Spec | Document | Description |
 |------|----------|-------------|
 | 00 | [Overview](./specs/00-overview.md) | Purpose, scope, and architecture |
@@ -835,6 +850,17 @@ The complete specification is maintained in the [`specs/`](./specs/) directory:
 | 20 | [Adapter: `@stax/codex`](./specs/20-adapter-codex.md) | Exact Codex adapter contract |
 | 21 | [Profile: `@stax/openclaw/profile`](./specs/21-openclaw-profile.md) | Portable OpenClaw runtime-profile artifact |
 | 22 | [Workspace Sources](./specs/22-workspace-sources.md) | Cacheable source artifacts and agent references for shared Git/workspace snapshots |
+| 23 | [Registry, Discovery, and Install](./specs/23-registry-discovery-install.md) | Draft design for search, install plans, and registry discovery |
+| 24 | [Trust, Policy, and Attestations](./specs/24-trust-policy-attestations.md) | Draft design for signatures, approvals, provenance, and policy gates |
+| 25 | [Hosted Platform Adapter Contract](./specs/25-hosted-platform-adapter-contract.md) | Draft design for hosted platform imports and non-filesystem consumers |
+| 26 | [Compatibility and Capability Metadata](./specs/26-compatibility-and-capability-metadata.md) | Draft design for compatibility preflight metadata |
+| 27 | [Package and Marketplace Metadata](./specs/27-package-and-marketplace-metadata.md) | Draft design for richer ecosystem metadata |
+| 28 | [Conformance and Certification](./specs/28-conformance-and-certification.md) | Draft design for interoperability testing |
+| 29 | [Source Governance and Provenance](./specs/29-source-governance-and-provenance.md) | Draft design for source snapshot governance |
+| 30 | [Package and MCP Safety Policy](./specs/30-package-and-mcp-safety-policy.md) | Draft design for package and MCP safety controls |
+| 31 | [Registry Lifecycle, Promotion, and Mirroring](./specs/31-registry-lifecycle-and-mirroring.md) | Draft design for promotion, mirroring, and lifecycle metadata |
+| 32 | [Distribution CLI Operations](./specs/32-distribution-cli-operations.md) | Draft design for future CLI distribution workflows |
+| 99 | [Roadmap and Draft Status](./specs/99-roadmap.md) | What is core `1.0.0`, what is draft, and what to implement first |
 
 ---
 

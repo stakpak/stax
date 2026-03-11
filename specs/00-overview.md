@@ -2,9 +2,11 @@
 
 ## What is stax?
 
-stax is a **packaging standard** for AI agents. It defines how to describe, bundle, version, validate, and distribute an agent's configuration as an OCI artifact.
+stax is a **distribution standard** for AI agents. It defines how to describe, bundle, version, validate, verify, and distribute agent artifacts as OCI artifacts.
 
-stax does **not** run agents, orchestrate them, or manage their lifecycle. Those concerns belong to runtimes, orchestrators, IDEs, CLIs, and platforms built on top of the format.
+stax artifacts are the agent equivalent of `docker build`, `docker push`, and `docker pull`: authors build and publish immutable agent artifacts, and consumers pull, inspect, verify, materialize, install, or import them into the environments where agents run.
+
+stax does **not** run agents, orchestrate them, or manage their lifecycle. Those concerns belong to runtimes, orchestrators, IDEs, CLIs, hosted agent platforms, and cloud systems built on top of the format.
 
 stax is to agents what the OCI Image Spec is to containers, what `package.json` is to JavaScript packages, and what `Chart.yaml` is to Helm charts.
 
@@ -24,6 +26,7 @@ The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHOULD**, **SHOULD NOT**, 
 
 - **Authoring formats** for agents, packages, personas, prompt surfaces, MCP, rules, skills, knowledge, memory, and secrets
 - **A compiled config blob** stored in OCI
+- **Distribution semantics** for versioning, addressing, inspection, pull/push workflows, and reproducible builds
 - **Runtime profile artifacts** for portable non-secret runtime configuration when appropriate
 - **Source artifacts** for cacheable workspace snapshots shared across many agents
 - **Typed OCI layers** for each brain concern
@@ -41,6 +44,7 @@ These remain out of scope and are owned by consumers of stax artifacts.
 | Concern | Why it's out of scope | Who handles it |
 |---------|----------------------|----------------|
 | Running agents | stax describes what to run, not how | CLIs, IDEs, platforms, orchestrators |
+| Long-running lifecycle | Start, resume, suspend, shutdown, and job control are runtime concerns | Hosted runtimes, orchestrators, platforms |
 | Swarm topology | Multi-agent relationships are orchestration concerns | Agent orchestrators |
 | Replicas and scaling | Deployment behavior is operational | Orchestrators, K8s |
 | Resource limits | CPU / memory allocation is runtime infrastructure | Container runtimes, microVMs |
@@ -53,7 +57,7 @@ These remain out of scope and are owned by consumers of stax artifacts.
 ## Boundary principle
 
 > A stax artifact carries **what an agent is** and **what it needs to start**.
-> Everything about **where it runs, with what limits, under what policies, and in what topology** is extrinsic and belongs to the consumer.
+> Everything about **where it runs, how long it runs, with what limits, under what policies, and in what topology** is extrinsic and belongs to the consumer.
 
 This is the same separation used by successful packaging standards:
 
@@ -64,7 +68,7 @@ This is the same separation used by successful packaging standards:
 ## Core concepts
 
 ### Agent artifact
-A versioned OCI artifact containing an agent's canonical configuration: identity, adapter, prompt, persona, rules, MCP servers, skills, knowledge, memory seed, secret declarations, and resolved package metadata.
+A versioned OCI artifact containing an agent's canonical distribution payload: identity, adapter, prompt, persona, rules, MCP servers, skills, knowledge, memory seed, secret declarations, and resolved package metadata.
 
 ### Package artifact
 A reusable OCI artifact that contributes canonical layers such as MCP, skills, rules, knowledge, and secrets. Packages are merged into agents at build or materialization time according to the package merge rules.
@@ -82,13 +86,13 @@ The OCI `config` object for an agent or package. This is the canonical compiled 
 A typed OCI layer containing one logical concern, such as persona JSON or a gzipped tarball of skills.
 
 ### Adapter
-A runtime-specific description of how a canonical stax agent maps to a target runtime such as Claude Code, Codex, Cursor, or Windsurf.
+A runtime-specific description of how a canonical stax agent maps to a target runtime such as Claude Code, Codex, or OpenClaw. Future adapters MAY target other runtimes such as Cursor, Windsurf, or hosted platforms.
 
 ### Consumer
-Any tool that reads stax artifacts: a CLI, IDE plugin, runtime, orchestrator, registry-aware service, or platform.
+Any tool that reads stax artifacts: a CLI, IDE plugin, runtime, orchestrator, registry-aware service, hosted agent platform, or cloud control plane.
 
 ### Materialization
-The process of turning a canonical stax artifact into runtime-native files and settings. For example: rendering prompt templates, translating MCP to `.mcp.json`, and writing skills into a runtime-specific directory.
+The process of turning a canonical stax artifact into runtime-native files, settings, or import payloads. For example: rendering prompt templates, translating MCP to `.mcp.json`, writing skills into a runtime-specific directory, or preparing a hosted platform import bundle.
 
 ## Compatibility model
 
@@ -118,7 +122,7 @@ To deprecate a field or feature in a future minor version:
 
 Adapters MUST declare:
 
-- `type` — adapter identifier (for example `claude`)
+- `type` — adapter identifier (for example `claude-code`)
 - `runtime` — target runtime family (for example `claude-code`)
 - `adapterVersion` — adapter schema version
 - `features` — supported translation features
@@ -138,7 +142,7 @@ Deterministic packaging rules are defined in [03 — Layers](./03-layers.md).
 ```
 ┌──────────────────────────────────────────────────┐
 │                     stax                         │
-│               (packaging standard)               │
+│              (distribution standard)             │
 │                                                  │
 │  TypeScript SDK → OCI Artifact → Registry        │
 │                                                  │
@@ -170,6 +174,8 @@ A single implementation MAY satisfy one, two, or all three roles.
 
 ## Specification documents
 
+Specs `01`–`22` and `33`–`36` define the current normative `1.0.0` surface. Specs `23`–`32` are forward-looking drafts and are not part of `1.0.0` conformance. See [99 — Roadmap and Draft Status](./99-roadmap.md) for the status map.
+
 | Spec | Description |
 |------|-------------|
 | [01 — Agent Manifest](./01-agent-manifest.md) | The root manifest and compiled config blob |
@@ -194,3 +200,18 @@ A single implementation MAY satisfy one, two, or all three roles.
 | [20 — Adapter: `@stax/codex`](./20-adapter-codex.md) | Exact Codex adapter contract |
 | [21 — Profile: `@stax/openclaw/profile`](./21-openclaw-profile.md) | Portable OpenClaw runtime-profile artifact for `openclaw.json`-style config |
 | [22 — Workspace Sources](./22-workspace-sources.md) | Cacheable source artifacts and agent references for shared Git/workspace snapshots |
+| [33 — Adapter: `@stax/cursor`](./33-adapter-cursor.md) | Exact Cursor IDE adapter contract |
+| [34 — Adapter: `@stax/github-copilot`](./34-adapter-github-copilot.md) | Exact GitHub Copilot adapter contract |
+| [35 — Adapter: `@stax/windsurf`](./35-adapter-windsurf.md) | Exact Windsurf adapter contract |
+| [36 — Adapter: `@stax/opencode`](./36-adapter-opencode.md) | Exact OpenCode adapter contract |
+| [23 — Registry, Discovery, and Install](./23-registry-discovery-install.md) | Draft design for search, install plans, channels, and registry discovery |
+| [24 — Trust, Policy, and Attestations](./24-trust-policy-attestations.md) | Draft design for signatures, approvals, provenance, revocation, and policy gates |
+| [25 — Hosted Platform Adapter Contract](./25-hosted-platform-adapter-contract.md) | Draft design for non-filesystem consumers and hosted platform imports |
+| [26 — Compatibility and Capability Metadata](./26-compatibility-and-capability-metadata.md) | Draft design for preflight compatibility and requirement summaries |
+| [27 — Package and Marketplace Metadata](./27-package-and-marketplace-metadata.md) | Draft design for ecosystem and catalog metadata |
+| [28 — Conformance and Certification](./28-conformance-and-certification.md) | Draft design for interoperability testing and certification |
+| [29 — Source Governance and Provenance](./29-source-governance-and-provenance.md) | Draft design for source snapshot provenance and enterprise controls |
+| [30 — Package and MCP Safety Policy](./30-package-and-mcp-safety-policy.md) | Draft design for package and MCP allow/deny policy |
+| [31 — Registry Lifecycle, Promotion, and Mirroring](./31-registry-lifecycle-and-mirroring.md) | Draft design for promotion, mirroring, deprecation, and yanking |
+| [32 — Distribution CLI Operations](./32-distribution-cli-operations.md) | Draft design for future CLI distribution workflows |
+| [99 — Roadmap and Draft Status](./99-roadmap.md) | Status map for `1.0.0`, forward drafts, and implementation order |

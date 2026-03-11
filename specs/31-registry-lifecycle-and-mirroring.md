@@ -1,0 +1,392 @@
+# 31 — Registry Lifecycle, Promotion, and Mirroring
+
+> Draft design document. This is forward-looking and not part of stax `1.0.0` conformance.
+
+## Overview
+
+Broad distribution requires more than storing artifacts in OCI repositories.
+
+Teams need to promote, mirror, deprecate, yank, revoke, and copy artifacts between environments without mutating bytes.
+
+This document defines future lifecycle and mirroring behavior for stax registries.
+
+## Design goals
+
+Registry lifecycle behavior SHOULD:
+
+1. keep digests immutable
+2. allow channels and approvals to move independently of artifact bytes
+3. support public-to-private mirroring
+4. preserve referrers and trust metadata
+5. support rollback by digest selection
+
+## Non-goals
+
+This document does not define:
+
+- runtime execution behavior
+- environment-specific deployment semantics
+- secret replication
+- session or job migration
+
+## Terminology
+
+### Publish
+
+Make an artifact digest available in a registry under one or more references.
+
+### Promote
+
+Move a mutable channel or approval marker to a different immutable digest.
+
+### Deprecate
+
+Mark an artifact as discouraged but still installable.
+
+### Yank
+
+Remove an artifact from normal version or channel resolution without deleting its bytes.
+
+### Revoke
+
+Mark an artifact as unsafe or untrusted such that installation SHOULD fail.
+
+### Copy
+
+Transfer one artifact and its associated metadata from one registry location to another.
+
+### Mirror
+
+Synchronize a namespace, package set, or policy-selected artifact set between registries.
+
+## Lifecycle operations
+
+Registries SHOULD support:
+
+- publish
+- promote
+- deprecate
+- yank
+- revoke
+- mirror
+- copy
+
+These operations MUST NOT change artifact digests.
+
+## Publish
+
+Publishing SHOULD:
+
+1. upload the OCI manifest, layers, and config blob
+2. index discovery metadata
+3. attach or discover existing referrers
+4. optionally assign one or more channels
+
+### Publish rules
+
+- a published digest MUST remain immutable
+- publishing the same digest multiple times MAY be idempotent
+- publishing the same `(package, version)` with a different digest MUST be rejected unless an explicit draft workflow exists outside this spec
+
+## Lifecycle states
+
+Registries SHOULD support these version lifecycle states:
+
+- `active`
+- `deprecated`
+- `yanked`
+- `revoked`
+
+### State semantics
+
+- `active` means normally discoverable and installable
+- `deprecated` means installable but discouraged
+- `yanked` means excluded from default resolution and discovery surfaces unless explicitly requested
+- `revoked` means blocked by default from install, import, promotion, and mirroring
+
+### State transition rules
+
+Recommended transitions:
+
+- `active -> deprecated`
+- `active -> yanked`
+- `active -> revoked`
+- `deprecated -> yanked`
+- `deprecated -> revoked`
+- `yanked -> active`
+- `yanked -> revoked`
+
+Registries MAY allow `deprecated -> active` if the deprecation was informational rather than a security event.
+
+Registries SHOULD NOT allow `revoked -> active` without an explicit override record or administrator action.
+
+## Deprecation
+
+Deprecation SHOULD record:
+
+- actor identity
+- timestamp
+- reason
+- optional replacement version or digest
+
+Deprecated artifacts:
+
+- MUST remain directly installable by exact version or digest
+- SHOULD be marked clearly in search and package views
+- SHOULD generate warnings during install and promotion workflows
+
+## Yanking
+
+Yanking is a distribution control, not a trust judgment.
+
+Yanked artifacts:
+
+- MUST remain addressable by exact digest
+- MUST NOT be selected by default from channels, latest, or semver-range resolution
+- SHOULD be hidden from default search results unless a client requests yanked entries
+
+Yanking SHOULD record:
+
+- actor identity
+- timestamp
+- reason
+
+## Revocation
+
+Revocation is a trust decision.
+
+A revoked artifact:
+
+- MUST be surfaced as revoked in lifecycle metadata
+- SHOULD be blocked from install, import, and promotion by default
+- SHOULD be blocked from mirroring unless a policy override exists
+
+Revocation metadata SHOULD be backed by or aligned with a revocation attestation as described in [24 — Trust, Policy, and Attestations](./24-trust-policy-attestations.md).
+
+## Channels
+
+Channels are mutable names that point to immutable digests.
+
+Suggested initial channel names:
+
+- `stable`
+- `beta`
+- `canary`
+- `approved`
+
+Enterprises MAY define additional channels such as:
+
+- `staging-approved`
+- `prod-approved`
+
+### Channel rules
+
+- a channel MUST resolve to exactly one digest at a time
+- moving a channel MUST NOT mutate artifact bytes
+- registries SHOULD record channel movement history with actor identity and timestamp
+- a channel SHOULD NOT point to a revoked digest unless an explicit insecure override is in effect
+
+## Promotion
+
+Promotion SHOULD move channel pointers or approval state, not rebuild artifacts.
+
+A promotion operation SHOULD include:
+
+- package name
+- source digest
+- target channel
+- actor identity
+- timestamp
+- optional policy result reference
+
+Example:
+
+```json
+{
+  "package": "acme/backend-engineer",
+  "digest": "sha256:abc...",
+  "channel": "stable",
+  "promotedBy": "release-bot@acme",
+  "promotedAt": "2026-03-11T15:00:00Z"
+}
+```
+
+### Promotion gates
+
+Registries or install brokers SHOULD support policy-controlled promotion requiring:
+
+- valid signature
+- no revocation
+- required evaluations
+- required approvals
+
+## Rollback
+
+Rollback is channel movement or selection of an older digest.
+
+Rollback MUST NOT require rebuilding an artifact.
+
+Registries SHOULD preserve enough channel history for operators to determine:
+
+- what digest was previously on a channel
+- when it moved
+- who moved it
+
+## Copy
+
+Copy is an explicit one-off transfer of an artifact from one registry location to another.
+
+A conforming copy operation SHOULD transfer:
+
+- manifest
+- config blob
+- layers
+- referrers when supported
+- lifecycle metadata when portable
+
+Copy MUST preserve the original digest.
+
+## Mirror
+
+Mirror is a repeated or policy-driven synchronization operation.
+
+Mirroring SHOULD copy:
+
+- artifact manifest
+- layers
+- config blob
+- referrers
+- discovery metadata when possible
+
+Mirroring MUST preserve the original digest.
+
+### Mirror modes
+
+Registries SHOULD support at least these mirror modes:
+
+- `digest-only`
+- `package-scope`
+- `namespace-scope`
+
+Definitions:
+
+- `digest-only` copies one explicitly selected digest
+- `package-scope` mirrors some or all versions of one package
+- `namespace-scope` mirrors a set of packages selected by namespace or policy
+
+### Mirror policy behavior
+
+Mirrors SHOULD be able to enforce:
+
+- allowed upstream registries
+- allowed namespaces
+- required signatures
+- required approvals
+- blocked lifecycle states
+
+### Downstream metadata
+
+A mirror MAY attach downstream-local metadata such as:
+
+- local approvals
+- local policy-result attestations
+- downstream channel pointers
+
+Downstream-local metadata MUST NOT alter upstream digests.
+
+## Discovery behavior across mirrors
+
+When discovery metadata is mirrored:
+
+- the original publisher identity SHOULD be preserved
+- the downstream registry MAY add its own mirror identity
+- upstream lifecycle state SHOULD remain visible when known
+- downstream-local lifecycle controls MAY be layered on top
+
+Example:
+
+- upstream marks version as `deprecated`
+- downstream MAY additionally yank it locally
+- downstream MUST NOT claim the upstream digest bytes changed
+
+## Deletion
+
+Deletion of artifact bytes is discouraged for published digests referenced by discovery metadata.
+
+Registries SHOULD prefer:
+
+- deprecation
+- yanking
+- revocation
+
+over hard deletion.
+
+If hard deletion occurs, registries SHOULD retain an auditable tombstone record when possible.
+
+## Audit records
+
+Lifecycle-changing operations SHOULD generate audit records containing:
+
+- operation type
+- package name
+- digest
+- actor identity
+- timestamp
+- reason
+
+Recommended operations to audit:
+
+- publish
+- promote
+- deprecate
+- yank
+- revoke
+- copy
+- mirror
+
+## API surface
+
+Registries or companion lifecycle services SHOULD expose logical operations equivalent to:
+
+```text
+POST /v1/promotions
+POST /v1/deprecations
+POST /v1/yanks
+POST /v1/revocations
+POST /v1/copies
+POST /v1/mirrors
+GET /v1/packages/{name}/channels
+GET /v1/packages/{name}/history
+```
+
+The exact transport and authentication model is implementation-defined.
+
+## CLI mapping
+
+The reference CLI SHOULD eventually expose:
+
+```bash
+stax promote <ref> --channel stable
+stax deprecate <ref> --reason "use 3.2.0"
+stax yank <ref> --reason "bad release"
+stax revoke <ref> --reason compromised
+stax copy <ref> <target>
+stax mirror <source> <target>
+```
+
+## Relationship to trust and install
+
+This document works with:
+
+- [23 — Registry, Discovery, and Install](./23-registry-discovery-install.md) for discovery, channels, and resolution
+- [24 — Trust, Policy, and Attestations](./24-trust-policy-attestations.md) for revocation and promotion gates
+
+Lifecycle metadata influences resolution and distribution policy, but does not replace cryptographic trust.
+
+## Open design questions
+
+The following need further design:
+
+1. whether promotion records should be their own attestations
+2. how discovery metadata should behave across mirrored registries
+3. how to reconcile upstream and downstream lifecycle states in a standard JSON schema

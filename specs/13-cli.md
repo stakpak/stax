@@ -6,6 +6,16 @@
 
 The CLI is both a user tool and a conformance reference for the specification.
 
+Conceptually:
+
+- `stax build` is the agent equivalent of `docker build`
+- `stax push` is the agent equivalent of `docker push`
+- `stax pull` is the agent equivalent of `docker pull`
+
+Consumers may then materialize or import the pulled artifact into a specific runtime or platform.
+
+Search, install, promotion, mirror, and hosted-import workflows beyond this baseline are forward draft work described in [23 — Registry, Discovery, and Install](./23-registry-discovery-install.md), [31 — Registry Lifecycle, Promotion, and Mirroring](./31-registry-lifecycle-and-mirroring.md), and [32 — Distribution CLI Operations](./32-distribution-cli-operations.md).
+
 ## Commands
 
 ### `stax init`
@@ -71,11 +81,11 @@ Validation MUST cover at least:
 
 ### `stax materialize`
 
-Resolve an artifact and translate it into runtime-native files.
+Resolve an artifact and translate it into runtime-native files or another consumer-native installation payload.
 
 ```bash
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --out ./output
-stax materialize ./dist/backend-engineer.oci --adapter cursor --out ./cursor-output
+stax materialize ./dist/backend-engineer.oci --adapter codex --out ./codex-output
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --json
 ```
 
@@ -84,6 +94,7 @@ A conforming implementation SHOULD support:
 - filesystem output
 - machine-readable JSON output
 - warnings for lossy translations
+- import-plan output for non-filesystem consumers when applicable
 
 ### `stax inspect`
 
