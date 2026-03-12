@@ -1,0 +1,23 @@
+version: 1
+applications:
+  - appRoot: apps/docs
+    frontend:
+      buildPath: /
+      phases:
+        preBuild:
+          commands:
+            - corepack enable
+            - corepack prepare pnpm@10.28.1 --activate
+            - pnpm install --frozen-lockfile
+        build:
+          commands:
+            - pnpm --filter docs build
+      artifacts:
+        baseDirectory: apps/docs/.amplify-hosting
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - apps/docs/node_modules/**/*
+          - packages/*/node_modules/**/*

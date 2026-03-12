@@ -6,6 +6,10 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
+const isAmplifyBuild = Boolean(
+  process.env.AWS_BRANCH || process.env.AWS_APP_ID || process.env.AMPLIFY_MONOREPO_APP_ROOT,
+);
+
 export default defineConfig({
   server: {
     port: 3000,
@@ -23,7 +27,7 @@ export default defineConfig({
     }),
     react(),
     nitro({
-      preset: "node-server",
+      preset: isAmplifyBuild ? "aws-amplify" : "node-server",
     }),
   ],
 });
