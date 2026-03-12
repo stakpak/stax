@@ -1,15 +1,63 @@
 ---
 title: stax diff
-description: Compare two artifacts or two local projects
+description: Compare two artifacts or local projects side by side
 ---
 
-Compare two artifacts or two local projects.
+Compare two artifacts or two local projects to see what changed between versions. The diff identifies changed layers, updated digests, package resolution differences, and materialization impact.
 
 ## Usage
 
 ```bash
+# Compare two registry artifacts
 stax diff ghcr.io/myorg/agents/backend-engineer:3.0.0 ghcr.io/myorg/agents/backend-engineer:3.1.0
+
+# Compare two local projects
 stax diff ./project-a ./project-b
+
+# Compare a local project against a registry artifact
+stax diff ./project ghcr.io/myorg/agents/backend-engineer:3.1.0
 ```
 
-A diff SHOULD identify changed layers, changed digests, package resolution differences, and materialization warnings.
+## What the diff shows
+
+The diff compares artifacts across multiple dimensions:
+
+| Dimension       | What it reports                                                     |
+| --------------- | ------------------------------------------------------------------- |
+| Layers          | Added, removed, or changed layers with size deltas                  |
+| Digests         | Layer content digest changes                                        |
+| Config          | Changes to identity, runtime, model, or persona                     |
+| Packages        | Added, removed, or updated dependency versions                      |
+| Materialization | Whether the changes affect adapter fidelity or produce new warnings |
+
+## Example output
+
+```text
+diff backend-engineer:3.0.0 → backend-engineer:3.1.0
+
+  config     unchanged
+  prompt     changed   (2.1 KB → 2.4 KB, +300 bytes)
+  persona    unchanged
+  mcp        changed   (0.5 KB → 0.7 KB, +1 server added)
+  skills     changed   (4.3 KB → 5.1 KB, +1 skill added)
+  rules      unchanged
+  secrets    changed   (+1 secret declared: REDIS_URL)
+
+  Packages:
+    @acme/mcp-bundle  sha256:4d2e7b… → sha256:8f1a3c…
+
+  Materialization impact:
+    claude-code: no fidelity change
+    codex: new secret REDIS_URL requires consumer configuration
+```
+
+## When to use diff
+
+- **Before releasing** — Verify that a new version contains only the intended changes
+- **Reviewing third-party updates** — Understand what changed in an upstream package or agent
+- **Debugging** — Identify why materialization produces different output between versions
+
+## Related commands
+
+- [`stax inspect`](/docs/cli/inspect) — View metadata for a single artifact
+- [`stax extract`](/docs/cli/extract) — Extract layers for manual comparison with standard diff tools

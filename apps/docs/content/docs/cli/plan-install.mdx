@@ -1,9 +1,9 @@
 ---
 title: stax plan-install
-description: Generate a machine-readable install plan without applying changes
+description: Preview materialization as a machine-readable install plan
 ---
 
-Generate a machine-readable install plan without applying changes.
+Generate a machine-readable install plan without applying any changes. This lets consumers, platforms, and CI pipelines preview what materialization would produce — which adapter is selected, what files would be written, what fidelity to expect, and what warnings would be emitted.
 
 ## Usage
 
@@ -14,18 +14,50 @@ stax plan-install ghcr.io/myorg/agents/backend-engineer:3.1.0 --consumer acme-cl
 
 ## Options
 
-| Flag         | Description                  |
-| ------------ | ---------------------------- |
-| `--consumer` | Target consumer/runtime      |
-| `--json`     | Output machine-readable JSON |
+| Flag              | Description                           |
+| ----------------- | ------------------------------------- |
+| `--consumer <id>` | Target consumer or runtime identifier |
+| `--json`          | Output machine-readable JSON          |
 
-## Plan Contents
+## Plan contents
 
-A conforming implementation SHOULD include:
+The install plan includes:
 
-- Selected adapter
-- Compatibility reasoning
-- Fidelity summary
-- Planned writes or remote targets
-- Warnings
-- Trust summary when available
+| Field          | Description                                                |
+| -------------- | ---------------------------------------------------------- |
+| Adapter        | Which adapter would handle the translation                 |
+| Compatibility  | Whether the artifact is fully compatible with the target   |
+| Fidelity       | Expected translation fidelity (`full`, `high`, or `lossy`) |
+| Planned writes | List of files or remote targets that would be created      |
+| Warnings       | Lossy translation warnings, unsupported features           |
+| Trust summary  | Signature and attestation status (when available)          |
+
+## Example output
+
+```text
+Plan: materialize backend-engineer:3.1.0 → codex
+
+  Adapter:       codex v1.0.0
+  Compatibility: compatible
+  Fidelity:      high (2 warnings)
+
+  Planned writes:
+    AGENTS.md           (2.4 KB)
+    codex.toml          (0.3 KB)
+    .codex/skills/      (3 files, 4.1 KB)
+
+  Warnings:
+    ⚠ memory seeds not supported — will be skipped
+    ⚠ skill variable ${STAX_WORKSPACE} has no equivalent
+```
+
+## When to use plan-install
+
+- **Before materializing** — Preview what files will be written and whether any information will be lost
+- **In CI pipelines** — Generate plans for review before applying changes to production environments
+- **Platform integrations** — Non-filesystem consumers can use the JSON output to understand what configuration an artifact provides
+
+## Related commands
+
+- [`stax materialize`](/docs/cli/materialize) — Apply the materialization (write files)
+- [`stax inspect`](/docs/cli/inspect) — View artifact metadata without planning materialization

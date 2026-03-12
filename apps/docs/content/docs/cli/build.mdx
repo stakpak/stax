@@ -3,7 +3,7 @@ title: stax build
 description: Compile TypeScript definitions and produce deterministic OCI layers
 ---
 
-Compile TypeScript definitions, resolve packages, produce deterministic OCI layers, and write `stax.lock` when needed.
+Compile TypeScript agent definitions, resolve package dependencies, produce deterministic OCI layers, and write `stax.lock` when dependencies change. This is the core command that turns your source files into an immutable, content-addressed artifact.
 
 ## Usage
 
@@ -18,14 +18,65 @@ stax build --symlink-mode flatten
 
 ## Options
 
-| Flag             | Description                             |
-| ---------------- | --------------------------------------- |
-| `--persona`      | Build for a specific persona            |
-| `--all-personas` | Build for all defined personas          |
-| `--dry-run`      | Preview build without writing artifacts |
-| `--refresh-lock` | Force refresh of the lockfile           |
-| `--symlink-mode` | Control symlink handling (`flatten`)    |
+| Flag               | Description                                                      |
+| ------------------ | ---------------------------------------------------------------- |
+| `--persona <name>` | Build for a specific persona only                                |
+| `--all-personas`   | Build separate artifacts for every defined persona               |
+| `--dry-run`        | Preview the build without writing artifacts to cache             |
+| `--refresh-lock`   | Force re-resolution of all dependencies and update `stax.lock`   |
+| `--symlink-mode`   | Control symlink handling: `flatten` resolves symlinks to targets |
 
-## Output
+## What happens during a build
 
-Artifact stored in the local cache (`~/.stax/cache/`).
+1. **Validate** — Checks all definitions for type correctness, required fields, path existence, dependency cycles, MCP secret references, and archive safety rules
+2. **Resolve dependencies** — Walks the dependency tree, resolves package references against the lockfile or registry, detects conflicts
+3. **Merge** — Combines configuration from all resolved packages using [merge rules](/docs/packages/merge-rules) (prompts concatenate, rules append, MCP servers merge by key)
+4. **Produce layers** — Creates deterministic OCI layers for each content type (config, prompt, persona, MCP, skills, rules, knowledge, secrets, memory)
+5. **Write lockfile** — Updates `stax.lock` if any dependency digests changed
+6. **Cache** — Stores the artifact in `~/.stax/cache/` indexed by content digest
+
+## Example output
+
+```text
+✓ validated agent definition
+✓ resolved 3 packages
+  @acme/compliance-rules (sha256:f8a1c3…)
+  @acme/mcp-bundle (sha256:4d2e7b…)
+  @acme/shared-knowledge (sha256:9c0f1a…)
+✓ built 8 layers (14.7 KB)
+✓ artifact cached — sha256:a3f8c1…e7d2
+```
+
+## Deterministic builds
+
+Builds are deterministic — the same inputs always produce byte-identical artifacts. This is achieved through canonical JSON serialization (sorted keys, consistent formatting), sorted tar archive entries with fixed metadata, and locked dependency digests in `stax.lock`.
+
+Two developers building the same project at different times will produce the same output digest, enabling reliable verification and caching.
+
+## Building with personas
+
+When an agent defines multiple personas, you can target a specific one or build all of them:
+
+```bash
+stax build                        # Default persona
+stax build --persona maya-chen    # Named persona
+stax build --all-personas         # All personas as separate artifacts
+```
+
+Each persona produces a distinct artifact with its own identity, prompt template variables, and potentially different model parameters.
+
+## Common errors
+
+| Exit code | Cause                                  | Fix                                           |
+| --------- | -------------------------------------- | --------------------------------------------- |
+| 1         | Validation failed                      | Run `stax validate` for details               |
+| 2         | Build error (layer exceeds size limit) | Reduce layer content or use workspace sources |
+| 4         | Dependency cycle or missing package    | Check `dependencies` in your definition       |
+
+See [Troubleshooting](/docs/cli/troubleshooting) for detailed error recovery.
+
+## Related commands
+
+- [`stax validate`](/docs/cli/validate) — Check definitions without building
+- [`stax inspect`](/docs/cli/inspect) — Examine a built artifact
+- [`stax push`](/docs/cli/push) — Publish the artifact to a registry

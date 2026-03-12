@@ -1,0 +1,170 @@
+---
+title: Glossary
+description: Definitions of key terms used throughout the stax specification and documentation
+---
+
+This glossary defines terms that carry specific meaning within the stax specification. Terms marked with **(normative)** have precise definitions that affect conformance.
+
+## A
+
+### Adapter **(normative)**
+
+A translator that converts a canonical stax artifact into runtime-native files for a specific consumer. Each adapter targets one runtime (e.g., `claude-code`, `codex`, `cursor`) and may support both _portable_ and _exact_ materialization modes. See [Adapters](/docs/spec/adapters).
+
+### Agent artifact **(normative)**
+
+An OCI artifact with media type `application/vnd.stax.agent.config.v1+json` that contains the complete, immutable definition of an AI agent — its identity, prompt, persona, rules, skills, knowledge, MCP servers, secrets declarations, and runtime hints.
+
+### Annotation
+
+An OCI manifest annotation (key-value string pair) used to record metadata about an artifact. stax defines annotations under the `dev.stax.*` namespace. See [OCI Artifact Format](/docs/spec/oci-artifact-format).
+
+### Archive safety rules **(normative)**
+
+Constraints on tar+gzip layer contents that prevent path traversal, symlink escapes, absolute paths, and other filesystem attacks. See [Layers](/docs/spec/layers).
+
+## B
+
+### Build
+
+The process of compiling TypeScript agent definitions into a deterministic OCI artifact. Performed by `stax build`. See [CLI — build](/docs/cli/build).
+
+## C
+
+### Canonical
+
+The single authoritative representation of a concept in stax. A _canonical artifact_ is the OCI artifact produced by `stax build`. _Canonical JSON_ follows deterministic serialization rules (sorted keys, no trailing commas, no comments). _Canonical layers_ are the unambiguous source-of-truth before adapter translation.
+
+### Conformance **(normative)**
+
+The degree to which an implementation satisfies the specification. stax defines three levels: **must-level** (required for any conforming implementation), **should-level** (expected unless justified), and **may-level** (optional). See [Specification — Conformance](/docs/spec#conformance-levels).
+
+### Consumer
+
+Any system that reads a stax artifact — a runtime, platform, CI pipeline, or human. Consumers _materialize_ artifacts into runtime-native files or _inspect_ them for metadata.
+
+## D
+
+### Dependency **(normative)**
+
+A reference from an agent or package to another stax package. Dependencies are declared in `defineAgent()` or `definePackage()` and resolved at build time using the lockfile. See [Dependencies](/docs/packages/dependencies).
+
+### Deterministic build **(normative)**
+
+A build where the same inputs always produce byte-identical outputs. stax achieves this through canonical JSON serialization, sorted archive entries, fixed tar metadata, and locked dependency digests. See [Layers](/docs/spec/layers).
+
+## E
+
+### Exact mode **(normative)**
+
+A materialization mode where the adapter attempts byte-for-byte fidelity with the runtime's native file format. Contrast with _portable mode_. See [Materialization](/docs/spec/materialization).
+
+## F
+
+### Fidelity **(normative)**
+
+The degree of accuracy achieved when translating a canonical artifact into a specific runtime's format. Adapters report fidelity as `full`, `high`, or `lossy`. See [Adapters — Fidelity](/docs/spec/adapters).
+
+## I
+
+### Instruction tree **(normative)**
+
+A directory structure (`instructions/`) containing path-scoped instruction files. Each file applies only when the agent works within a matching filesystem path. See [Instruction Trees](/docs/spec/instruction-trees).
+
+## K
+
+### Knowledge **(normative)**
+
+Static reference documents (Markdown, text, PDF, CSV) packaged in the `knowledge/` layer. Knowledge is read-only and immutable once built. Contrast with _memory_, which is mutable. See [Knowledge](/docs/spec/knowledge).
+
+## L
+
+### Layer **(normative)**
+
+A content-addressed blob in an OCI artifact. Each layer has a specific media type (e.g., `application/vnd.stax.prompt.v1+markdown`) and contains one category of agent configuration. See [Layers](/docs/spec/layers).
+
+### Lockfile **(normative)**
+
+`stax.lock` — a JSON file recording the exact digest of every resolved dependency. Ensures reproducible builds across machines and time. See [Lockfile](/docs/packages/lockfile).
+
+### Lossy **(normative)**
+
+A translation where some information from the canonical artifact cannot be represented in the target runtime's format. Adapters MUST emit warnings when lossy translation occurs. See [Materialization](/docs/spec/materialization).
+
+## M
+
+### Materialization **(normative)**
+
+The process of translating a canonical artifact into runtime-native files via an adapter. Performed by `stax materialize`. See [Materialization](/docs/spec/materialization).
+
+### MCP (Model Context Protocol) **(normative)**
+
+A protocol for connecting AI agents to external tools and data sources. stax packages MCP server declarations (transport, command, arguments, environment, secrets) in the `mcp` layer. See [MCP](/docs/spec/mcp).
+
+### Memory **(normative)**
+
+Mutable, session-scoped or persistent state owned by the consumer runtime. stax artifacts may include _seed memory_ (initial state) but consumers own the runtime memory lifecycle. Contrast with _knowledge_, which is immutable. See [Memory](/docs/spec/memory).
+
+### Merge rules **(normative)**
+
+The rules governing how values from multiple packages combine when an agent depends on several packages. Different field types use different strategies: prompts concatenate, rules append, MCP servers merge by key, secrets union. See [Merge Rules](/docs/packages/merge-rules).
+
+## N
+
+### Normative
+
+Language that defines required behavior. stax uses RFC 2119 keywords: **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY**.
+
+## O
+
+### OCI (Open Container Initiative)
+
+The industry standard for container image and artifact distribution. stax uses OCI manifests, content-addressed layers, and registry APIs to store and distribute agent artifacts. See [OCI Artifact Format](/docs/spec/oci-artifact-format).
+
+## P
+
+### Package **(normative)**
+
+A reusable bundle of agent configuration (rules, skills, MCP servers, knowledge, secrets) that can be depended on by agents or other packages. Defined with `definePackage()`. See [Packages](/docs/spec/packages).
+
+### Persona **(normative)**
+
+An identity overlay containing a name, role, expertise, communication style, and behavioral traits. Personas are defined with `definePersona()` and referenced by agents. See [Persona](/docs/spec/persona).
+
+### Portable mode **(normative)**
+
+A materialization mode optimized for broad compatibility across runtimes. May use simplified file structures. Contrast with _exact mode_. See [Materialization](/docs/spec/materialization).
+
+## R
+
+### Referrer
+
+An OCI artifact that references another artifact via the `subject` field. stax uses referrers for signatures, attestations, approvals, and provenance metadata. See [OCI Artifact Format — Referrers](/docs/spec/oci-artifact-format).
+
+### Runtime
+
+A system that executes AI agents — Claude Code, Codex CLI, Cursor, GitHub Copilot, Windsurf, OpenCode, etc. Each runtime has its own configuration format; adapters translate stax artifacts into these formats.
+
+## S
+
+### Secret **(normative)**
+
+A named credential declaration in the `secrets` layer. stax artifacts declare _what secrets an agent needs_ but never contain secret values. Consumers supply actual values at runtime. See [Secrets](/docs/spec/secrets).
+
+### Skill **(normative)**
+
+A Markdown file with YAML frontmatter that defines a reusable capability. Skills are packaged in the `skills` layer and may contain template variables. See [Skills](/docs/spec/skills).
+
+### Source artifact **(normative)**
+
+An OCI artifact containing a workspace source snapshot (e.g., a Git checkout). Built with `stax build-source` and referenced by agents that need repository context. See [Workspace Sources](/docs/spec/workspace-sources).
+
+### Surface **(normative)**
+
+A named slot in the agent's instruction hierarchy (e.g., `system`, `project`, `user`, `session`). Surfaces define where prompt content and rules are placed in the final instruction tree. See [Surfaces](/docs/spec/surfaces).
+
+## V
+
+### Validation **(normative)**
+
+The process of checking agent definitions against the specification's structural and semantic rules. Performed by `stax validate` or as part of `stax build`. See [CLI — validate](/docs/cli/validate).

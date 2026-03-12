@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import type { Lockfile } from "./types.ts";
 
 export function createLockfile(resolved: {
@@ -18,6 +19,25 @@ export function createLockfile(resolved: {
   };
 }
 
-export function readLockfile(_path: string): Lockfile {
-  throw new Error("Not implemented");
+export async function readLockfile(filePath: string): Promise<Lockfile> {
+  let content: string;
+  try {
+    content = await readFile(filePath, "utf-8");
+  } catch {
+    throw new Error(`Lockfile not found: ${filePath}`);
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error(`Malformed lockfile JSON: ${filePath}`);
+  }
+
+  const obj = parsed as Record<string, unknown>;
+  if (obj.lockVersion !== 1) {
+    throw new Error(`Invalid lockVersion: ${obj.lockVersion}. Expected 1`);
+  }
+
+  return parsed as Lockfile;
 }

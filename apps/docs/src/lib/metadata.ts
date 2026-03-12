@@ -31,7 +31,7 @@ export function createMetadata({
       { property: "og:description", content: description },
       { property: "og:type", content: type },
       ...(absoluteUrl ? [{ property: "og:url", content: absoluteUrl }] : []),
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
       ...(noindex ? [{ name: "robots", content: "noindex, nofollow" }] : []),

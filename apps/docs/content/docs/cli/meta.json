@@ -21,6 +21,8 @@
     "login",
     "---Configuration---",
     "config",
-    "exit-codes"
+    "exit-codes",
+    "---Help---",
+    "troubleshooting"
   ]
 }

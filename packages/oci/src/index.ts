@@ -1,8 +1,9 @@
 export { createManifest } from "./manifest.ts";
 export { parseReference, type OciReference } from "./reference.ts";
+export { registryUrl, sha256hex } from "./registry.ts";
 export { push } from "./push.ts";
-export { pull } from "./pull.ts";
-export { inspect } from "./inspect.ts";
+export { pull, type PullResult } from "./pull.ts";
+export { inspect, type InspectResult } from "./inspect.ts";
 
 export type { OciManifest, OciLayer, OciConfig } from "./types.ts";
 

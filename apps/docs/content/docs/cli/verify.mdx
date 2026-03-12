@@ -1,12 +1,62 @@
 ---
 title: stax verify
-description: Verify signatures or attestations attached via OCI referrers
+description: Verify signatures and attestations attached to an artifact
 ---
 
-Verify signatures or attestations attached via OCI referrers.
+Verify cryptographic signatures or attestations attached to an artifact via OCI referrers. This validates the artifact's provenance, integrity, and any policy attestations before you trust it.
 
 ## Usage
 
 ```bash
 stax verify ghcr.io/myorg/agents/backend-engineer:3.1.0
 ```
+
+## What gets verified
+
+The verify command checks OCI referrer artifacts attached to the target manifest:
+
+| Check        | Description                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| Signatures   | Validates cryptographic signatures (e.g., cosign, Notation) against trusted keys or certificate chains |
+| Attestations | Verifies build provenance, SBOM, or policy attestations                                                |
+| Integrity    | Confirms that layer digests in the manifest match actual content                                       |
+
+## Example output
+
+```text
+✓ verified ghcr.io/myorg/agents/backend-engineer:3.1.0
+
+  Signatures:
+    ✓ cosign signature by deploy@acme.dev (valid)
+
+  Attestations:
+    ✓ build provenance (GitHub Actions, run #1234)
+    ✓ policy: acme-compliance-v2 (approved by security@acme.dev)
+
+  Integrity:
+    ✓ all 7 layer digests verified
+```
+
+A failing verification:
+
+```text
+✗ verification failed — ghcr.io/myorg/agents/backend-engineer:3.1.0
+
+  ✗ no signatures found
+  ⚠ attestation "acme-compliance-v2" has expired (2024-12-01)
+
+Exit code: 6
+```
+
+## When to use verify
+
+- **Before materializing untrusted artifacts** — Confirm provenance before running agent configuration
+- **In CI/CD pipelines** — Gate deployments on signature verification
+- **Compliance workflows** — Verify that required policy attestations are present and valid
+
+## Related commands
+
+- [`stax inspect`](/docs/cli/inspect) — View artifact metadata including referrer annotations
+- [`stax pull`](/docs/cli/pull) — Pull the artifact (does not verify by default)
+
+See also: [Trust, Policy, and Attestations](/docs/spec) (draft specification)

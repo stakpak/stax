@@ -17,10 +17,12 @@ export const Route = createRootRoute({
       {
         name: "theme-color",
         content: "#09090b",
+        media: "(prefers-color-scheme: dark)",
       },
       {
-        name: "color-scheme",
-        content: "dark",
+        name: "theme-color",
+        content: "#fcfcfd",
+        media: "(prefers-color-scheme: light)",
       },
     ],
     links: [
@@ -37,17 +39,12 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className="dark"
-      style={{ backgroundColor: "#09090b", color: "#fafafa", colorScheme: "dark" }}
-    >
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body className="flex flex-col min-h-screen" style={{ backgroundColor: "#09090b" }}>
-        <RootProvider theme={{ defaultTheme: "dark" }}>
+      <body className="flex flex-col min-h-screen">
+        <RootProvider theme={{ defaultTheme: "system" }}>
           <Outlet />
         </RootProvider>
         <Scripts />

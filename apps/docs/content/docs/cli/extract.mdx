@@ -1,12 +1,54 @@
 ---
 title: stax extract
-description: Extract canonical layers for debugging
+description: Extract canonical layer contents to disk for debugging
 ---
 
-Extract canonical layers for debugging.
+Extract the raw canonical layers from an artifact to a directory. Unlike [`stax materialize`](/docs/cli/materialize) which translates content through an adapter, `extract` dumps the unmodified layer contents exactly as they exist in the OCI artifact — useful for debugging, auditing, and understanding what a build produced.
 
 ## Usage
 
 ```bash
 stax extract ghcr.io/myorg/agents/backend-engineer:3.1.0 ./output/
+stax extract sha256:a3f8c1…e7d2 ./output/
 ```
+
+## What gets extracted
+
+Each layer is written to a subdirectory matching its content type:
+
+```text
+output/
+├── config.json          # Agent manifest (identity, runtime, model)
+├── prompt.md            # System prompt
+├── persona.json         # Persona definition
+├── mcp.json             # MCP server declarations
+├── secrets.json         # Secret declarations (names only, never values)
+├── skills/              # Skill files with frontmatter
+│   ├── code-review.md
+│   └── testing.md
+├── rules/               # Rule files with frontmatter
+│   ├── code-style.md
+│   └── security.md
+└── knowledge/           # Knowledge documents
+    └── api-reference.md
+```
+
+## Extract vs. materialize
+
+|               | `stax extract`        | `stax materialize`     |
+| ------------- | --------------------- | ---------------------- |
+| Output format | Canonical stax layers | Runtime-native files   |
+| Adapter       | None — raw content    | Translates via adapter |
+| Use case      | Debugging, auditing   | Using the artifact     |
+
+## When to use extract
+
+- **Debugging builds** — Verify that the built artifact contains what you expect
+- **Auditing** — Inspect the exact content of a third-party artifact before trusting it
+- **Diffing manually** — Extract two versions and use standard diff tools to compare
+
+## Related commands
+
+- [`stax inspect`](/docs/cli/inspect) — View metadata without extracting files
+- [`stax diff`](/docs/cli/diff) — Compare two artifacts programmatically
+- [`stax materialize`](/docs/cli/materialize) — Translate through an adapter instead

@@ -3,13 +3,73 @@ title: stax login
 description: Authenticate with an OCI registry
 ---
 
-Authenticate with an OCI registry.
+Authenticate with an OCI-compatible registry. Credentials are stored using the same credential store as Docker or ORAS, so existing Docker logins may work automatically.
 
 ## Usage
 
 ```bash
+# Interactive login (prompts for username and password)
 stax login ghcr.io
+
+# Non-interactive login (for CI/CD)
 stax login --username user --password-stdin ghcr.io
+
+# With a personal access token
+echo $GITHUB_TOKEN | stax login --username USERNAME --password-stdin ghcr.io
 ```
 
-Uses the same credential store as Docker or ORAS when possible.
+## Options
+
+| Flag                | Description                                        |
+| ------------------- | -------------------------------------------------- |
+| `--username <user>` | Registry username                                  |
+| `--password-stdin`  | Read password from stdin (for non-interactive use) |
+
+## Credential storage
+
+stax uses the same credential store as Docker and ORAS:
+
+- **macOS** — Keychain Access
+- **Linux** — `~/.docker/config.json` or a configured credential helper
+- **Windows** — Windows Credential Manager
+
+If you're already authenticated with Docker for the same registry, stax will use those credentials automatically.
+
+## Registry-specific setup
+
+### GitHub Container Registry (ghcr.io)
+
+Create a [personal access token](https://github.com/settings/tokens) with `read:packages` and `write:packages` scopes:
+
+```bash
+echo $GITHUB_TOKEN | stax login --username YOUR_USERNAME --password-stdin ghcr.io
+```
+
+### Docker Hub
+
+```bash
+stax login docker.io
+```
+
+### Private registries
+
+Any OCI-compatible registry works:
+
+```bash
+stax login registry.example.com
+```
+
+## CI/CD usage
+
+In CI environments, pass credentials via environment variables and stdin:
+
+```yaml
+# GitHub Actions
+- name: Login to registry
+  run: echo "${{ secrets.REGISTRY_TOKEN }}" | stax login --username ${{ github.actor }} --password-stdin ghcr.io
+```
+
+## Related commands
+
+- [`stax push`](/docs/cli/push) — Push requires authentication
+- [`stax pull`](/docs/cli/pull) — Pull from private registries requires authentication

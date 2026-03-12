@@ -113,3 +113,16 @@ Consumers MAY:
 stax does not require any specific retrieval strategy.
 
 Consumers SHOULD retain source attribution when available from `knowledge.manifest.json`.
+
+## Knowledge vs. memory
+
+Knowledge and [memory](/docs/spec/memory) serve different purposes:
+
+|            | Knowledge                          | Memory                            |
+| ---------- | ---------------------------------- | --------------------------------- |
+| Mutability | Immutable — set at build time      | Mutable — evolves at runtime      |
+| Ownership  | Author-provided reference material | Consumer-managed state            |
+| Lifecycle  | Versioned with the artifact        | Persists across sessions          |
+| Content    | Documentation, API specs, policies | User preferences, learned context |
+
+Use knowledge for information the agent should always have access to. Use memory for state that accumulates through usage.

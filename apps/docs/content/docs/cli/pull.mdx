@@ -1,15 +1,46 @@
 ---
 title: stax pull
-description: Pull an artifact from a registry into the local cache
+description: Download an artifact from a registry into the local cache
 ---
 
-Pull an artifact from a registry into the local cache.
+Pull an artifact from an OCI registry into your local cache. Once cached, the artifact can be inspected, materialized, or extracted without additional network requests.
 
 ## Usage
 
 ```bash
 stax pull ghcr.io/myorg/agents/backend-engineer:3.1.0
-stax pull ghcr.io/myorg/agents/backend-engineer@sha256:abc...
+stax pull ghcr.io/myorg/agents/backend-engineer@sha256:a3f8c1…e7d2
 ```
 
-Consumers SHOULD cache source artifacts by digest in the same local cache and reuse them across multiple agent materializations.
+## Resolving references
+
+Pull accepts two forms of reference:
+
+- **Tag** (`backend-engineer:3.1.0`) — Resolves to the current digest for that tag. Tags are mutable — the same tag may point to different digests over time.
+- **Digest** (`backend-engineer@sha256:abc...`) — Resolves to an exact, immutable artifact. Use digests when reproducibility matters (CI, production deployments).
+
+## Caching behavior
+
+Pulled artifacts are stored in the local cache at `~/.stax/cache/`, indexed by content digest:
+
+- If an artifact with the same digest already exists locally, the pull is a no-op
+- Layers shared between artifacts are deduplicated — pulling a new version only downloads changed layers
+- Source artifacts referenced by agents are cached in the same store and reused across multiple materializations
+
+## Authentication
+
+Private registries require authentication. See [`stax login`](/docs/cli/login).
+
+## Example output
+
+```text
+↓ pulling ghcr.io/myorg/agents/backend-engineer:3.1.0
+  ↓ 3 new layers (8.1 KB), 4 cached
+✓ pulled — sha256:a3f8c1…e7d2
+```
+
+## Related commands
+
+- [`stax materialize`](/docs/cli/materialize) — Translate the pulled artifact into runtime files
+- [`stax inspect`](/docs/cli/inspect) — View artifact metadata
+- [`stax push`](/docs/cli/push) — Push an artifact to a registry

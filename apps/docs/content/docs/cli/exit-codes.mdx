@@ -1,14 +1,39 @@
 ---
 title: Exit Codes
-description: CLI exit code reference
+description: CLI exit code reference for scripting and CI integration
 ---
 
-| Code | Meaning                             |
-| ---- | ----------------------------------- |
-| 0    | Success                             |
-| 1    | Validation error                    |
-| 2    | Build error                         |
-| 3    | Registry error                      |
-| 4    | Package resolution error            |
-| 5    | Materialization compatibility error |
-| 6    | Signature / verification error      |
+Every stax command exits with a numeric code indicating success or the category of failure. Use these codes in CI pipelines and scripts to handle different error conditions.
+
+## Reference
+
+| Code | Meaning                             | Common causes                                                       |
+| ---- | ----------------------------------- | ------------------------------------------------------------------- |
+| 0    | Success                             | Command completed without errors                                    |
+| 1    | Validation error                    | Missing required fields, invalid paths, bad frontmatter             |
+| 2    | Build error                         | Layer exceeds size limit, archive safety violation                  |
+| 3    | Registry error                      | Authentication failure, network error, repository not found         |
+| 4    | Package resolution error            | Dependency cycle, missing package, version conflict                 |
+| 5    | Materialization compatibility error | No compatible adapter, lossy translation (when strict mode enabled) |
+| 6    | Signature / verification error      | Missing or invalid signatures, expired attestations                 |
+
+## Using exit codes in CI
+
+```bash
+# Fail the pipeline on any validation error
+stax validate || exit 1
+
+# Distinguish between build and registry errors
+stax push ghcr.io/myorg/agent:latest
+case $? in
+  0) echo "Pushed successfully" ;;
+  2) echo "Build error — check layer sizes" ;;
+  3) echo "Registry error — check authentication" ;;
+  *) echo "Unexpected error: $?" ;;
+esac
+```
+
+## Related
+
+- [`stax validate`](/docs/cli/validate) — Produces exit code 1 on validation failures
+- [Troubleshooting](/docs/cli/troubleshooting) — Detailed error messages and recovery steps

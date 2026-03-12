@@ -1,9 +1,9 @@
 ---
 title: stax materialize
-description: Resolve an artifact and translate it into runtime-native files
+description: Translate an artifact into runtime-native files for any supported adapter
 ---
 
-Resolve an artifact and translate it into runtime-native files or another consumer-native installation payload.
+Resolve an artifact and translate it into runtime-native files using the appropriate adapter. This is how a canonical stax artifact becomes usable by a specific runtime like Claude Code, Codex, Cursor, or any other supported consumer.
 
 ## Usage
 
@@ -16,19 +16,78 @@ stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --plan --consumer c
 
 ## Options
 
-| Flag         | Description                             |
-| ------------ | --------------------------------------- |
-| `--out`      | Output directory for materialized files |
-| `--adapter`  | Override the adapter to use             |
-| `--json`     | Output machine-readable JSON            |
-| `--plan`     | Preview materialization without writing |
-| `--consumer` | Target consumer for plan output         |
+| Flag               | Description                                          |
+| ------------------ | ---------------------------------------------------- |
+| `--out <dir>`      | Output directory for materialized files              |
+| `--adapter <name>` | Override adapter selection (e.g., `codex`, `cursor`) |
+| `--json`           | Output machine-readable JSON instead of files        |
+| `--plan`           | Preview materialization without writing files        |
+| `--consumer <id>`  | Target consumer for plan output                      |
 
-## Supported Output
+## How materialization works
 
-A conforming implementation SHOULD support:
+1. **Pull** — Fetch the artifact from a registry or local cache
+2. **Select adapter** — Choose the adapter matching the artifact's declared runtime, or use `--adapter` to override
+3. **Translate** — Convert canonical layers into the runtime's native file format
+4. **Write** — Emit files to the output directory (or JSON to stdout)
 
-- Filesystem output
-- Machine-readable JSON output
-- Warnings for lossy translations
-- Import-plan output for non-filesystem consumers when applicable
+## Example output
+
+For a Claude Code artifact:
+
+```text
+✓ pulled ghcr.io/myorg/agents/backend-engineer:3.1.0
+✓ selected adapter: claude-code
+✓ materialized — 4 files written to ./output
+
+  output/
+  ├── CLAUDE.md
+  ├── .claude/
+  │   ├── settings.json
+  │   └── skills/
+  └── .mcp.json
+```
+
+For Codex:
+
+```text
+✓ selected adapter: codex
+✓ materialized — 3 files written to ./output
+
+  output/
+  ├── AGENTS.md
+  ├── codex.toml
+  └── .codex/skills/
+```
+
+## Lossy translations
+
+Not every runtime supports every feature. When information is lost during translation, the CLI emits warnings:
+
+```text
+⚠ lossy translation for adapter "codex"
+  ⚠ memory seeds not supported — skipped
+  ⚠ 2 skill template variables have no equivalent — rendered as literals
+```
+
+Use `--plan` to preview fidelity before writing files:
+
+```bash
+stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --plan --consumer codex
+```
+
+## Machine-readable output
+
+The `--json` flag outputs the full materialization result as structured JSON, suitable for piping into other tools or platform integrations:
+
+```bash
+stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --json | jq '.files'
+```
+
+## Related commands
+
+- [`stax plan-install`](/docs/cli/plan-install) — Generate an install plan without materializing
+- [`stax inspect`](/docs/cli/inspect) — View artifact metadata before materializing
+- [`stax pull`](/docs/cli/pull) — Pull the artifact without materializing
+
+See also: [Materialization specification](/docs/spec/materialization) and [Runtime adapters](/docs/spec/adapters)

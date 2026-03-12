@@ -1,9 +1,9 @@
 ---
 title: stax push
-description: Push a built artifact to an OCI registry
+description: Publish a built artifact to an OCI registry
 ---
 
-Push a built artifact to an OCI registry.
+Push a built artifact from your local cache to an OCI-compatible registry. Once pushed, the artifact is available to anyone with registry access for pulling, materializing, or inspecting.
 
 ## Usage
 
@@ -14,6 +14,55 @@ stax push --all-personas ghcr.io/myorg/agents/backend-engineer
 
 ## Options
 
-| Flag             | Description               |
-| ---------------- | ------------------------- |
-| `--all-personas` | Push all persona variants |
+| Flag             | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `--all-personas` | Push all persona variant artifacts under the same repository |
+
+## How pushing works
+
+1. The CLI locates the artifact in your local cache (`~/.stax/cache/`)
+2. Each layer is uploaded to the registry as a content-addressed blob
+3. The OCI manifest is pushed with the specified tag
+4. The registry returns the manifest digest for verification
+
+Because layers are content-addressed, pushing a new version of an agent only uploads layers that actually changed — unchanged layers are deduplicated by the registry.
+
+## Tagging strategy
+
+The reference after `push` determines the repository and tag:
+
+```bash
+# Push with a semver tag
+stax push ghcr.io/myorg/agents/backend-engineer:3.1.0
+
+# Push with a branch or environment tag
+stax push ghcr.io/myorg/agents/backend-engineer:staging
+
+# Push with a latest tag
+stax push ghcr.io/myorg/agents/backend-engineer:latest
+```
+
+For multi-persona agents, `--all-personas` pushes each persona as a separate manifest under the same repository, typically tagged with the persona name:
+
+```bash
+stax push --all-personas ghcr.io/myorg/agents/backend-engineer
+# Pushes: backend-engineer:maya-chen, backend-engineer:alex-rivera, etc.
+```
+
+## Authentication
+
+You must be authenticated with the target registry before pushing. See [`stax login`](/docs/cli/login).
+
+## Example output
+
+```text
+↑ pushing 7 layers (12.4 KB)
+✓ pushed ghcr.io/myorg/agents/backend-engineer:3.1.0
+  digest: sha256:a3f8c1…e7d2
+```
+
+## Related commands
+
+- [`stax build`](/docs/cli/build) — Build the artifact before pushing
+- [`stax pull`](/docs/cli/pull) — Pull an artifact from a registry
+- [`stax login`](/docs/cli/login) — Authenticate with a registry

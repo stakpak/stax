@@ -52,6 +52,14 @@
   --stax-border-hover: #d1d5db;
   --stax-code-bg: #f3f4f6;
   --stax-code-color: #065f46;
+  --stax-term-bg: #f8f9fa;
+  --stax-term-text: #374151;
+  --stax-term-green: #059669;
+  --stax-term-cyan: #0891b2;
+  --stax-term-chrome: rgba(0, 0, 0, 0.06);
+  --stax-term-dot: rgba(0, 0, 0, 0.15);
+  --stax-term-title: rgba(0, 0, 0, 0.35);
+  --stax-term-prompt: rgba(5, 150, 105, 0.6);
 }
 
 /* ─── Dark theme ─── */
@@ -77,12 +85,48 @@
   --stax-border-hover: #3f3f46;
   --stax-code-bg: #18181b;
   --stax-code-color: #6ee7b7;
+  --stax-term-bg: #111113;
+  --stax-term-text: #e4e4e7;
+  --stax-term-green: #34d399;
+  --stax-term-cyan: #22d3ee;
+  --stax-term-chrome: rgba(255, 255, 255, 0.06);
+  --stax-term-dot: rgba(255, 255, 255, 0.12);
+  --stax-term-title: rgba(255, 255, 255, 0.25);
+  --stax-term-prompt: rgba(52, 211, 153, 0.5);
+}
+
+/* ─── Skip link ─── */
+
+.stax-skip-link {
+  position: fixed;
+  top: -100%;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: 0.4rem;
+  background: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  opacity: 0;
+  transition:
+    top 0.15s,
+    opacity 0.15s;
+}
+
+.stax-skip-link:focus {
+  top: 0.75rem;
+  opacity: 1;
 }
 
 /* ─── Base reset ─── */
 
 html {
   background: var(--color-fd-background);
+  scrollbar-color: var(--color-fd-border) transparent;
+  scrollbar-width: thin;
 }
 
 body {
@@ -124,6 +168,28 @@ code {
   background: var(--stax-border-hover);
 }
 
+/* ─── Focus indicators ─── */
+
+:focus-visible {
+  outline: 2px solid var(--color-fd-ring);
+  outline-offset: 2px;
+}
+
+.stax-btn-primary:focus-visible {
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-fd-primary) 25%, transparent);
+}
+
+.stax-doc-card:focus-visible {
+  outline-offset: -2px;
+  border-color: var(--color-fd-ring);
+}
+
+.stax-nav__toggle:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0.35rem;
+}
+
 /* ══════════════════════════════════════════════════════════════
    SHARED COMPONENTS
    ══════════════════════════════════════════════════════════════ */
@@ -141,6 +207,11 @@ code {
   height: 0.5rem;
   border-radius: 999px;
   background: var(--color-fd-primary);
+  transition: transform 0.2s ease;
+}
+
+.stax-wordmark:hover .stax-wordmark__dot {
+  transform: scale(1.4);
 }
 
 .stax-wordmark__label {
@@ -188,6 +259,7 @@ code {
   background-size: 64px 64px;
   opacity: 0.4;
   mask-image: radial-gradient(ellipse 60% 40% at 50% 15%, black 0%, transparent 100%);
+  contain: strict;
 }
 
 .stax-glow-orb {
@@ -202,6 +274,8 @@ code {
   opacity: 0.15;
   background: radial-gradient(ellipse, var(--color-fd-primary), transparent 70%);
   filter: blur(60px);
+  contain: strict;
+  will-change: transform;
 }
 
 /* ─── Navigation ─── */
@@ -214,6 +288,7 @@ code {
   border-bottom: 1px solid var(--color-fd-border);
   background: color-mix(in srgb, var(--color-fd-background) 80%, transparent);
   backdrop-filter: blur(16px) saturate(180%);
+  contain: layout style;
 }
 
 .stax-nav__inner {
@@ -248,6 +323,20 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+}
+
+.stax-nav__toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-fd-foreground);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ─── Hero ─── */
@@ -355,12 +444,22 @@ code {
   font-family: var(--font-body);
   font-size: 0.85rem;
   font-weight: 600;
-  transition: all 0.15s ease;
+  transition:
+    filter 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
 .stax-btn-primary:hover {
   filter: brightness(1.1);
   box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--color-fd-primary) 40%, transparent);
+  transform: translateY(-1px);
+}
+
+.stax-btn-primary:active {
+  transform: translateY(1px);
+  filter: brightness(0.95);
+  box-shadow: none;
 }
 
 .stax-btn-install {
@@ -375,12 +474,15 @@ code {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   font-weight: 500;
-  cursor: default;
-  transition: border-color 0.15s;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .stax-btn-install:hover {
   border-color: var(--stax-border-hover);
+  background: var(--color-fd-muted);
 }
 
 .stax-btn-install__prompt {
@@ -388,17 +490,25 @@ code {
   user-select: none;
 }
 
+.stax-btn-install__copy {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.25rem;
+  color: var(--color-fd-muted-foreground);
+  transition: color 0.15s ease;
+}
+
+.stax-btn-install:hover .stax-btn-install__copy {
+  color: var(--color-fd-foreground);
+}
+
 /* ─── Terminal ─── */
 
 .stax-terminal {
-  background: #111113;
+  background: var(--stax-term-bg);
   border: 1px solid var(--color-fd-border);
   border-radius: 0.65rem;
   overflow: hidden;
-}
-
-:root:not(.dark) .stax-terminal {
-  background: #1a1a2e;
 }
 
 .stax-terminal__chrome {
@@ -406,7 +516,7 @@ code {
   align-items: center;
   justify-content: space-between;
   padding: 0.6rem 0.85rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--stax-term-chrome);
 }
 
 .stax-terminal__dots {
@@ -418,13 +528,13 @@ code {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--stax-term-dot);
 }
 
 .stax-terminal__title {
   font-family: var(--font-mono);
   font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--stax-term-title);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -444,21 +554,34 @@ code {
 }
 
 .stax-terminal-line__prompt {
-  color: rgba(52, 211, 153, 0.5);
+  color: var(--stax-term-prompt);
   user-select: none;
   flex-shrink: 0;
 }
 
 .stax-terminal-line__cmd {
-  color: #e4e4e7;
+  color: var(--stax-term-text);
+}
+
+.stax-terminal-line:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1.1em;
+  margin-left: 0.25em;
+  background: var(--color-fd-primary);
+  opacity: 0;
+  vertical-align: text-bottom;
+  animation: cursor-blink 1s step-end infinite;
+  animation-delay: 3.6s;
 }
 
 .stax-term--green {
-  color: #34d399;
+  color: var(--stax-term-green);
 }
 
 .stax-term--cyan {
-  color: #22d3ee;
+  color: var(--stax-term-cyan);
 }
 
 @keyframes term-line {
@@ -480,6 +603,11 @@ code {
   max-width: var(--content-width);
   margin: 0 auto var(--space-section);
   padding: 0 1.5rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+  animation: reveal linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 25%;
 }
 
 .stax-section__header {
@@ -512,6 +640,170 @@ code {
   max-width: 36rem;
 }
 
+/* ─── Anatomy ─── */
+
+.stax-anatomy {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stax-anatomy__artifact {
+  border: 1px solid var(--color-fd-border);
+  border-radius: 0.65rem;
+  overflow: hidden;
+  background: var(--color-fd-background);
+}
+
+.stax-anatomy__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--color-fd-border);
+  background: var(--stax-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-fd-muted-foreground);
+  letter-spacing: 0.02em;
+}
+
+.stax-anatomy__header svg {
+  color: var(--color-fd-primary);
+  flex-shrink: 0;
+}
+
+.stax-anatomy__layers {
+  display: flex;
+  flex-direction: column;
+}
+
+.stax-anatomy-layer {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-fd-border) 50%, transparent);
+  transition: background 0.15s ease;
+}
+
+.stax-anatomy-layer:last-child {
+  border-bottom: none;
+}
+
+.stax-anatomy-layer:hover {
+  background: var(--stax-subtle);
+}
+
+.stax-anatomy-layer__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stax-anatomy-layer--emerald .stax-anatomy-layer__icon {
+  background: color-mix(in srgb, #059669 12%, transparent);
+  color: #059669;
+}
+.stax-anatomy-layer--cyan .stax-anatomy-layer__icon {
+  background: color-mix(in srgb, #0891b2 12%, transparent);
+  color: #0891b2;
+}
+.stax-anatomy-layer--amber .stax-anatomy-layer__icon {
+  background: color-mix(in srgb, #d97706 12%, transparent);
+  color: #d97706;
+}
+.stax-anatomy-layer--violet .stax-anatomy-layer__icon {
+  background: color-mix(in srgb, #7c3aed 12%, transparent);
+  color: #7c3aed;
+}
+
+.dark .stax-anatomy-layer--emerald .stax-anatomy-layer__icon {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+}
+.dark .stax-anatomy-layer--cyan .stax-anatomy-layer__icon {
+  background: rgba(34, 211, 238, 0.1);
+  color: #22d3ee;
+}
+.dark .stax-anatomy-layer--amber .stax-anatomy-layer__icon {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+}
+.dark .stax-anatomy-layer--violet .stax-anatomy-layer__icon {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.stax-anatomy-layer__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.stax-anatomy-layer__name {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-fd-foreground);
+}
+
+.stax-anatomy-layer__desc {
+  font-size: 0.78rem;
+  color: var(--color-fd-muted-foreground);
+  line-height: 1.4;
+}
+
+.stax-anatomy__runtimes {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 0.25rem;
+}
+
+.stax-anatomy__runtimes-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-fd-muted-foreground);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.stax-anatomy__runtime-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.stax-anatomy__runtime-list span {
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-background);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--color-fd-muted-foreground);
+  letter-spacing: 0.02em;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.stax-anatomy__runtime-list span:hover {
+  border-color: var(--color-fd-primary);
+  color: var(--color-fd-primary);
+}
+
 /* ─── Concept cards ─── */
 
 .stax-analogies {
@@ -527,11 +819,14 @@ code {
 .stax-concept-card {
   background: var(--color-fd-background);
   padding: 1.5rem;
-  transition: background 0.15s;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .stax-concept-card:hover {
   background: var(--stax-subtle);
+  transform: translateY(-2px);
 }
 
 .stax-concept-card__tag {
@@ -539,7 +834,7 @@ code {
   align-items: center;
   gap: 0.4rem;
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -578,19 +873,29 @@ code {
   background: var(--color-fd-background);
   padding: 1.5rem 1.25rem;
   text-align: center;
+  transition: background 0.2s ease;
+}
+
+.stax-flow-step:hover {
+  background: var(--stax-subtle);
 }
 
 .stax-flow-step__number {
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--color-fd-border);
+  color: var(--color-fd-muted-foreground);
   line-height: 1;
   margin-bottom: 0.65rem;
+  transition: color 0.2s ease;
+}
+
+.stax-flow-step:hover .stax-flow-step__number {
+  color: var(--color-fd-primary);
 }
 
 .dark .stax-flow-step__number {
-  color: #27272a;
+  color: var(--color-fd-border);
 }
 
 .stax-flow-step__name {
@@ -622,6 +927,11 @@ code {
   border-radius: 0.65rem;
   padding: 1.5rem;
   background: var(--color-fd-background);
+  transition: border-color 0.2s ease;
+}
+
+.stax-boundary-card--accent:hover {
+  border-color: color-mix(in srgb, var(--color-fd-primary) 40%, var(--color-fd-border));
 }
 
 .stax-boundary-card__title {
@@ -683,12 +993,22 @@ code {
   border-radius: 0.65rem;
   padding: 1.5rem;
   background: var(--color-fd-background);
-  transition: all 0.15s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .stax-doc-card:hover {
   border-color: var(--stax-border-hover);
   background: var(--stax-subtle);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.08);
+}
+
+.dark .stax-doc-card:hover {
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.3);
 }
 
 .stax-doc-card__icon {
@@ -699,6 +1019,11 @@ code {
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.stax-doc-card:hover .stax-doc-card__icon {
+  transform: translateY(-2px);
 }
 
 .stax-doc-card--emerald .stax-doc-card__icon {
@@ -765,8 +1090,16 @@ code {
   transition: color 0.15s;
 }
 
+.stax-doc-card__cta svg {
+  transition: transform 0.2s ease;
+}
+
 .stax-doc-card:hover .stax-doc-card__cta {
   color: var(--color-fd-primary);
+}
+
+.stax-doc-card:hover .stax-doc-card__cta svg {
+  transform: translateX(3px);
 }
 
 /* ─── Footer ─── */
@@ -807,6 +1140,7 @@ code {
   border-color: var(--color-fd-border) !important;
   background: color-mix(in srgb, var(--color-fd-background) 80%, transparent) !important;
   backdrop-filter: blur(16px) saturate(180%);
+  contain: layout style;
 }
 
 /* ─── Sidebar ─── */
@@ -829,7 +1163,10 @@ code {
 
 #nd-sidebar button[data-state],
 #nd-sidebar a {
-  transition: all 0.12s ease;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease,
+    opacity 0.12s ease;
 }
 
 #nd-sidebar a[data-active="true"],
@@ -871,7 +1208,7 @@ code {
 /* Sidebar section labels */
 #nd-sidebar p[class*="text-fd-muted-foreground"] {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   opacity: 0.55;
@@ -993,7 +1330,7 @@ code {
 #nd-toc > h3 {
   margin-bottom: 0.5rem;
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1016,7 +1353,9 @@ code {
   font-size: 0.78rem;
   line-height: 1.4;
   text-decoration: none;
-  transition: all 0.12s ease;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
 }
 
 #nd-toc a:hover {
@@ -1044,7 +1383,7 @@ code {
 }
 
 .dark .stax-prose {
-  color: #b4b4b4;
+  color: var(--color-fd-muted-foreground);
 }
 
 .stax-prose > :first-child {
@@ -1179,7 +1518,7 @@ code {
 }
 
 .dark .stax-prose pre {
-  background: #111113 !important;
+  background: var(--color-fd-background) !important;
 }
 
 /* ── Tables ── */
@@ -1203,7 +1542,7 @@ code {
 
 .stax-prose th {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1309,6 +1648,40 @@ code {
   }
 }
 
+@keyframes cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Reduced motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════ */
@@ -1320,6 +1693,14 @@ code {
   }
 }
 
+/* ─── Tablet ─── */
+@media (max-width: 1023px) {
+  .stax-flow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ─── Mobile ─── */
 @media (max-width: 767px) {
   :root {
     --space-section: 4rem;
@@ -1335,10 +1716,6 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .stax-flow {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .stax-doc-title {
     font-size: clamp(1.35rem, 7vw, 1.85rem) !important;
   }
@@ -1351,14 +1728,47 @@ code {
   .stax-prose {
     font-size: 0.88rem;
   }
-}
 
-@media (max-width: 480px) {
-  .stax-flow {
-    grid-template-columns: 1fr;
+  /* Mobile nav */
+  .stax-nav__toggle {
+    display: flex;
+  }
+
+  .stax-nav__inner {
+    flex-wrap: wrap;
   }
 
   .stax-nav__links {
-    gap: 1rem;
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding-bottom: 0.5rem;
+  }
+
+  .stax-nav__links--open {
+    display: flex;
+  }
+
+  .stax-nav__link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    min-height: 2.75rem;
+    border-top: 1px solid var(--color-fd-border);
+  }
+
+  /* Terminal text overflow */
+  .stax-terminal__body {
+    font-size: 0.72rem;
+    overflow-x: auto;
+  }
+}
+
+/* ─── Small mobile ─── */
+@media (max-width: 480px) {
+  .stax-flow {
+    grid-template-columns: 1fr;
   }
 }

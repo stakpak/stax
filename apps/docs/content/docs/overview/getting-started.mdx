@@ -1,0 +1,206 @@
+---
+title: Getting Started
+description: Install stax, define your first agent, build it, push it to a registry, and materialize it into a runtime
+---
+
+This guide walks you through the full stax lifecycle in under five minutes: define an agent, build a deterministic artifact, push it to a registry, and materialize it into a runtime.
+
+## Prerequisites
+
+- Node.js 18+
+- An OCI-compatible registry (GitHub Container Registry, Docker Hub, or any OCI registry)
+
+## Install stax
+
+```bash
+npm install -g stax
+```
+
+Verify the installation:
+
+```bash
+stax --version
+```
+
+## Scaffold a project
+
+```bash
+mkdir my-agent && cd my-agent
+stax init --agent
+```
+
+This creates:
+
+```text
+my-agent/
+├── agent.ts            # Agent definition
+├── prompt.md           # System prompt
+├── rules/              # Behavioral rules
+│   └── code-style.md
+├── skills/             # Reusable skill files
+├── knowledge/          # Reference documents
+└── tsconfig.json
+```
+
+## Define your agent
+
+Open `agent.ts` and customize it:
+
+```typescript
+import { defineAgent, definePersona } from "stax";
+
+const engineer = definePersona({
+  name: "alex",
+  displayName: "Alex Chen",
+  role: "Senior Backend Engineer",
+  expertise: ["TypeScript", "distributed systems", "API design"],
+});
+
+export default defineAgent({
+  name: "backend-engineer",
+  version: "1.0.0",
+  description: "A senior backend engineer for TypeScript projects",
+  runtime: "claude-code",
+  model: "claude-sonnet-4-1",
+  persona: engineer,
+  prompt: "./prompt.md",
+  rules: ["./rules/*.md"],
+  skills: ["./skills/*.md"],
+  knowledge: ["./knowledge/"],
+});
+```
+
+Write a system prompt in `prompt.md`:
+
+```markdown
+You are a senior backend engineer specializing in TypeScript and Node.js.
+You write clean, well-tested code with clear error handling.
+You prefer composition over inheritance and value explicit over implicit behavior.
+```
+
+## Build the artifact
+
+```bash
+stax build
+```
+
+```text
+✓ validated agent definition
+✓ resolved 0 packages
+✓ built 6 layers (8.2 KB)
+✓ artifact cached — sha256:a3f8c1…e7d2
+```
+
+The build compiles your TypeScript definitions, resolves any package dependencies, produces deterministic OCI layers, and stores the artifact in your local cache at `~/.stax/cache/`.
+
+Use `--dry-run` to preview without writing:
+
+```bash
+stax build --dry-run
+```
+
+## Inspect the artifact
+
+Before pushing, verify what you built:
+
+```bash
+stax inspect sha256:a3f8c1…e7d2
+```
+
+```text
+Agent: backend-engineer v1.0.0
+Runtime: claude-code (claude-sonnet-4-1)
+Persona: alex (Alex Chen, Senior Backend Engineer)
+
+Layers:
+  config     application/vnd.stax.config.v1+json          1.2 KB
+  prompt     application/vnd.stax.prompt.v1+markdown      0.4 KB
+  persona    application/vnd.stax.persona.v1+json         0.3 KB
+  rules      application/vnd.stax.rules.v1.tar+gzip       0.8 KB  (1 rule)
+  skills     application/vnd.stax.skills.v1.tar+gzip      0.0 KB  (0 skills)
+  knowledge  application/vnd.stax.knowledge.v1.tar+gzip   5.5 KB
+```
+
+## Push to a registry
+
+Authenticate with your registry first:
+
+```bash
+stax login ghcr.io
+```
+
+Then push:
+
+```bash
+stax push ghcr.io/yourorg/backend-engineer:1.0.0
+```
+
+```text
+↑ pushing 6 layers (8.2 KB)
+✓ pushed ghcr.io/yourorg/backend-engineer:1.0.0
+  digest: sha256:a3f8c1…e7d2
+```
+
+The artifact is now available to anyone with registry access.
+
+## Materialize into a runtime
+
+Pull and translate the artifact into runtime-native files:
+
+```bash
+stax materialize ghcr.io/yourorg/backend-engineer:1.0.0 --out ./workspace
+```
+
+```text
+✓ pulled ghcr.io/yourorg/backend-engineer:1.0.0
+✓ selected adapter: claude-code
+✓ materialized — 4 files written to ./workspace
+```
+
+The output depends on the target runtime. For Claude Code, you get:
+
+```text
+workspace/
+├── CLAUDE.md           # System prompt + rules + knowledge refs
+├── .claude/
+│   ├── settings.json   # Model and MCP configuration
+│   └── skills/         # Skill files
+└── .mcp.json           # MCP server definitions
+```
+
+To preview without writing files:
+
+```bash
+stax materialize ghcr.io/yourorg/backend-engineer:1.0.0 --json
+```
+
+To target a different runtime:
+
+```bash
+stax materialize ghcr.io/yourorg/backend-engineer:1.0.0 --adapter codex --out ./workspace
+```
+
+## What's next
+
+<Cards>
+  <Card
+    title="Define packages"
+    href="/docs/packages/define-package"
+    description="Create reusable skill packs, MCP bundles, and compliance rules"
+  />
+  <Card
+    title="Dependency resolution"
+    href="/docs/packages/dependencies"
+    description="How stax resolves and merges package dependencies"
+  />
+  <Card
+    title="Runtime adapters"
+    href="/docs/spec/adapters"
+    description="How artifacts translate to Claude Code, Codex, Cursor, and more"
+  />
+  <Card
+    title="Full specification"
+    href="/docs/spec"
+    description="The complete normative reference for the stax standard"
+  />
+</Cards>

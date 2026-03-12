@@ -1,9 +1,9 @@
 ---
 title: stax init
-description: Scaffold a new agent or package project
+description: Scaffold a new agent or package project with starter files
 ---
 
-Scaffold a new agent or package project.
+Scaffold a new agent or package project. Creates a ready-to-build directory structure with starter files for definitions, prompts, rules, and skills.
 
 ## Usage
 
@@ -14,10 +14,63 @@ stax init --package
 stax init --template github-workflow
 ```
 
+When run without flags, `stax init` prompts you to choose between an agent or package project interactively.
+
 ## Options
 
-| Flag         | Description                  |
-| ------------ | ---------------------------- |
-| `--agent`    | Initialize an agent project  |
-| `--package`  | Initialize a package project |
-| `--template` | Use a specific template      |
+| Flag              | Description                                |
+| ----------------- | ------------------------------------------ |
+| `--agent`         | Initialize an agent project (skip prompt)  |
+| `--package`       | Initialize a package project (skip prompt) |
+| `--template <id>` | Use a specific starter template            |
+
+## What gets created
+
+### Agent project
+
+```text
+my-agent/
+├── agent.ts            # defineAgent() entry point
+├── prompt.md           # System prompt
+├── rules/              # Behavioral rules (Markdown with frontmatter)
+│   └── code-style.md
+├── skills/             # Reusable skill definitions
+├── knowledge/          # Static reference documents
+└── tsconfig.json
+```
+
+### Package project
+
+```text
+my-package/
+├── package.ts          # definePackage() entry point
+├── rules/              # Shared rules
+├── skills/             # Shared skills
+└── tsconfig.json
+```
+
+## Templates
+
+Templates provide opinionated starter configurations for specific use cases:
+
+```bash
+stax init --template github-workflow
+```
+
+Templates may scaffold additional files such as CI configurations, pre-populated rules for specific domains, or MCP server declarations.
+
+## After scaffolding
+
+Once initialized, the typical workflow is:
+
+1. Edit `agent.ts` to set your agent's identity, runtime, and model
+2. Write your system prompt in `prompt.md`
+3. Add rules and skills as Markdown files
+4. Run [`stax build`](/docs/cli/build) to produce an artifact
+
+See [Getting Started](/docs/overview/getting-started) for a complete walkthrough.
+
+## Related commands
+
+- [`stax build`](/docs/cli/build) — Build the scaffolded project into an artifact
+- [`stax validate`](/docs/cli/validate) — Check definitions without building

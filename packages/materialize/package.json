@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@stax/core": "workspace:*",
-    "@stax/oci": "workspace:*"
+    "@stax/oci": "workspace:*",
+    "@stax/resolve": "workspace:*"
   },
   "devDependencies": {
     "@stax/config": "workspace:*",

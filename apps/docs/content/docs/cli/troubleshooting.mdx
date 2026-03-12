@@ -1,0 +1,205 @@
+---
+title: Troubleshooting
+description: Common errors, their causes, and how to fix them
+---
+
+This page covers the most common errors you may encounter when using the stax CLI, organized by command.
+
+## Build errors
+
+### "Required field missing"
+
+```text
+Error: validation failed — agent.ts
+  ✗ required field "name" is missing
+  ✗ required field "version" is missing
+Exit code: 1
+```
+
+**Cause:** Your `defineAgent()` call is missing required fields. The `name`, `version`, `runtime`, and `prompt` fields are always required.
+
+**Fix:** Add the missing fields to your agent definition. Run `stax validate` to check without building.
+
+### "Path does not exist"
+
+```text
+Error: validation failed — agent.ts
+  ✗ prompt path "./prompt.md" does not exist
+  ✗ rules glob "./rules/*.md" matched 0 files
+Exit code: 1
+```
+
+**Cause:** A file or directory referenced in your agent definition doesn't exist on disk.
+
+**Fix:** Create the missing file, or update the path in your definition. Paths are resolved relative to the file containing `defineAgent()`.
+
+### "Dependency cycle detected"
+
+```text
+Error: build failed
+  ✗ dependency cycle: @acme/base → @acme/tools → @acme/base
+Exit code: 4
+```
+
+**Cause:** Two or more packages depend on each other, creating a circular dependency.
+
+**Fix:** Break the cycle by extracting shared configuration into a new package that both can depend on without circularity. See [Dependencies](/docs/packages/dependencies).
+
+### "Lockfile out of date"
+
+```text
+Warning: stax.lock is out of date — 2 packages changed
+  @acme/tools: sha256:abc123 → sha256:def456
+  @acme/rules: (new dependency)
+```
+
+**Cause:** Your dependencies have changed since the lockfile was last written.
+
+**Fix:** Run `stax build --refresh-lock` to update the lockfile, then commit the updated `stax.lock`.
+
+### "Layer exceeds size limit"
+
+```text
+Error: build failed
+  ✗ knowledge layer exceeds 10 MB limit (12.3 MB)
+Exit code: 2
+```
+
+**Cause:** A single layer exceeds the 10 MB size limit defined in the specification.
+
+**Fix:** Reduce the content in that layer. For knowledge, consider splitting large documents or using a workspace source artifact instead. See [Layers — Size Limits](/docs/spec/layers).
+
+## Registry errors
+
+### "Authentication required"
+
+```text
+Error: registry error — ghcr.io
+  ✗ 401 Unauthorized: authentication required
+Exit code: 3
+```
+
+**Cause:** You haven't authenticated with the registry, or your credentials have expired.
+
+**Fix:** Run `stax login ghcr.io` to authenticate. For CI environments, set registry credentials via environment variables or use `--password-stdin`.
+
+### "Repository not found"
+
+```text
+Error: registry error — ghcr.io/yourorg/my-agent
+  ✗ 404 Not Found: repository does not exist
+Exit code: 3
+```
+
+**Cause:** The repository doesn't exist on the registry, or you don't have access to it.
+
+**Fix:** For GitHub Container Registry, the repository is created automatically on first push. Ensure your authentication token has `write:packages` scope. For other registries, create the repository first.
+
+### "Manifest not found"
+
+```text
+Error: registry error — ghcr.io/yourorg/my-agent:2.0.0
+  ✗ 404 Not Found: manifest unknown
+Exit code: 3
+```
+
+**Cause:** The specific tag or digest you requested doesn't exist in the registry.
+
+**Fix:** Verify the tag exists with `stax inspect` or check the registry's web UI. Tags are case-sensitive.
+
+## Materialization errors
+
+### "No compatible adapter"
+
+```text
+Error: materialization failed
+  ✗ no adapter found for runtime "unknown-runtime"
+  Available adapters: claude-code, codex, cursor, github-copilot, windsurf, opencode
+Exit code: 5
+```
+
+**Cause:** The artifact's declared runtime doesn't match any installed adapter.
+
+**Fix:** Use `--adapter` to explicitly select an adapter, or check that the runtime name in your agent definition is correct. See [Adapters](/docs/spec/adapters) for the full list.
+
+### "Lossy translation warning"
+
+```text
+Warning: lossy translation for adapter "codex"
+  ⚠ memory seeds not supported — skipped
+  ⚠ 2 skill variables have no equivalent — rendered as literals
+```
+
+**Cause:** The target runtime doesn't support all features present in the artifact. This is a warning, not an error — materialization still completes.
+
+**Fix:** This is expected when materializing for a runtime with fewer capabilities than the artifact's declared runtime. Review the warnings to ensure nothing critical was lost. Use `stax plan-install` to preview fidelity before materializing.
+
+## Validation errors
+
+### "Symlink not allowed"
+
+```text
+Error: validation failed
+  ✗ symlink detected: rules/shared.md → ../../other-project/rules/shared.md
+  Symlinks outside the project root are not permitted
+Exit code: 1
+```
+
+**Cause:** A file in your agent definition is a symlink pointing outside the project directory. This is rejected for security reasons (path traversal prevention).
+
+**Fix:** Copy the file into your project instead of symlinking it, or use `--symlink-mode flatten` during build to automatically resolve symlinks to their targets.
+
+### "Invalid MCP secret reference"
+
+```text
+Error: validation failed
+  ✗ MCP server "database" references undeclared secret "DB_PASSWORD"
+  Declare it in the secrets array of your agent definition
+Exit code: 1
+```
+
+**Cause:** An MCP server configuration references a secret that isn't declared in the agent's `secrets` array.
+
+**Fix:** Add the secret to your agent definition:
+
+```typescript
+export default defineAgent({
+  // ...
+  secrets: [{ name: "DB_PASSWORD", description: "Database password", required: true }],
+});
+```
+
+## General issues
+
+### "Command not found: stax"
+
+**Cause:** stax is not installed globally or not in your PATH.
+
+**Fix:**
+
+```bash
+npm install -g stax
+```
+
+If installed but not found, ensure your global npm bin directory is in your PATH:
+
+```bash
+npm config get prefix
+# Add the bin/ subdirectory to your PATH
+```
+
+### Exit codes reference
+
+Every stax command exits with a code indicating what went wrong:
+
+| Code | Meaning                  | What to check                              |
+| ---- | ------------------------ | ------------------------------------------ |
+| 0    | Success                  | —                                          |
+| 1    | Validation error         | Run `stax validate` for details            |
+| 2    | Build error              | Check layer contents and sizes             |
+| 3    | Registry error           | Check authentication and network           |
+| 4    | Package resolution error | Check dependency declarations and lockfile |
+| 5    | Materialization error    | Check adapter compatibility                |
+| 6    | Verification error       | Check signatures and attestations          |
+
+See [Exit Codes](/docs/cli/exit-codes) for the full reference.

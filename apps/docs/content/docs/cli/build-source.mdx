@@ -1,9 +1,9 @@
 ---
 title: stax build-source
-description: Build a cacheable workspace source artifact
+description: Build a cacheable workspace source artifact from a Git repository
 ---
 
-Build a cacheable workspace source artifact from a Git repo or prepared directory tree.
+Build a cacheable workspace source artifact from a Git repository or prepared directory tree. Source artifacts give agents repository context — the codebase they work on — stored as a separate OCI artifact that can be shared across multiple agent materializations.
 
 ## Usage
 
@@ -15,16 +15,65 @@ stax build-source ./repo --sparse services/api --sparse packages/shared
 
 ## Options
 
-| Flag        | Description                              |
-| ----------- | ---------------------------------------- |
-| `--git-url` | Associate a Git remote URL               |
-| `--commit`  | Associate a specific commit hash         |
-| `--sparse`  | Include only specific paths (repeatable) |
+| Flag              | Description                                                 |
+| ----------------- | ----------------------------------------------------------- |
+| `--git-url <url>` | Associate a Git remote URL for provenance metadata          |
+| `--commit <hash>` | Associate a specific commit hash                            |
+| `--sparse <path>` | Include only specific paths (repeatable for multiple paths) |
 
-## Behavior
+## What gets built
 
-A conforming implementation SHOULD:
+The build process creates an OCI artifact containing a snapshot of your repository:
 
-- Strip `.git/` and other VCS metadata
-- Record source metadata in the source artifact config blob
-- Emit a deterministic source snapshot layer
+1. **Strips VCS metadata** — Removes `.git/` and other version control directories
+2. **Applies sparse filters** — When `--sparse` is used, includes only the specified paths
+3. **Records metadata** — Stores the Git URL, commit hash, and timestamp in the config blob
+4. **Produces a deterministic layer** — The snapshot is archived as a single tar+gzip layer
+
+## When to use source artifacts
+
+Use source artifacts when your agent needs access to a codebase:
+
+```typescript
+export default defineAgent({
+  // ...
+  source: {
+    artifact: "ghcr.io/acme/backend-source:main",
+  },
+});
+```
+
+Source artifacts are stored separately from agent artifacts because:
+
+- **Caching** — Repository snapshots are often much larger than agent configuration. Caching by digest avoids re-downloading.
+- **Sharing** — Multiple agents can reference the same source artifact.
+- **Versioning** — Source snapshots can be tagged independently of agent versions.
+
+## Sparse checkouts
+
+Use `--sparse` to include only the parts of a repository an agent needs:
+
+```bash
+stax build-source ./monorepo \
+  --sparse services/api \
+  --sparse packages/shared \
+  --sparse tsconfig.json
+```
+
+This keeps source artifacts small and focused.
+
+## Example output
+
+```text
+✓ scanned ./repo (1,247 files)
+✓ stripped .git/ metadata
+✓ built source layer (2.3 MB)
+✓ artifact cached — sha256:7b4e2f…c1d9
+```
+
+## Related commands
+
+- [`stax build`](/docs/cli/build) — Build an agent artifact (may reference source artifacts)
+- [`stax push`](/docs/cli/push) — Publish the source artifact to a registry
+
+See also: [Workspace Sources specification](/docs/spec/workspace-sources)

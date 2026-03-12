@@ -411,6 +411,9 @@ importers:
       '@stax/oci':
         specifier: workspace:*
         version: link:../oci
+      '@stax/resolve':
+        specifier: workspace:*
+        version: link:../resolve
     devDependencies:
       '@stax/config':
         specifier: workspace:*

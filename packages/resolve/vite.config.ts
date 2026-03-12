@@ -9,7 +9,7 @@ export default defineConfig({
       fileName: "index",
     },
     rollupOptions: {
-      external: [/^@stax\//],
+      external: [/^@stax\//, /^node:/],
     },
   },
 });

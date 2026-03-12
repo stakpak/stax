@@ -3,9 +3,11 @@ title: Configuration
 description: Project-level configuration with stax.config.ts
 ---
 
+Configure stax behavior at the project level with an optional `stax.config.ts` file. This sets defaults for registry, persona selection, and materialization behavior so you don't need to pass them as CLI flags every time.
+
 ## stax.config.ts
 
-Optional project-level configuration file.
+Place this file in your project root alongside `agent.ts`:
 
 ```typescript
 export default {
@@ -14,3 +16,44 @@ export default {
   failOnLossyMaterialization: false,
 };
 ```
+
+## Configuration options
+
+| Option                       | Type      | Description                                                    |
+| ---------------------------- | --------- | -------------------------------------------------------------- |
+| `registry`                   | `string`  | Default registry for push/pull when no full reference is given |
+| `defaultPersona`             | `string`  | Persona to use when `--persona` is not specified               |
+| `failOnLossyMaterialization` | `boolean` | Exit with error if materialization produces lossy warnings     |
+
+## How configuration is resolved
+
+Configuration is resolved in this order, with later sources overriding earlier ones:
+
+1. **Built-in defaults** — Sensible defaults for all options
+2. **`stax.config.ts`** — Project-level configuration file
+3. **CLI flags** — Command-line arguments always take precedence
+
+For example, if `stax.config.ts` sets `registry: "ghcr.io/myorg/agents"`, you can push with just:
+
+```bash
+stax push backend-engineer:3.1.0
+# Equivalent to: stax push ghcr.io/myorg/agents/backend-engineer:3.1.0
+```
+
+But you can always override with an explicit reference:
+
+```bash
+stax push docker.io/myorg/backend-engineer:3.1.0
+```
+
+## Strict materialization
+
+Set `failOnLossyMaterialization: true` to enforce full fidelity in CI:
+
+```typescript
+export default {
+  failOnLossyMaterialization: true,
+};
+```
+
+With this enabled, `stax materialize` exits with code 5 if any lossy translation warnings are produced. This is useful for ensuring that artifacts are fully compatible with their target runtime before deployment.

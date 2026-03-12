@@ -1,24 +1,29 @@
 ---
 title: stax inspect
-description: Display artifact metadata and layer information
+description: Display artifact metadata, identity, and layer information
 ---
 
-Display artifact metadata and layer information.
+Display an artifact's metadata, identity, persona, runtime configuration, and layer breakdown. Use this to understand what's inside an artifact before pushing, pulling, or materializing it.
 
 ## Usage
 
 ```bash
 stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0
 stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0 --json
+stax inspect sha256:a3f8c1…e7d2
 ```
+
+Accepts registry references (with tag or digest) or local cache digests.
 
 ## Options
 
-| Flag     | Description                  |
-| -------- | ---------------------------- |
-| `--json` | Output machine-readable JSON |
+| Flag     | Description                             |
+| -------- | --------------------------------------- |
+| `--json` | Output full metadata as structured JSON |
 
-## Example Output
+## Example output
+
+### Human-readable
 
 ```text
 Agent: backend-engineer v3.1.0
@@ -33,4 +38,34 @@ Layers:
   skills     application/vnd.stax.skills.v1.tar+gzip      4.3 KB  (3 skills)
   rules      application/vnd.stax.rules.v1.tar+gzip       1.7 KB  (4 rules)
   secrets    application/vnd.stax.secrets.v1+json         0.3 KB  (3 secrets)
+
+Packages:
+  @acme/compliance-rules  sha256:f8a1c3…
+  @acme/mcp-bundle        sha256:4d2e7b…
+
+Total: 11.2 KB (7 layers)
 ```
+
+### JSON output
+
+The `--json` flag returns the full OCI manifest, config blob, annotations, and layer metadata as structured JSON:
+
+```bash
+stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0 --json | jq '.config.persona'
+```
+
+This is useful for scripting, CI pipelines, and building tools on top of stax artifacts.
+
+## What you can learn from inspect
+
+- **Identity** — Agent name, version, and persona
+- **Runtime** — Target runtime and model
+- **Layer breakdown** — Each layer's media type, size, and content summary
+- **Dependencies** — Resolved packages with their locked digests
+- **Annotations** — OCI manifest annotations (build timestamp, source URL, etc.)
+
+## Related commands
+
+- [`stax diff`](/docs/cli/diff) — Compare two artifacts side by side
+- [`stax extract`](/docs/cli/extract) — Extract layer contents to disk
+- [`stax materialize`](/docs/cli/materialize) — Translate the artifact into runtime files
