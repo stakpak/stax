@@ -563,18 +563,7 @@ code {
   color: var(--stax-term-text);
 }
 
-.stax-terminal-line:last-child::after {
-  content: "";
-  display: inline-block;
-  width: 0.5em;
-  height: 1.1em;
-  margin-left: 0.25em;
-  background: var(--color-fd-primary);
-  opacity: 0;
-  vertical-align: text-bottom;
-  animation: cursor-blink 1s step-end infinite;
-  animation-delay: 3.6s;
-}
+
 
 .stax-term--green {
   color: var(--stax-term-green);
@@ -1648,15 +1637,7 @@ code {
   }
 }
 
-@keyframes cursor-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
+
 
 @keyframes reveal {
   from {
