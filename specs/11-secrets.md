@@ -13,26 +13,26 @@ Secret values, providers, rotation, and access control remain the consumer's res
 ```typescript
 secrets: [
   {
-    key: 'ANTHROPIC_API_KEY',
+    key: "ANTHROPIC_API_KEY",
     required: true,
-    description: 'API key for Claude',
-    kind: 'api-key',
-    exposeAs: { env: 'ANTHROPIC_API_KEY' }
+    description: "API key for Claude",
+    kind: "api-key",
+    exposeAs: { env: "ANTHROPIC_API_KEY" },
   },
   {
-    key: 'GITHUB_TOKEN',
+    key: "GITHUB_TOKEN",
     required: true,
-    description: 'GitHub personal access token',
-    kind: 'token'
+    description: "GitHub personal access token",
+    kind: "token",
   },
   {
-    key: 'TLS_CERT',
+    key: "TLS_CERT",
     required: false,
-    description: 'Optional client certificate',
-    kind: 'certificate',
-    exposeAs: { file: '/run/secrets/tls.crt' }
-  }
-]
+    description: "Optional client certificate",
+    kind: "certificate",
+    exposeAs: { file: "/run/secrets/tls.crt" },
+  },
+];
 ```
 
 ## Type definition
@@ -42,7 +42,7 @@ interface SecretDeclaration {
   key: string;
   required: boolean;
   description?: string;
-  kind?: 'api-key' | 'token' | 'password' | 'certificate' | 'connection-string' | 'url' | 'opaque';
+  kind?: "api-key" | "token" | "password" | "certificate" | "connection-string" | "url" | "opaque";
   exposeAs?: {
     env?: string;
     file?: string;

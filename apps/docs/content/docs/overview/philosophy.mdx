@@ -1,0 +1,67 @@
+---
+title: Philosophy
+description: The boundary principle and design philosophy behind stax
+---
+
+## The Boundary Principle
+
+> A stax artifact carries **what an agent is** and **what it needs to start**.
+> Everything about **where it runs, how long it runs, with what limits, under what policies, and in what topology** is extrinsic and belongs to the consumer.
+
+This is the same separation used by successful packaging standards:
+
+- OCI images describe the image, not the deployment topology
+- npm packages describe dependencies, not process supervision
+- Helm charts describe desired resources, not cluster implementation details
+
+## What stax Carries
+
+- What an agent is
+- What bytes define it
+- What dependencies it needs
+- What source context it expects
+- What secrets it declares
+- What runtime-native outputs it can materialize into
+- What trust and policy metadata is attached to it
+
+## What stax Does Not Carry
+
+- Where the agent is scheduled
+- How many replicas it runs
+- What event starts it
+- How long it executes
+- How jobs are retried
+- What service mesh or queue transports it uses
+- What cloud account or cluster hosts it
+
+Execution contracts can live in other products. stax remains the distribution substrate.
+
+## Design Principles
+
+### Keep the scope hard
+
+Do not let stax absorb runtime execution semantics. The standard stays valuable only if local tools can consume it, cloud systems can consume it, enterprises can govern it, and future runtimes can adopt it without inheriting one execution model.
+
+### Win the artifact first
+
+Before expanding, make the artifact story excellent: deterministic builds, exact digests, strong validation, clean package resolution, stable merge rules, trustworthy materialization.
+
+### Make installation real
+
+A standard is not real until users can install artifacts into working environments in minutes.
+
+### Invest in trust early
+
+Distribution standards become strategic when they can enforce trust boundaries. This means first-class support for signing, provenance, evaluation referrers, approvals, and policy-aware installation.
+
+### Design for remote agents without owning execution
+
+For cloud and long-running agents, stax defines how agents are distributed into those systems, not how those systems execute them.
+
+### Prefer composition over monoliths
+
+The future stack should be composable: stax core artifact, stax registry conventions, stax policy and attestation conventions, stax adapters, third-party execution systems.
+
+### Be neutral but opinionated
+
+stax is neutral about runtime choice, but opinionated about artifact quality: reproducibility, explicit boundaries, deterministic packaging, supply-chain integrity, no secret embedding, no undocumented mutation.

@@ -1,0 +1,31 @@
+---
+title: stax plan-install
+description: Generate a machine-readable install plan without applying changes
+---
+
+Generate a machine-readable install plan without applying changes.
+
+## Usage
+
+```bash
+stax plan-install ghcr.io/myorg/agents/backend-engineer:3.1.0 --consumer codex
+stax plan-install ghcr.io/myorg/agents/backend-engineer:3.1.0 --consumer acme-cloud --json
+```
+
+## Options
+
+| Flag | Description |
+| --- | --- |
+| `--consumer` | Target consumer/runtime |
+| `--json` | Output machine-readable JSON |
+
+## Plan Contents
+
+A conforming implementation SHOULD include:
+
+- Selected adapter
+- Compatibility reasoning
+- Fidelity summary
+- Planned writes or remote targets
+- Warnings
+- Trust summary when available

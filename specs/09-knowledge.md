@@ -80,8 +80,8 @@ Example:
 
 ```typescript
 export default defineAgent({
-  name: 'backend-engineer',
-  knowledge: './knowledge/'
+  name: "backend-engineer",
+  knowledge: "./knowledge/",
 });
 ```
 

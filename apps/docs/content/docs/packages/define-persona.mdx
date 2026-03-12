@@ -1,0 +1,159 @@
+---
+title: Defining a Persona
+description: How to define an agent persona using definePersona()
+---
+
+A persona defines an agent's identity, expertise, voice, values, and behavioral boundaries. The same agent with different persona layers becomes a distinct artifact that shares every other unchanged layer by digest.
+
+Personas are authored in TypeScript using `definePersona()` and compiled to canonical JSON.
+
+## definePersona()
+
+```typescript
+import { definePersona } from "stax";
+
+export default definePersona({
+  name: "maya-chen",
+  displayName: "Maya Chen",
+  role: "Senior Backend Engineer",
+
+  background: "10 years building distributed systems at scale.",
+  expertise: {
+    primary: ["Go", "distributed systems", "PostgreSQL"],
+    secondary: ["Kubernetes", "Terraform"],
+    learning: ["Rust"],
+  },
+
+  personality: {
+    traits: ["pragmatic", "thorough", "mentoring"],
+    communicationStyle: "direct",
+    verbosity: "concise",
+  },
+
+  voice: {
+    tone: "Professional but warm. Uses concrete examples.",
+    codeComments: "minimal",
+    patterns: [
+      "Starts with positives before suggestions",
+      'Uses "we" when proposing improvements',
+    ],
+    avoid: ["Overly academic language", "Unnecessary hedging"],
+  },
+
+  values: [
+    "Correctness over speed",
+    "Explicit over implicit",
+    "Simplicity over cleverness",
+  ],
+
+  preferences: {
+    testing: "Table-driven tests, no mocks unless necessary.",
+    errorHandling: "Explicit error returns, no panic.",
+  },
+
+  boundaries: {
+    willNot: ["Write code without tests", "Skip error handling"],
+    always: ["Consider backwards compatibility", "Document breaking changes"],
+    escalates: ["Security-sensitive changes", "Database migrations"],
+  },
+});
+```
+
+## Fields
+
+### Required Fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | Identifier (same naming rules as agents) |
+| `displayName` | `string` | Human-readable name |
+| `role` | `string` | Role title |
+
+### Identity
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `background` | `string` | Experience and background summary |
+| `expertise.primary` | `string[]` | Core areas of expertise |
+| `expertise.secondary` | `string[]` | Supporting skills |
+| `expertise.learning` | `string[]` | Areas currently being learned |
+
+### Personality and Voice
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `personality.traits` | `string[]` | Character traits |
+| `personality.communicationStyle` | `string` | One of: `direct`, `diplomatic`, `academic`, `casual`, `formal` |
+| `personality.verbosity` | `string` | One of: `minimal`, `concise`, `balanced`, `detailed`, `verbose` |
+| `voice.tone` | `string` | Tone description |
+| `voice.codeComments` | `string` | One of: `none`, `minimal`, `moderate`, `thorough` |
+| `voice.patterns` | `string[]` | Communication patterns to follow |
+| `voice.avoid` | `string[]` | Patterns to avoid |
+
+### Values and Boundaries
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `values` | `string[]` | Guiding principles |
+| `preferences` | `Record<string, unknown>` | Domain-specific preferences |
+| `boundaries.willNot` | `string[]` | Actions the persona refuses |
+| `boundaries.always` | `string[]` | Actions the persona always takes |
+| `boundaries.escalates` | `string[]` | Situations requiring escalation |
+
+## Persona Discovery
+
+Builders support three persona modes:
+
+```bash
+stax build                    # build default persona.ts if present
+stax build --persona maya-chen
+stax build --all-personas     # build every personas/*.ts except files starting with _
+```
+
+Files in `personas/` whose basename starts with `_` are ignored for standalone builds but can be imported for inheritance or composition.
+
+## Inheritance
+
+Persona inheritance is an authoring pattern using standard TypeScript spread syntax:
+
+```typescript
+import base from "./_base.ts";
+
+export default definePersona({
+  ...base,
+  name: "maya-chen",
+  displayName: "Maya Chen",
+  role: "Senior Backend Engineer",
+  expertise: { primary: ["Go", "distributed systems"] },
+});
+```
+
+The final spread-merged object must pass all validation rules. Child values override base values using standard spread semantics.
+
+## Prompt Templating
+
+Prompts can reference persona fields using `{{ ... }}` expressions:
+
+```markdown
+You are {{persona.displayName}}, a {{persona.role}}.
+{{persona.background}}
+```
+
+### Template Rules
+
+- Only `persona` is in scope
+- Expressions use dotted paths such as `persona.role`
+- Missing values resolve to an empty string
+- Array values are rendered as comma-separated lists
+- To emit a literal `{{`, write `\{{`
+- Nested expressions, function calls, conditionals, and loops are not supported
+
+## Storage Efficiency
+
+All persona variants share every unchanged layer:
+
+```text
+backend-engineer:3.1.0-maya-chen     persona sha256:111
+backend-engineer:3.1.0-alex-rivera   persona sha256:222
+                                     all other layer digests identical
+```

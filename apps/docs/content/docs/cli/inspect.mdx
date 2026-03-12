@@ -1,0 +1,36 @@
+---
+title: stax inspect
+description: Display artifact metadata and layer information
+---
+
+Display artifact metadata and layer information.
+
+## Usage
+
+```bash
+stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0
+stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0 --json
+```
+
+## Options
+
+| Flag | Description |
+| --- | --- |
+| `--json` | Output machine-readable JSON |
+
+## Example Output
+
+```text
+Agent: backend-engineer v3.1.0
+Runtime: claude-code (claude-opus-4-1)
+Persona: maya-chen (Maya Chen, Senior Backend Engineer)
+
+Layers:
+  config     application/vnd.stax.config.v1+json          1.5 KB
+  prompt     application/vnd.stax.prompt.v1+markdown      2.1 KB
+  persona    application/vnd.stax.persona.v1+json         0.8 KB
+  mcp        application/vnd.stax.mcp.v1+json             0.5 KB
+  skills     application/vnd.stax.skills.v1.tar+gzip      4.3 KB  (3 skills)
+  rules      application/vnd.stax.rules.v1.tar+gzip       1.7 KB  (4 rules)
+  secrets    application/vnd.stax.secrets.v1+json         0.3 KB  (3 secrets)
+```

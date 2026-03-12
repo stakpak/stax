@@ -13,12 +13,12 @@ The base memory layer format is standardized. Runtime synchronization strategy r
 
 ## Memory vs knowledge
 
-| | Knowledge | Memory |
-|---|-----------|--------|
-| Mutability | Immutable author input | Mutable runtime output |
-| Source | Docs, specs, guides | Learned context |
-| Lifecycle | Updated by rebuild | Updated by execution |
-| Scope | Usually shared broadly | Often scoped to user, workspace, or instance |
+|            | Knowledge              | Memory                                       |
+| ---------- | ---------------------- | -------------------------------------------- |
+| Mutability | Immutable author input | Mutable runtime output                       |
+| Source     | Docs, specs, guides    | Learned context                              |
+| Lifecycle  | Updated by rebuild     | Updated by execution                         |
+| Scope      | Usually shared broadly | Often scoped to user, workspace, or instance |
 
 ## Directory structure
 

@@ -1,0 +1,26 @@
+---
+title: stax validate
+description: Validate definitions without producing an artifact
+---
+
+Validate definitions without producing an artifact.
+
+## Usage
+
+```bash
+stax validate
+stax validate agent.ts
+```
+
+## Validation Coverage
+
+Validation MUST cover at least:
+
+- Type correctness
+- Required fields
+- Path existence and type
+- Package reference syntax
+- Dependency cycles
+- MCP secret references
+- Skill and rule frontmatter validity
+- Archive safety rules

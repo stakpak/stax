@@ -1,0 +1,91 @@
+---
+title: Architecture
+description: Core objects and architecture of the stax distribution standard
+---
+
+## Architecture Diagram
+
+```text title="Architecture"
+┌──────────────────────────────────────────────────┐
+│                     stax                         │
+│              (distribution standard)             │
+│                                                  │
+│  TypeScript SDK → OCI Artifact → Registry        │
+│                                                  │
+│  defineAgent()     Typed layers    Push/Pull     │
+│  definePackage()   Config blob     Inspect       │
+│  definePersona()   Lockfile        Materialize   │
+└──────────────────┬───────────────────────────────┘
+                   │
+                   │ OCI artifacts consumed by:
+                   │
+     ┌─────────────┼─────────────┬─────────────────┐
+     ▼             ▼             ▼                 ▼
+  Your           Agent         Cloud           Community
+  Orchestrator   Platforms     Providers       Tools
+```
+
+## Core Objects
+
+stax separates distinct concerns into distinct artifact families.
+
+<Cards>
+  <Card title="1. Agent Artifacts" description="The canonical brain: persona, prompt, instruction trees, surfaces, subagents, MCP servers, skills, rules, knowledge, memory, secret declarations, and adapter metadata." />
+  <Card title="2. Package Artifacts" description="Reusable bundles of shared behavior: org standards, domain toolkits, compliance rules, skill packs, knowledge packs, and MCP packs." />
+  <Card title="3. Source Artifacts" description="Cacheable workspace or repository snapshots consumed by many agents." />
+  <Card title="4. Runtime Profile Artifacts" description="Portable, non-secret runtime defaults that should not live inside the agent brain." />
+  <Card title="5. Referrer Artifacts" description="Metadata attached after publication: signatures, evaluations, approvals, memory snapshots, provenance, and policy attestations." />
+</Cards>
+
+## The Seven Jobs
+
+If stax is the distribution standard, it must solve the full lifecycle of artifact movement.
+
+| Job | Description |
+| --- | --- |
+| **Packaging** | Build deterministic artifacts from source trees so the same inputs always produce the same digests |
+| **Addressing** | Every agent, package, source snapshot, and profile must be versioned, content-addressed, taggable, diffable, and reproducible |
+| **Dependency Management** | Agents depend on packages and source artifacts in a way that is explicit, lockable, inspectable, mergeable, and conflict-aware |
+| **Materialization** | A single canonical artifact maps into many runtimes without manual rewriting |
+| **Verification** | Consumers can answer: who published this, what changed, whether it's signed, what evals it passed, whether it was approved |
+| **Promotion** | The same artifact moves cleanly through personal development, shared staging, production deployment, internal mirrors, and regulated environments |
+| **Discovery & Installation** | Artifacts are easy to search, install, update, and roll back |
+
+## Conformance Levels
+
+<Tabs items={['Builder', 'Consumer', 'Registry Tool']}>
+  <Tab value="Builder">
+    A **builder** compiles authoring files into canonical JSON and deterministic OCI artifacts.
+
+    Builders are responsible for:
+    - Parsing TypeScript definitions (`defineAgent()`, `definePackage()`, `definePersona()`)
+    - Compiling to canonical JSON config blobs
+    - Constructing deterministic OCI layers
+    - Resolving and locking package dependencies
+    - Producing reproducible digests from the same source tree
+  </Tab>
+  <Tab value="Consumer">
+    A **consumer** reads artifacts, validates them, resolves packages, and optionally materializes them for a runtime.
+
+    Consumers include:
+    - CLIs that materialize artifacts into runtime-native files
+    - IDE plugins that import agent configurations
+    - Hosted platforms that deploy agents from artifacts
+    - Orchestrators that resolve and schedule agent workloads
+  </Tab>
+  <Tab value="Registry Tool">
+    A **registry tool** pushes, pulls, copies, signs, verifies, and inspects artifacts and referrers.
+
+    Registry tools handle:
+    - Pushing built artifacts to OCI registries
+    - Pulling artifacts by tag or digest
+    - Copying artifacts between registries
+    - Signing artifacts with Sigstore or other signers
+    - Verifying signatures and attestations
+    - Inspecting artifact metadata and layers
+  </Tab>
+</Tabs>
+
+<Callout type="info" title="Multiple Roles">
+A single implementation MAY satisfy one, two, or all three conformance roles. The `stax` reference CLI implements all three.
+</Callout>

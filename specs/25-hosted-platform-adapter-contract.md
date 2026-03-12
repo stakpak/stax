@@ -4,9 +4,7 @@
 
 ## Overview
 
-stax `1.0.0` models adapters primarily around filesystem-oriented runtimes such as Claude Code, Codex, and OpenClaw.
-
-That is necessary but incomplete for the broader vision.
+stax `1.0.0` now includes baseline non-filesystem targets and install-plan output, but hosted consumers still need richer contracts than local runtimes.
 
 Many future consumers of stax artifacts will be:
 
@@ -77,17 +75,15 @@ A hosted consumer SHOULD perform the following steps:
 
 The hosted consumer remains responsible for execution after import.
 
-## Problem with `1.0.0` target kinds
+## Relationship to the core adapter model
 
-`1.0.0` defines:
+The core adapter model now supports:
 
 ```typescript
-kind: 'file' | 'directory' | 'setting'
+kind: "file" | "directory" | "setting" | "api" | "bundle" | "object";
 ```
 
-That is too narrow for remote consumers.
-
-Future versions SHOULD extend target modeling to include non-filesystem outputs.
+This document extends that baseline with more hosted-specific guidance rather than redefining the core model.
 
 ## Proposed target model
 
@@ -95,9 +91,9 @@ Future adapter contracts SHOULD support:
 
 ```typescript
 interface MaterializationTargetV2 {
-  kind: 'file' | 'directory' | 'setting' | 'api' | 'bundle' | 'object';
+  kind: "file" | "directory" | "setting" | "api" | "bundle" | "object";
   target: string;
-  scope?: 'user' | 'project' | 'workspace' | 'local' | 'remote' | 'account' | 'organization';
+  scope?: "user" | "project" | "workspace" | "local" | "remote" | "account" | "organization";
   exact?: boolean;
   description?: string;
   mediaType?: string;
@@ -177,8 +173,8 @@ Future hosted adapters SHOULD compile to a payload equivalent to:
 ```typescript
 interface HostedAdapterConfig extends AdapterConfig {
   config: {
-    importMode: 'filesystem' | 'api' | 'bundle' | 'object-map';
-    fidelity: 'byte-exact' | 'schema-exact' | 'best-effort';
+    importMode: "filesystem" | "api" | "bundle" | "object-map";
+    fidelity: "byte-exact" | "schema-exact" | "best-effort";
     apiVersion?: string;
     targetObjects?: string[];
     maxArtifactSizeMb?: number;

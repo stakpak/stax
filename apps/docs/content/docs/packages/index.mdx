@@ -1,0 +1,97 @@
+---
+title: Getting Started
+description: How to define, build, and distribute stax agents and packages
+---
+
+stax provides a TypeScript-first authoring experience for defining agents and packages. Every definition uses a typed helper function that validates your configuration at build time.
+
+## Quick Start
+
+<Steps>
+  <Step>
+    ### Initialize a new agent
+
+    ```bash
+    stax init --agent
+    ```
+  </Step>
+  <Step>
+    ### Define your agent
+
+    ```typescript title="agent.ts"
+    import { defineAgent } from "stax";
+
+    export default defineAgent({
+      name: "backend-engineer",
+      version: "3.1.0",
+      persona: "./personas/maya-chen.ts",
+      prompt: "./prompt.md",
+      mcp: "./mcp.ts",
+      skills: "./skills/",
+      rules: "./rules/",
+      packages: ["@acme/coding-standards@^1.0.0"],
+      adapter: {
+        type: "claude-code",
+        runtime: "claude-code",
+      },
+    });
+    ```
+  </Step>
+  <Step>
+    ### Build the artifact
+
+    ```bash
+    stax build
+    ```
+  </Step>
+  <Step>
+    ### Push to a registry
+
+    ```bash
+    stax push ghcr.io/myorg/agents/backend-engineer:3.1.0
+    ```
+  </Step>
+  <Step>
+    ### Materialize into a runtime
+
+    ```bash
+    stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --out ./output
+    ```
+  </Step>
+</Steps>
+
+## Project Structure
+
+After running `stax init --agent`, your project will look like this:
+
+<Files>
+  <Folder name="my-agent" defaultOpen>
+    <File name="agent.ts" />
+    <File name="SYSTEM_PROMPT.md" />
+    <File name="persona.ts" />
+    <File name="mcp-servers.ts" />
+    <Folder name="personas" defaultOpen>
+      <File name="_base.ts" />
+      <File name="maya-chen.ts" />
+    </Folder>
+    <Folder name="skills">
+      <File name="code-review.md" />
+      <File name="architecture.md" />
+    </Folder>
+    <Folder name="rules">
+      <File name="style-guide.md" />
+    </Folder>
+    <Folder name="knowledge" />
+    <Folder name="memory" />
+    <File name=".staxignore" />
+    <File name="stax.lock" />
+  </Folder>
+</Files>
+
+## Next Steps
+
+<Cards>
+  <Card title="Defining an Agent" href="/docs/packages/define-agent" description="Full reference for defineAgent() including identity, layers, adapters, secrets, and hints" />
+  <Card title="Defining a Package" href="/docs/packages/define-package" description="Create reusable bundles of skills, rules, MCP config, and knowledge" />
+  <Card title="Defining a Persona" href="/docs/packages/define-persona" description="Author rich persona definitions with traits, communication style, and prompt templates" />
+</Cards>

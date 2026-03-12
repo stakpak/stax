@@ -1,0 +1,215 @@
+---
+title: Defining an Agent
+description: How to define an agent using defineAgent()
+---
+
+The agent manifest is the root definition of an agent artifact. It declares identity, layer sources, runtime hints, package dependencies, secret requirements, and the adapter used to materialize the artifact for a target environment.
+
+Agents are authored in TypeScript using `defineAgent()` and compiled to JSON for the OCI config blob.
+
+## defineAgent()
+
+<Callout type="info" title="Single Root Definition">
+A project must contain exactly one root agent definition file, typically `agent.ts`. All relative paths are resolved relative to the directory containing this file.
+</Callout>
+
+```typescript title="agent.ts"
+import { defineAgent } from "stax";
+import claudeCode from "@stax/claude-code";
+
+export default defineAgent({
+  name: "backend-engineer",
+  version: "3.1.0",
+  description: "Senior backend engineer with Go and distributed systems expertise.",
+  author: "myorg",
+  license: "MIT",
+  tags: ["code-review", "architecture", "golang"],
+  url: "https://github.com/myorg/backend-engineer",
+
+  adapter: claudeCode({
+    model: "claude-opus-4-1",
+    modelParams: { temperature: 0.3 },
+  }),
+
+  persona: "./personas/maya-chen.ts",
+  prompt: "./SYSTEM_PROMPT.md",
+  mcp: "./mcp-servers.ts",
+  skills: "./skills/",
+  rules: "./rules/",
+  knowledge: "./knowledge/",
+  memory: "./memory/",
+  surfaces: "./surfaces/",
+
+  hints: {
+    isolation: "microvm",
+    capabilities: {
+      shell: true,
+      network: {
+        mode: "restricted",
+        allowlist: ["api.anthropic.com", "api.github.com"],
+      },
+      filesystem: {
+        workspace: "/workspace",
+        writable: ["/workspace"],
+        denyRead: ["**/.env", "**/*credentials*"],
+      },
+    },
+  },
+
+  secrets: [
+    { key: "ANTHROPIC_API_KEY", required: true, kind: "api-key" },
+    { key: "GITHUB_TOKEN", required: true, kind: "token" },
+    { key: "SLACK_WEBHOOK", required: false, kind: "url" },
+  ],
+
+  packages: [
+    "ghcr.io/myorg/packages/github-workflow:2.0.0",
+    "ghcr.io/myorg/packages/org-standards@sha256:0123456789abcdef...",
+    "./packages/local-team-overrides",
+  ],
+});
+```
+
+## Identity Fields
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | Yes | Agent identifier. Must match `^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$` |
+| `version` | `string` | Yes | Valid semver version |
+| `description` | `string` | Yes | Human-readable description |
+| `author` | `string` | No | Author or organization |
+| `license` | `string` | No | SPDX license identifier |
+| `url` | `string` | No | Project URL |
+| `tags` | `string[]` | No | Unique, case-sensitive tags |
+
+## Layer Source Paths
+
+These fields point to the files or directories that define each layer of your agent.
+
+| Field | Points to | Description |
+| --- | --- | --- |
+| `persona` | File | Persona definition (`definePersona()`) |
+| `prompt` | File | System prompt (Markdown) |
+| `mcp` | File | MCP server configuration |
+| `subagents` | File | Subagent definitions |
+| `skills` | Directory | Skill definitions |
+| `rules` | Directory | Rule files |
+| `knowledge` | Directory | Knowledge documents |
+| `memory` | Directory | Memory files |
+| `surfaces` | Directory | Surface files for exact runtime materialization |
+| `instructionTree` | Directory | Instruction tree files |
+
+<Callout type="warn" title="Path Resolution">
+All paths are resolved relative to `agent.ts`. Missing optional paths cause a validation error if explicitly declared.
+</Callout>
+
+## Adapter
+
+The `adapter` field declares the intended runtime for your agent. Adapters are provided as typed functions from adapter packages (e.g., `@stax/claude-code`).
+
+```typescript title="adapter-config.ts"
+adapter: claudeCode({
+  model: "claude-opus-4-1",
+  modelParams: { temperature: 0.3 },
+}),
+```
+
+You can also provide `adapterFallback` as an array of alternate adapter configs in descending preference order. If the primary adapter is not compatible with a consumer, fallbacks are tried in order.
+
+## Runtime Hints
+
+Hints communicate non-binding runtime requirements to consumers.
+
+```typescript title="hints-config.ts"
+hints: {
+  isolation: "process" | "container" | "gvisor" | "microvm",
+  capabilities: {
+    shell: boolean,
+    processes: boolean,
+    docker: boolean,
+    network: { mode: "none" | "restricted" | "full", allowlist: string[] },
+    filesystem: { workspace: string, writable: string[], denyRead: string[] },
+  },
+}
+```
+
+## Secrets
+
+Declare secrets your agent needs at runtime. Values are never stored in the artifact.
+
+```typescript title="secrets-config.ts"
+secrets: [
+  { key: "ANTHROPIC_API_KEY", required: true, kind: "api-key" },
+  { key: "GITHUB_TOKEN", required: true, kind: "token" },
+  { key: "SLACK_WEBHOOK", required: false, kind: "url" },
+]
+```
+
+<Callout type="error" title="Security">
+Secret **values** are never stored in the artifact. Only declarations (key names, kinds, and requirements) are included. The runtime or consumer is responsible for resolving actual secret values.
+</Callout>
+
+Available kinds: `api-key`, `token`, `password`, `certificate`, `connection-string`, `url`, `opaque`.
+
+You can control how secrets are exposed using `exposeAs`:
+
+```typescript
+{ key: "DB_PASSWORD", required: true, kind: "password", exposeAs: { env: "DATABASE_PASSWORD" } }
+```
+
+## Package References
+
+Each entry in `packages` must be one of:
+
+- A relative local path: `./packages/local-overrides`
+- An OCI reference with an explicit tag: `ghcr.io/myorg/packages/github-workflow:2.0.0`
+- An OCI digest reference: `ghcr.io/myorg/packages/org-standards@sha256:0123...`
+
+<Callout type="warn" title="Pinned References">
+Semver ranges and floating selectors like `latest` should not be used in committed manifests. The builder resolves them into `stax.lock`.
+</Callout>
+
+## Workspace Sources
+
+Declare shared repository or workspace dependencies that consumers should make available.
+
+```typescript title="workspace-sources.ts"
+workspaceSources: [
+  {
+    id: "backend-repo",
+    ref: "ghcr.io/myorg/sources/backend@sha256:abcdef123456...",
+    mountPath: "/workspace/backend",
+    writable: true,
+    required: true,
+  },
+]
+```
+
+Each entry must have a unique `id`, reference an OCI source artifact by digest or exact tag, and specify an absolute `mountPath`.
+
+## Directory Structure
+
+<Files>
+  <Folder name="my-agent" defaultOpen>
+    <File name="agent.ts" />
+    <File name="SYSTEM_PROMPT.md" />
+    <File name="persona.ts" />
+    <File name="mcp-servers.ts" />
+    <Folder name="personas" defaultOpen>
+      <File name="_base.ts" />
+      <File name="maya-chen.ts" />
+      <File name="alex-rivera.ts" />
+    </Folder>
+    <Folder name="skills" />
+    <Folder name="rules" />
+    <Folder name="knowledge" />
+    <Folder name="memory" />
+    <Folder name="surfaces" defaultOpen>
+      <File name="instructions.md" />
+      <File name="persona.md" />
+      <File name="tools.md" />
+    </Folder>
+    <File name=".staxignore" />
+    <File name="stax.lock" />
+  </Folder>
+</Files>

@@ -152,6 +152,8 @@ An adapter claiming exactness MUST be tested against:
 - byte-preserving mappings where applicable
 - failure or warning behavior for synthesized outputs
 
+Generic adapters MUST NOT claim exactness certification.
+
 ### Runtime fixtures
 
 Each exact adapter profile SHOULD include:
@@ -160,6 +162,7 @@ Each exact adapter profile SHOULD include:
 - expected output tree
 - expected warnings
 - runtime version metadata
+- subagent and instruction-tree fixtures when the runtime supports them
 
 ## Registry conformance requirements
 
@@ -224,6 +227,7 @@ Therefore:
 - exact adapter profiles SHOULD record the runtime version tested
 - implementations SHOULD re-run exactness profiles when runtime versions change materially
 - an implementation SHOULD NOT claim exact support for an untested runtime major version
+- an implementation SHOULD downgrade exact claims when runtime-version coverage is missing or stale
 
 ## Open design questions
 

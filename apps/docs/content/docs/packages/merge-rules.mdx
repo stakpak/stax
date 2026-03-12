@@ -1,0 +1,55 @@
+---
+title: Merge Rules
+description: How package layers are merged into consuming agents
+---
+
+When an agent or package depends on other packages, their layers are merged together. stax uses a deterministic merge strategy based on declaration order and precedence.
+
+## Precedence Order
+
+Layers are merged with the following precedence (highest wins):
+
+1. The consuming artifact's own layers (highest)
+2. Direct dependencies in declaration order
+3. Transitive dependencies (lowest)
+
+## Merge Table
+
+Each layer type has specific merge rules:
+
+| Layer | Merge unit | Conflict key | Rule |
+| --- | --- | --- | --- |
+| MCP | Server object | Server name | Replace entire server object at the highest-precedence definition |
+| Skills | Top-level skill directory | Skill name | Higher precedence replaces the entire skill directory |
+| Rules | Rule file | Rule `id` if present, else archive path | Higher precedence replaces matching rule; otherwise append in precedence order |
+| Knowledge | Archive path | Normalized path | Higher precedence replaces matching path |
+| Surfaces | Surface file | Basename | Higher precedence replaces the entire file |
+| Secrets | Secret key | `key` | Higher precedence replaces entire declaration |
+
+## Why Replace, Not Deep Merge
+
+stax uses **replace**, not deep merge, for structured conflicts. This avoids non-deterministic behavior and ambiguous list merging.
+
+For example, if two packages define the `github` MCP server, the higher-precedence definition replaces the lower one entirely. There is no attempt to merge individual server fields.
+
+## Rules Ordering
+
+After rule replacement and deduplication, remaining rules are ordered by:
+
+1. Precedence level (lowest to highest)
+2. Explicit `priority` ascending
+3. Normalized archive path ascending
+
+Consumers may apply additional runtime-specific ordering but should preserve the canonical order when possible.
+
+## Skills Conflict Behavior
+
+A skill is identified by its top-level directory name. If two packages provide `skills/fix-issue/`, the higher-precedence package wins and the lower-precedence directory is discarded entirely.
+
+## Knowledge Conflict Behavior
+
+Knowledge files are identified by normalized archive path. If two sources provide the same path, the higher-precedence file wins. Consumers should retain path provenance when materializing or indexing merged knowledge.
+
+## Secrets Merging
+
+Secrets are merged by `key`. Higher precedence replaces the full declaration, including `required`, `description`, `kind`, and `exposeAs`.

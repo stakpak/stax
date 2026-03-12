@@ -10,12 +10,12 @@ This adapter targets the documented Windsurf file contract described in [17 — 
 
 ## Scope model
 
-| Scope | Typical files |
-|------|---------------|
-| Project | `.windsurf/rules/*.md`, `.windsurf/workflows/*.md`, `AGENTS.md` |
-| User | `~/.codeium/windsurf/memories/global_rules.md`, `~/.codeium/windsurf/global_workflows/*.md`, `~/.codeium/windsurf/mcp_config.json` |
-| Legacy | `.windsurfrules` (project root, deprecated in favor of `.windsurf/rules/`) |
-| System (enterprise) | `/Library/Application Support/Windsurf/rules/*.md` (macOS), `/etc/windsurf/rules/*.md` (Linux) |
+| Scope               | Typical files                                                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Project             | `.windsurf/rules/*.md`, `.windsurf/workflows/*.md`, `AGENTS.md`                                                                    |
+| User                | `~/.codeium/windsurf/memories/global_rules.md`, `~/.codeium/windsurf/global_workflows/*.md`, `~/.codeium/windsurf/mcp_config.json` |
+| Legacy              | `.windsurfrules` (project root, deprecated in favor of `.windsurf/rules/`)                                                         |
+| System (enterprise) | `/Library/Application Support/Windsurf/rules/*.md` (macOS), `/etc/windsurf/rules/*.md` (Linux)                                     |
 
 In stax `1.0.0`, `@stax/windsurf` SHOULD default to **project scope**.
 
@@ -26,17 +26,17 @@ interface WindsurfAdapterOptions {
   model?: string;
   modelParams?: Record<string, unknown>;
 
-  scope?: 'project' | 'user';
+  scope?: "project" | "user";
   exact?: boolean;
 
-  writeRules?: boolean;                // default: true
-  writeWorkflows?: boolean;            // default: false — workflows are user-authored
-  writeMcp?: boolean;                  // default: true
-  writeInstructions?: boolean;         // default: true
+  writeRules?: boolean; // default: true
+  writeWorkflows?: boolean; // default: false — workflows are user-authored
+  writeMcp?: boolean; // default: true
+  writeInstructions?: boolean; // default: true
 
-  legacyWindsurfrules?: boolean;       // default: false — emit .windsurfrules instead of .windsurf/rules/
+  legacyWindsurfrules?: boolean; // default: false — emit .windsurfrules instead of .windsurf/rules/
 
-  config?: Record<string, unknown>;    // Windsurf-specific settings
+  config?: Record<string, unknown>; // Windsurf-specific settings
 }
 ```
 
@@ -54,19 +54,19 @@ The compiled adapter config SHOULD use:
 
 ### Project scope
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` or composed prompt | `AGENTS.md` |
-| rules | `.windsurf/rules/*.md` |
-| skills (as workflows) | `.windsurf/workflows/*.md` |
+| stax source                                   | Target                     |
+| --------------------------------------------- | -------------------------- |
+| `surfaces/instructions.md` or composed prompt | `AGENTS.md`                |
+| rules                                         | `.windsurf/rules/*.md`     |
+| skills (as workflows)                         | `.windsurf/workflows/*.md` |
 
 ### User scope
 
-| stax source | Target |
-|------------|--------|
+| stax source                                   | Target                                         |
+| --------------------------------------------- | ---------------------------------------------- |
 | `surfaces/instructions.md` or composed prompt | `~/.codeium/windsurf/memories/global_rules.md` |
-| MCP layer | `~/.codeium/windsurf/mcp_config.json` |
-| skills (as workflows) | `~/.codeium/windsurf/global_workflows/*.md` |
+| MCP layer                                     | `~/.codeium/windsurf/mcp_config.json`          |
+| skills (as workflows)                         | `~/.codeium/windsurf/global_workflows/*.md`    |
 
 ## `AGENTS.md` generation
 
@@ -88,14 +88,14 @@ Windsurf uses `.md` files in `.windsurf/rules/` with YAML frontmatter.
 
 Each canonical stax rule SHOULD be translated to a `.windsurf/rules/<rule-id>.md` file with the following frontmatter mapping:
 
-| stax rule field | Windsurf frontmatter field |
-|----------------|----------------------------|
-| `scope: 'always'` | `trigger: always_on` |
-| `scope: 'auto'` | `trigger: model_decision` + `description` (required) |
-| `scope: 'glob'` | `trigger: glob` + `globs` |
-| `scope: 'manual'` | `trigger: manual` |
-| `globs` | `globs` |
-| `id` | filename stem |
+| stax rule field   | Windsurf frontmatter field                           |
+| ----------------- | ---------------------------------------------------- |
+| `scope: 'always'` | `trigger: always_on`                                 |
+| `scope: 'auto'`   | `trigger: model_decision` + `description` (required) |
+| `scope: 'glob'`   | `trigger: glob` + `globs`                            |
+| `scope: 'manual'` | `trigger: manual`                                    |
+| `globs`           | `globs`                                              |
+| `id`              | filename stem                                        |
 
 ### Example output
 

@@ -11,6 +11,8 @@ Unlike the single `prompt` layer, surfaces exist so stax can represent runtimes 
 
 Surfaces are packaged as a deterministic tarball layer.
 
+Surfaces are for **named runtime-facing documents**, not for full hierarchical instruction discovery trees. Path-scoped instruction hierarchies are represented separately by [38 — Instruction Trees](./38-instruction-trees.md).
+
 ## Why surfaces exist
 
 A single prompt is not enough for runtimes that separate:
@@ -29,10 +31,10 @@ An agent MAY declare:
 
 ```typescript
 export default defineAgent({
-  name: 'assistant',
-  version: '1.0.0',
+  name: "assistant",
+  version: "1.0.0",
   adapter: openclaw({}),
-  surfaces: './surfaces/'
+  surfaces: "./surfaces/",
 });
 ```
 
@@ -55,15 +57,15 @@ All files are optional.
 
 Canonical basenames and their semantics:
 
-| File | Role | Typical runtime mapping |
-|------|------|--------------------------|
-| `instructions.md` | Core operating instructions | `AGENTS.md`, `CLAUDE.md` |
-| `persona.md` | Soul, tone, boundaries | `SOUL.md`, embedded persona section |
-| `tools.md` | Tool guidance and local conventions | `TOOLS.md`, embedded tool section |
-| `identity.md` | Agent display identity | `IDENTITY.md`, embedded identity section |
-| `user.md` | User profile and preferred address | `USER.md`, embedded user section |
-| `heartbeat.md` | Heartbeat-specific guidance | `HEARTBEAT.md`, embedded or omitted |
-| `bootstrap.md` | One-time bootstrap ritual | `BOOTSTRAP.md`, embedded or omitted |
+| File              | Role                                | Typical runtime mapping                  |
+| ----------------- | ----------------------------------- | ---------------------------------------- |
+| `instructions.md` | Core operating instructions         | `AGENTS.md`, `CLAUDE.md`                 |
+| `persona.md`      | Soul, tone, boundaries              | `SOUL.md`, embedded persona section      |
+| `tools.md`        | Tool guidance and local conventions | `TOOLS.md`, embedded tool section        |
+| `identity.md`     | Agent display identity              | `IDENTITY.md`, embedded identity section |
+| `user.md`         | User profile and preferred address  | `USER.md`, embedded user section         |
+| `heartbeat.md`    | Heartbeat-specific guidance         | `HEARTBEAT.md`, embedded or omitted      |
+| `bootstrap.md`    | One-time bootstrap ritual           | `BOOTSTRAP.md`, embedded or omitted      |
 
 Consumers MUST ignore unknown extra files unless an adapter explicitly recognizes them.
 
@@ -99,6 +101,13 @@ If both exist, adapters define precedence. In general:
 
 - runtimes with one prompt surface MAY merge `prompt` + `surfaces`
 - runtimes with multiple named files SHOULD preserve `surfaces` as separate files
+
+## Relationship to instruction trees
+
+- `surfaces` model a small set of named documents whose file identity matters
+- `instructionTree` models a path-scoped hierarchy of instruction documents
+
+An artifact MAY include both.
 
 ## Relationship to persona
 

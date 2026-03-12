@@ -1,0 +1,17 @@
+{
+  "title": "Packages",
+  "description": "How to define and distribute agents and packages",
+  "icon": "Package",
+  "root": true,
+  "pages": [
+    "index",
+    "---Authoring---",
+    "define-agent",
+    "define-package",
+    "define-persona",
+    "---Distribution---",
+    "dependencies",
+    "merge-rules",
+    "lockfile"
+  ]
+}

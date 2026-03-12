@@ -12,11 +12,11 @@ This adapter targets the documented Claude Code file contract described in [17 â
 
 Claude Code supports multiple scopes.
 
-| Scope | Typical files |
-|------|---------------|
-| User | `~/.claude/CLAUDE.md`, `~/.claude/skills/**`, `~/.claude/settings.json`, `~/.claude/agents/*.md`, `~/.claude.json` |
-| Project | `CLAUDE.md` or `.claude/CLAUDE.md`, `.claude/skills/**`, `.claude/settings.json`, `.mcp.json`, `.claude/agents/*.md` |
-| Local override | `.claude/settings.local.json` |
+| Scope          | Typical files                                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| User           | `~/.claude/CLAUDE.md`, `~/.claude/skills/**`, `~/.claude/settings.json`, `~/.claude/agents/*.md`, `~/.claude.json`   |
+| Project        | `CLAUDE.md` or `.claude/CLAUDE.md`, `.claude/skills/**`, `.claude/settings.json`, `.mcp.json`, `.claude/agents/*.md` |
+| Local override | `.claude/settings.local.json`                                                                                        |
 
 In stax `1.0.0`, `@stax/claude-code` SHOULD default to **project scope** unless the user explicitly requests user scope.
 
@@ -29,20 +29,20 @@ interface ClaudeCodeAdapterOptions {
   model?: string;
   modelParams?: Record<string, unknown>;
 
-  scope?: 'project' | 'user';
+  scope?: "project" | "user";
   exact?: boolean;
 
-  instructionsFile?: 'CLAUDE.md' | '.claude/CLAUDE.md';
-  writeSkills?: boolean;                // default: true
-  writeMcp?: boolean;                   // default: true
-  writeSettings?: boolean;              // default: true
+  instructionsFile?: "CLAUDE.md" | ".claude/CLAUDE.md";
+  writeSkills?: boolean; // default: true
+  writeMcp?: boolean; // default: true
+  writeSettings?: boolean; // default: true
 
   permissions?: {
     allowedTools?: string[];
     denyRules?: string[];
   };
 
-  settings?: Record<string, unknown>;   // Claude-specific settings payload
+  settings?: Record<string, unknown>; // Claude-specific settings payload
 }
 ```
 
@@ -62,21 +62,23 @@ The compiled adapter config SHOULD use:
 
 ### Project scope
 
-| stax source | Target |
-|------------|--------|
+| stax source                                   | Target                             |
+| --------------------------------------------- | ---------------------------------- |
 | `surfaces/instructions.md` or composed prompt | `CLAUDE.md` or `.claude/CLAUDE.md` |
-| `skills/` | `.claude/skills/` |
-| MCP layer | `.mcp.json` |
-| adapter settings/config | `.claude/settings.json` |
+| `skills/`                                     | `.claude/skills/`                  |
+| `subagents`                                   | `.claude/agents/*.md`              |
+| MCP layer                                     | `.mcp.json`                        |
+| adapter settings/config                       | `.claude/settings.json`            |
 
 ### User scope
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` or composed prompt | `~/.claude/CLAUDE.md` |
-| `skills/` | `~/.claude/skills/` |
-| adapter settings/config | `~/.claude/settings.json` |
-| MCP layer | `~/.claude.json` |
+| stax source                                   | Target                    |
+| --------------------------------------------- | ------------------------- |
+| `surfaces/instructions.md` or composed prompt | `~/.claude/CLAUDE.md`     |
+| `skills/`                                     | `~/.claude/skills/`       |
+| `subagents`                                   | `~/.claude/agents/*.md`   |
+| adapter settings/config                       | `~/.claude/settings.json` |
+| MCP layer                                     | `~/.claude.json`          |
 
 ## `CLAUDE.md` generation
 
@@ -161,6 +163,15 @@ stax skills map directly to Claude Code skills:
 - each top-level skill directory MUST be preserved
 - `SKILL.md` content SHOULD be preserved byte-for-byte
 
+## Subagents mapping
+
+When a subagents layer is present, the adapter SHOULD materialize each named subagent to:
+
+- `.claude/agents/<name>.md` in project scope
+- `~/.claude/agents/<name>.md` in user scope
+
+Consumers SHOULD preserve the compiled instruction bytes and warn when Claude-specific metadata cannot represent a canonical subagent field exactly.
+
 ## Exactness requirements
 
 An implementation claiming exact Claude Code support SHOULD:
@@ -169,8 +180,9 @@ An implementation claiming exact Claude Code support SHOULD:
 2. write `.mcp.json` for project MCP config
 3. write `.claude/settings.json` for settings
 4. preserve skill directory structure exactly
-5. avoid generating local-only files by default
-6. warn or fail when synthesizing `CLAUDE.md`
+5. materialize subagents to `.claude/agents/*.md` when present
+6. avoid generating local-only files by default
+7. warn or fail when synthesizing `CLAUDE.md`
 
 ## Files the adapter MUST NOT own by default
 

@@ -1,0 +1,60 @@
+---
+title: Lockfile
+description: How stax.lock ensures reproducible builds
+---
+
+`stax build` produces a `stax.lock` file when package resolution occurs. The lockfile pins exact digests to make builds reproducible and surface dependency conflicts early.
+
+## Goals
+
+- Pin exact digests for every resolved package
+- Make builds reproducible across environments
+- Surface dependency conflicts early
+
+## Format
+
+```json
+{
+  "lockVersion": 1,
+  "specVersion": "1.0.0",
+  "packages": {
+    "ghcr.io/myorg/packages/github-workflow:2.0.0": {
+      "digest": "sha256:abc...",
+      "dependencies": ["ghcr.io/myorg/packages/git-utils:1.0.0"]
+    },
+    "ghcr.io/myorg/packages/git-utils:1.0.0": {
+      "digest": "sha256:def...",
+      "dependencies": []
+    }
+  }
+}
+```
+
+## Fields
+
+| Field | Description |
+| --- | --- |
+| `lockVersion` | Lock file format version |
+| `specVersion` | stax spec version used during resolution |
+| `packages` | Map of package references to their resolved digests and dependencies |
+
+Each package entry contains:
+
+| Field | Description |
+| --- | --- |
+| `digest` | Exact OCI digest (e.g., `sha256:abc...`) |
+| `dependencies` | List of transitive package references |
+
+## CI Behavior
+
+Builders should fail in CI when `stax.lock` is out of date unless explicitly told to refresh it. This prevents unintentional dependency drift.
+
+To refresh the lockfile:
+
+```bash
+stax build --refresh-lock
+```
+
+## Committing the Lockfile
+
+The `stax.lock` file should be committed to version control. This ensures that all team members and CI environments resolve the same package versions.

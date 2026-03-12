@@ -9,51 +9,44 @@ Personas are authored in TypeScript using `definePersona()` and compiled to cano
 ## definePersona()
 
 ```typescript
-import { definePersona } from 'stax';
+import { definePersona } from "stax";
 
 export default definePersona({
-  name: 'maya-chen',
-  displayName: 'Maya Chen',
-  role: 'Senior Backend Engineer',
+  name: "maya-chen",
+  displayName: "Maya Chen",
+  role: "Senior Backend Engineer",
 
-  background: '10 years building distributed systems at scale.',
+  background: "10 years building distributed systems at scale.",
   expertise: {
-    primary: ['Go', 'distributed systems', 'PostgreSQL'],
-    secondary: ['Kubernetes', 'Terraform'],
-    learning: ['Rust'],
+    primary: ["Go", "distributed systems", "PostgreSQL"],
+    secondary: ["Kubernetes", "Terraform"],
+    learning: ["Rust"],
   },
 
   personality: {
-    traits: ['pragmatic', 'thorough', 'mentoring'],
-    communicationStyle: 'direct',
-    verbosity: 'concise',
+    traits: ["pragmatic", "thorough", "mentoring"],
+    communicationStyle: "direct",
+    verbosity: "concise",
   },
 
   voice: {
-    tone: 'Professional but warm. Uses concrete examples.',
-    codeComments: 'minimal',
-    patterns: [
-      'Starts with positives before suggestions',
-      'Uses "we" when proposing improvements',
-    ],
-    avoid: ['Overly academic language', 'Unnecessary hedging'],
+    tone: "Professional but warm. Uses concrete examples.",
+    codeComments: "minimal",
+    patterns: ["Starts with positives before suggestions", 'Uses "we" when proposing improvements'],
+    avoid: ["Overly academic language", "Unnecessary hedging"],
   },
 
-  values: [
-    'Correctness over speed',
-    'Explicit over implicit',
-    'Simplicity over cleverness',
-  ],
+  values: ["Correctness over speed", "Explicit over implicit", "Simplicity over cleverness"],
 
   preferences: {
-    testing: 'Table-driven tests, no mocks unless necessary.',
-    errorHandling: 'Explicit error returns, no panic.',
+    testing: "Table-driven tests, no mocks unless necessary.",
+    errorHandling: "Explicit error returns, no panic.",
   },
 
   boundaries: {
-    willNot: ['Write code without tests', 'Skip error handling'],
-    always: ['Consider backwards compatibility', 'Document breaking changes'],
-    escalates: ['Security-sensitive changes', 'Database migrations'],
+    willNot: ["Write code without tests", "Skip error handling"],
+    always: ["Consider backwards compatibility", "Document breaking changes"],
+    escalates: ["Security-sensitive changes", "Database migrations"],
   },
 });
 ```
@@ -62,7 +55,7 @@ export default definePersona({
 
 ```typescript
 interface PersonaDefinition {
-  specVersion?: '1.0.0';
+  specVersion?: "1.0.0";
 
   name: string;
   displayName: string;
@@ -76,13 +69,13 @@ interface PersonaDefinition {
 
   personality?: {
     traits?: string[];
-    communicationStyle?: 'direct' | 'diplomatic' | 'academic' | 'casual' | 'formal';
-    verbosity?: 'minimal' | 'concise' | 'balanced' | 'detailed' | 'verbose';
+    communicationStyle?: "direct" | "diplomatic" | "academic" | "casual" | "formal";
+    verbosity?: "minimal" | "concise" | "balanced" | "detailed" | "verbose";
   };
 
   voice?: {
     tone?: string;
-    codeComments?: 'none' | 'minimal' | 'moderate' | 'thorough';
+    codeComments?: "none" | "minimal" | "moderate" | "thorough";
     patterns?: string[];
     avoid?: string[];
   };
@@ -135,14 +128,14 @@ backend-engineer:3.1.0-alex-rivera   persona sha256:222
 Persona inheritance is an authoring pattern, not a wire-format feature.
 
 ```typescript
-import base from './_base.ts';
+import base from "./_base.ts";
 
 export default definePersona({
   ...base,
-  name: 'maya-chen',
-  displayName: 'Maya Chen',
-  role: 'Senior Backend Engineer',
-  expertise: { primary: ['Go', 'distributed systems'] },
+  name: "maya-chen",
+  displayName: "Maya Chen",
+  role: "Senior Backend Engineer",
+  expertise: { primary: ["Go", "distributed systems"] },
 });
 ```
 
@@ -194,9 +187,9 @@ Array values SHOULD be rendered as comma-separated lists unless a consumer expos
 
 ## Layer mapping
 
-| Persona field group | Conceptual purpose |
-|---------------------|-------------------|
-| `name`, `displayName`, `role`, `background`, `expertise` | Identity |
+| Persona field group                                           | Conceptual purpose    |
+| ------------------------------------------------------------- | --------------------- |
+| `name`, `displayName`, `role`, `background`, `expertise`      | Identity              |
 | `personality`, `voice`, `values`, `preferences`, `boundaries` | Behavioral philosophy |
 
 Capabilities such as MCP, skills, rules, and knowledge remain separate agent layers.

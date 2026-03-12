@@ -16,6 +16,7 @@ Metadata SHOULD:
 2. support marketplace browsing and enterprise cataloging
 3. expose trust and compatibility summaries
 4. remain descriptive rather than execution-defining
+5. communicate package health, maintenance, and curation clearly enough for enterprise adoption
 
 ## Non-goals
 
@@ -53,6 +54,10 @@ Artifacts and packages SHOULD eventually support:
 - publisher verification status
 - changelog URL
 - support policy
+- maintenance status
+- maturity level
+- curation status
+- support tier
 
 ## Package categories
 
@@ -79,6 +84,7 @@ Registries SHOULD be able to show:
 - maintainer organization
 - contact URL or email
 - verified publisher linkage
+- maintenance or support owner
 
 ## Marketplace summaries
 
@@ -89,6 +95,9 @@ Marketplaces SHOULD expose concise summaries for:
 - required secrets
 - package dependencies
 - source requirements
+- maintenance status
+- support tier
+- curation or approval state
 
 These summaries SHOULD be derivable from compatibility and trust metadata where possible.
 
@@ -113,6 +122,19 @@ Private registries MAY add:
 - data sensitivity classification
 - approved environments
 - internal support tier
+- curated package collection membership
+- package owner rotation or escalation contact
+
+## Package health and economics
+
+Marketplaces and enterprise catalogs SHOULD make the following obvious:
+
+- whether a package is actively maintained
+- whether a verified organization stands behind it
+- what support tier applies
+- whether it is curated or approved internally
+
+Without these signals, package reuse remains technically possible but commercially weak.
 
 ## Relationship to discovery
 

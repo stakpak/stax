@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "registry-discovery-install",
+    "trust-policy-attestations",
+    "hosted-platform-adapter",
+    "compatibility-metadata",
+    "marketplace-metadata",
+    "conformance-certification",
+    "source-governance",
+    "safety-policy",
+    "registry-lifecycle",
+    "distribution-cli"
+  ]
+}

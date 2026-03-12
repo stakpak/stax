@@ -31,6 +31,7 @@ The registry and install model SHOULD:
 5. support local runtimes, hosted platforms, and cloud control planes
 6. make install impact inspectable before any files or imports are applied
 7. support promotion, deprecation, and yanking as metadata, not artifact mutation
+8. give operators enough summary data to decide whether an artifact is safe and supported before they inspect raw config
 
 ## Non-goals
 
@@ -158,6 +159,20 @@ A discovery registry SHOULD expose a package record with at least:
   "registry": {
     "ociRepository": "ghcr.io/acme/agents/backend-engineer"
   },
+  "compatibilitySummary": {
+    "runtimes": ["claude-code", "codex"],
+    "exactAvailable": true,
+    "hostedImport": false,
+    "requiredSecrets": 2
+  },
+  "trustSummary": {
+    "signed": true,
+    "verifiedPublisher": true
+  },
+  "maintenance": {
+    "status": "active",
+    "supportTier": "maintained"
+  },
   "latest": {
     "version": "3.1.0",
     "digest": "sha256:abc..."
@@ -177,12 +192,15 @@ A discovery registry SHOULD expose a package record with at least:
 
 - `name`
 - `kind`
+- `summary`
 - `publisher`
 - `registry.ociRepository`
+- `compatibilitySummary`
+- `trustSummary`
+- `maintenance`
 
 ### Optional package record fields
 
-- `summary`
 - `description`
 - `latest`
 - `channels`
@@ -190,6 +208,18 @@ A discovery registry SHOULD expose a package record with at least:
 - `homepage`
 - `documentation`
 - `license`
+
+### Operator-facing summaries
+
+Discovery registries SHOULD expose a concise operator summary that answers:
+
+- which runtimes are supported
+- whether exact materialization is available
+- whether hosted import is available
+- how many required secrets exist
+- whether workspace sources are required
+- whether the artifact is signed
+- whether the package is actively maintained
 
 ## Version record
 
@@ -202,6 +232,7 @@ Each published version SHOULD expose:
 - lifecycle state
 - compatibility metadata
 - trust metadata summary
+- support or maintenance status
 - referenced OCI repository
 
 Example:
@@ -226,6 +257,10 @@ Example:
     "signed": true,
     "approvals": ["prod-approved"],
     "evaluations": ["smoke", "policy"]
+  },
+  "maintenance": {
+    "status": "active",
+    "supportTier": "maintained"
   }
 }
 ```
@@ -237,6 +272,7 @@ Example:
 - `digest`
 - `publishedAt`
 - `lifecycle.state`
+- `maintenance.status`
 
 ### Version uniqueness
 

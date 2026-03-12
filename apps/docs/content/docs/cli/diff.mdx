@@ -1,0 +1,15 @@
+---
+title: stax diff
+description: Compare two artifacts or two local projects
+---
+
+Compare two artifacts or two local projects.
+
+## Usage
+
+```bash
+stax diff ghcr.io/myorg/agents/backend-engineer:3.0.0 ghcr.io/myorg/agents/backend-engineer:3.1.0
+stax diff ./project-a ./project-b
+```
+
+A diff SHOULD identify changed layers, changed digests, package resolution differences, and materialization warnings.

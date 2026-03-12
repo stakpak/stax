@@ -25,14 +25,14 @@ interface OpenClawAdapterOptions {
   model?: string;
   modelParams?: Record<string, unknown>;
 
-  workspaceRoot?: string;              // consumer-selected output root
-  exact?: boolean;                     // default: true for this adapter
-  writeSkills?: boolean;               // default: true
-  writeMemory?: boolean;               // default: true
-  writeBootstrap?: boolean;            // default: true
+  workspaceRoot?: string; // consumer-selected output root
+  exact?: boolean; // default: true for this adapter
+  writeSkills?: boolean; // default: true
+  writeMemory?: boolean; // default: true
+  writeBootstrap?: boolean; // default: true
 
-  strictMissingSurfaces?: boolean;     // fail if expected OpenClaw surfaces are absent
-  config?: Record<string, unknown>;    // runtime hints only; not ~/.openclaw/openclaw.json
+  strictMissingSurfaces?: boolean; // fail if expected OpenClaw surfaces are absent
+  config?: Record<string, unknown>; // runtime hints only; not ~/.openclaw/openclaw.json
 }
 ```
 
@@ -48,17 +48,17 @@ The compiled adapter config SHOULD use:
 
 ## Exact target mapping
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` | `<workspace>/AGENTS.md` |
-| `surfaces/persona.md` | `<workspace>/SOUL.md` |
-| `surfaces/tools.md` | `<workspace>/TOOLS.md` |
-| `surfaces/identity.md` | `<workspace>/IDENTITY.md` |
-| `surfaces/user.md` | `<workspace>/USER.md` |
-| `surfaces/heartbeat.md` | `<workspace>/HEARTBEAT.md` |
-| `surfaces/bootstrap.md` | `<workspace>/BOOTSTRAP.md` |
-| `skills/` | `<workspace>/skills/` |
-| `memory/` | `<workspace>/memory/` |
+| stax source                | Target                     |
+| -------------------------- | -------------------------- |
+| `surfaces/instructions.md` | `<workspace>/AGENTS.md`    |
+| `surfaces/persona.md`      | `<workspace>/SOUL.md`      |
+| `surfaces/tools.md`        | `<workspace>/TOOLS.md`     |
+| `surfaces/identity.md`     | `<workspace>/IDENTITY.md`  |
+| `surfaces/user.md`         | `<workspace>/USER.md`      |
+| `surfaces/heartbeat.md`    | `<workspace>/HEARTBEAT.md` |
+| `surfaces/bootstrap.md`    | `<workspace>/BOOTSTRAP.md` |
+| `skills/`                  | `<workspace>/skills/`      |
+| `memory/`                  | `<workspace>/memory/`      |
 
 ## Missing surface behavior
 

@@ -10,10 +10,10 @@ This adapter targets the documented Copilot file contract described in [17 — R
 
 ## Scope model
 
-| Scope | Typical files |
-|------|---------------|
+| Scope     | Typical files                                                                                                                                                                                 |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Workspace | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`, `.github/agents/*.agent.md`, `.github/skills/**`, `.github/prompts/*.prompt.md`, `.vscode/mcp.json`, `AGENTS.md` |
-| User | `~/.copilot/instructions/*.instructions.md`, `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/**` |
+| User      | `~/.copilot/instructions/*.instructions.md`, `~/.copilot/agents/*.agent.md`, `~/.copilot/skills/**`                                                                                           |
 
 In stax `1.0.0`, `@stax/github-copilot` SHOULD default to **workspace scope**.
 
@@ -24,17 +24,17 @@ interface GithubCopilotAdapterOptions {
   model?: string;
   modelParams?: Record<string, unknown>;
 
-  scope?: 'workspace' | 'user';
+  scope?: "workspace" | "user";
   exact?: boolean;
 
-  writeInstructions?: boolean;         // default: true
-  writePathInstructions?: boolean;     // default: true
-  writeMcp?: boolean;                  // default: true
-  writeSkills?: boolean;              // default: true
-  writeAgents?: boolean;              // default: false — subagent .agent.md files
-  writeAgentsMd?: boolean;            // default: true — AGENTS.md at root
+  writeInstructions?: boolean; // default: true
+  writePathInstructions?: boolean; // default: true
+  writeMcp?: boolean; // default: true
+  writeSkills?: boolean; // default: true
+  writeAgents?: boolean; // default: false — subagent .agent.md files
+  writeAgentsMd?: boolean; // default: true — AGENTS.md at root
 
-  config?: Record<string, unknown>;   // Copilot-specific settings
+  config?: Record<string, unknown>; // Copilot-specific settings
 }
 ```
 
@@ -52,22 +52,24 @@ The compiled adapter config SHOULD use:
 
 ### Workspace scope
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` or composed prompt | `.github/copilot-instructions.md` |
-| rules (glob-scoped) | `.github/instructions/<rule-id>.instructions.md` |
-| rules (always) | embedded in `.github/copilot-instructions.md` |
-| MCP layer | `.vscode/mcp.json` |
-| skills | `.github/skills/` |
+| stax source                                   | Target                                                          |
+| --------------------------------------------- | --------------------------------------------------------------- |
+| `surfaces/instructions.md` or composed prompt | `.github/copilot-instructions.md`                               |
+| `instructionTree`                             | `<scoped-path>/AGENTS.md` when nested AGENTS support is enabled |
+| rules (glob-scoped)                           | `.github/instructions/<rule-id>.instructions.md`                |
+| rules (always)                                | embedded in `.github/copilot-instructions.md`                   |
+| MCP layer                                     | `.vscode/mcp.json`                                              |
+| skills                                        | `.github/skills/`                                               |
+| `subagents`                                   | `.github/agents/*.agent.md` when `writeAgents` is enabled       |
 
 ### User scope
 
-| stax source | Target |
-|------------|--------|
+| stax source                                   | Target                                                      |
+| --------------------------------------------- | ----------------------------------------------------------- |
 | `surfaces/instructions.md` or composed prompt | `~/.copilot/instructions/stax-instructions.instructions.md` |
-| rules (glob-scoped) | `~/.copilot/instructions/<rule-id>.instructions.md` |
-| MCP layer | user-level MCP config via VS Code settings |
-| skills | `~/.copilot/skills/` |
+| rules (glob-scoped)                           | `~/.copilot/instructions/<rule-id>.instructions.md`         |
+| MCP layer                                     | user-level MCP config via VS Code settings                  |
+| skills                                        | `~/.copilot/skills/`                                        |
 
 ## Instructions generation
 
@@ -87,7 +89,7 @@ stax rules with `scope: 'glob'` SHOULD be translated to `.github/instructions/<r
 
 ```markdown
 ---
-applyTo: '**/*.ts,**/*.tsx'
+applyTo: "**/*.ts,**/*.tsx"
 ---
 
 Rule content here.
@@ -95,13 +97,13 @@ Rule content here.
 
 ### Frontmatter mapping
 
-| stax rule field | Copilot frontmatter field |
-|----------------|---------------------------|
-| `globs` | `applyTo` (comma-separated glob patterns) |
-| `scope: 'always'` | No frontmatter; embed in `copilot-instructions.md` |
-| `scope: 'glob'` | `applyTo` with glob patterns |
-| `scope: 'auto'` | `applyTo` with broad pattern or embed in instructions |
-| `scope: 'manual'` | Not supported; emit warning |
+| stax rule field   | Copilot frontmatter field                             |
+| ----------------- | ----------------------------------------------------- |
+| `globs`           | `applyTo` (comma-separated glob patterns)             |
+| `scope: 'always'` | No frontmatter; embed in `copilot-instructions.md`    |
+| `scope: 'glob'`   | `applyTo` with glob patterns                          |
+| `scope: 'auto'`   | `applyTo` with broad pattern or embed in instructions |
+| `scope: 'manual'` | Not supported; emit warning                           |
 
 ### Lossy translations
 
@@ -112,6 +114,8 @@ Rule content here.
 ### `AGENTS.md` support
 
 Copilot reads `AGENTS.md` at the workspace root (and subdirectories with `chat.useNestedAgentsMdFiles`). When `writeAgentsMd` is `true`, the adapter MAY also write `AGENTS.md` alongside `.github/copilot-instructions.md`.
+
+When an artifact includes [38 — Instruction Trees](./38-instruction-trees.md), the adapter MAY materialize nested `AGENTS.md` files at the corresponding scoped paths when the target Copilot environment enables nested AGENTS support.
 
 ## MCP mapping
 
@@ -161,6 +165,12 @@ Copilot supports skills in `.github/skills/<name>/SKILL.md`, compatible with the
 - `SKILL.md` content SHOULD be preserved byte-for-byte
 - Copilot also reads `.claude/skills/` and `.agents/skills/` as compatible paths
 
+## Subagents mapping
+
+When `writeAgents` is enabled and a subagents layer is present, the adapter SHOULD materialize each named subagent to `.github/agents/<name>.agent.md`.
+
+Consumers SHOULD preserve the compiled instruction bytes and warn when a canonical subagent field cannot be represented in Copilot's `.agent.md` shape.
+
 ## Feature map
 
 ```json
@@ -194,5 +204,7 @@ An implementation claiming exact GitHub Copilot support SHOULD:
 2. write `.github/instructions/*.instructions.md` with correct `applyTo` frontmatter for glob-scoped rules
 3. write `.vscode/mcp.json` with `servers` root key and explicit `type` fields
 4. preserve skill directory structure exactly under `.github/skills/`
-5. avoid writing user preferences or auth files
-6. warn or fail when lossy translations occur in `exact` mode
+5. materialize subagents to `.github/agents/*.agent.md` when enabled and present
+6. materialize nested `AGENTS.md` files from `instructionTree` when the target environment supports them
+7. avoid writing user preferences or auth files
+8. warn or fail when lossy translations occur in `exact` mode

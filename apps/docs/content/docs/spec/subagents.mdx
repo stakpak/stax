@@ -1,0 +1,155 @@
+---
+title: "Subagents and Agent Bundles"
+description: "Canonical delegate-agent packaging and handoff metadata"
+---
+
+## Overview
+
+Subagents are named delegate agents packaged alongside a primary agent artifact.
+
+stax uses subagents to model:
+
+- role-specialized delegate agents
+- runtime-native custom agent definitions
+- explicit handoff targets
+- agent bundles that travel as one artifact
+
+This spec defines packaging and metadata for subagents. It does **not** define execution topology, scheduling, autonomous loops, or runtime orchestration.
+
+## Why subagents exist
+
+Modern agent runtimes increasingly support:
+
+- custom agents
+- delegate agents
+- multi-agent handoff
+- role-specific instruction bundles
+
+Without a canonical subagent model, stax only captures the primary agent brain and loses important structure that already exists in the market.
+
+## Authoring
+
+An agent MAY declare:
+
+```typescript
+export default defineAgent({
+  name: "backend-engineer",
+  version: "1.0.0",
+  adapter: codex({}),
+  subagents: "./subagents.ts",
+});
+```
+
+### `defineSubagents()`
+
+```typescript
+import { defineSubagents } from "stax";
+
+export default defineSubagents({
+  agents: {
+    reviewer: {
+      description: "Reviews code changes for correctness and regressions",
+      invocation: "manual",
+      instructions: "./subagents/reviewer.md",
+      model: "gpt-5-codex",
+      handoff: {
+        allowedFrom: ["primary"],
+        returnMode: "report",
+      },
+    },
+    debugger: {
+      description: "Investigates failing builds and runtime errors",
+      invocation: "delegate",
+      instructions: "./subagents/debugger.md",
+    },
+  },
+});
+```
+
+## Canonical type
+
+```typescript
+interface SubagentsDefinition {
+  specVersion?: "1.0.0";
+  agents: Record<string, SubagentDefinition>;
+}
+
+interface SubagentDefinition {
+  description: string;
+  invocation?: "manual" | "delegate" | "automatic";
+  instructions: string; // build-time source path, compiled to markdown text
+  model?: string;
+  tags?: string[];
+  handoff?: {
+    allowedFrom?: string[];
+    returnMode?: "report" | "patch" | "continue";
+  };
+  metadata?: Record<string, string>;
+}
+```
+
+## Validation
+
+- subagent names MUST be unique object keys
+- subagent names MUST match the same character rules as agent names
+- `instructions` MUST resolve to a Markdown file
+- subagent definitions MUST NOT recursively reference other subagent bundles in `1.0.0`
+- consumers MUST treat unknown fields as additive metadata unless the adapter schema says otherwise
+
+## OCI layer
+
+Subagents are packaged as canonical JSON:
+
+```text
+application/vnd.stax.subagents.v1+json
+```
+
+Builders SHOULD annotate the layer with `dev.stax.subagents.count`.
+
+## Compiled JSON shape
+
+```json
+{
+  "specVersion": "1.0.0",
+  "agents": {
+    "reviewer": {
+      "description": "Reviews code changes for correctness and regressions",
+      "invocation": "manual",
+      "instructions": "Review code for correctness, regressions, and missing tests.",
+      "model": "gpt-5-codex",
+      "handoff": {
+        "allowedFrom": ["primary"],
+        "returnMode": "report"
+      }
+    }
+  }
+}
+```
+
+## Adapter expectations
+
+Adapters MAY:
+
+- materialize subagents into runtime-native custom-agent files
+- embed subagent metadata into a hosted import payload
+- omit subagents with a warning when the runtime has no representation
+
+Consumers SHOULD NOT silently drop subagents in `exact` mode.
+
+## Relationship to orchestration
+
+Subagents define:
+
+- who the delegate agents are
+- what role they play
+- basic handoff intent
+
+Subagents do not define:
+
+- when delegation occurs
+- concurrency
+- retries
+- supervision
+- agent graph topology
+
+Those remain runtime or orchestrator concerns.

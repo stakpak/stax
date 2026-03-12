@@ -1,0 +1,15 @@
+---
+title: stax pull
+description: Pull an artifact from a registry into the local cache
+---
+
+Pull an artifact from a registry into the local cache.
+
+## Usage
+
+```bash
+stax pull ghcr.io/myorg/agents/backend-engineer:3.1.0
+stax pull ghcr.io/myorg/agents/backend-engineer@sha256:abc...
+```
+
+Consumers SHOULD cache source artifacts by digest in the same local cache and reuse them across multiple agent materializations.

@@ -1,0 +1,3 @@
+{
+  "extends": "@stax/config/tsconfig.base.json"
+}

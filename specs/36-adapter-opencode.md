@@ -10,11 +10,11 @@ This adapter targets the documented OpenCode file contract described in [17 — 
 
 ## Scope model
 
-| Scope | Typical files |
-|------|---------------|
-| Project | `opencode.jsonc`, `AGENTS.md`, `.opencode/command/*.md`, `.opencode/skill/**/SKILL.md`, `.opencode/agent/*.md`, `.opencode/plugin/*.ts` |
-| User | `~/.config/opencode/opencode.jsonc`, `~/.config/opencode/AGENTS.md`, `~/.opencode/command/*.md`, `~/.opencode/skill/**/SKILL.md`, `~/.opencode/agent/*.md` |
-| Enterprise | `/Library/Application Support/opencode/` (macOS), `/etc/opencode/` (Linux), `C:\ProgramData\opencode\` (Windows) |
+| Scope      | Typical files                                                                                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project    | `opencode.jsonc`, `AGENTS.md`, `.opencode/command/*.md`, `.opencode/skill/**/SKILL.md`, `.opencode/agent/*.md`, `.opencode/plugin/*.ts`                    |
+| User       | `~/.config/opencode/opencode.jsonc`, `~/.config/opencode/AGENTS.md`, `~/.opencode/command/*.md`, `~/.opencode/skill/**/SKILL.md`, `~/.opencode/agent/*.md` |
+| Enterprise | `/Library/Application Support/opencode/` (macOS), `/etc/opencode/` (Linux), `C:\ProgramData\opencode\` (Windows)                                           |
 
 In stax `1.0.0`, `@stax/opencode` SHOULD default to **project scope**.
 
@@ -25,29 +25,32 @@ interface OpenCodeAdapterOptions {
   model?: string;
   modelParams?: Record<string, unknown>;
 
-  scope?: 'project' | 'user';
+  scope?: "project" | "user";
   exact?: boolean;
 
-  writeConfig?: boolean;               // default: true
-  writeInstructions?: boolean;         // default: true
-  writeMcp?: boolean;                  // default: true
-  writeCommands?: boolean;             // default: true
-  writeSkills?: boolean;               // default: true
-  writeAgents?: boolean;               // default: false
+  writeConfig?: boolean; // default: true
+  writeInstructions?: boolean; // default: true
+  writeMcp?: boolean; // default: true
+  writeCommands?: boolean; // default: true
+  writeSkills?: boolean; // default: true
+  writeAgents?: boolean; // default: false
 
-  agent?: {                            // OpenCode agent config
+  agent?: {
+    // OpenCode agent config
     build?: { model?: string };
     plan?: { model?: string };
-    [name: string]: { model?: string; description?: string; mode?: 'primary' | 'subagent' | 'all' } | undefined;
+    [name: string]:
+      | { model?: string; description?: string; mode?: "primary" | "subagent" | "all" }
+      | undefined;
   };
 
   permission?: {
-    edit?: 'allow' | 'deny' | 'ask';
-    bash?: 'allow' | 'deny' | 'ask';
-    mcp?: 'allow' | 'deny' | 'ask';
+    edit?: "allow" | "deny" | "ask";
+    bash?: "allow" | "deny" | "ask";
+    mcp?: "allow" | "deny" | "ask";
   };
 
-  config?: Record<string, unknown>;    // extra OpenCode JSONC config keys
+  config?: Record<string, unknown>; // extra OpenCode JSONC config keys
 }
 ```
 
@@ -65,23 +68,25 @@ The compiled adapter config SHOULD use:
 
 ### Project scope
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` or composed prompt | `AGENTS.md` |
-| MCP layer | `opencode.jsonc` under `mcp` |
-| adapter config (model, agents) | `opencode.jsonc` |
-| skills | `.opencode/skill/**/SKILL.md` |
-| skills (as commands) | `.opencode/command/*.md` |
+| stax source                                   | Target                                                                        |
+| --------------------------------------------- | ----------------------------------------------------------------------------- |
+| `surfaces/instructions.md` or composed prompt | `AGENTS.md`                                                                   |
+| `instructionTree`                             | configured `instructions` entries or scoped `AGENTS.md` files where supported |
+| MCP layer                                     | `opencode.jsonc` under `mcp`                                                  |
+| adapter config (model, agents)                | `opencode.jsonc`                                                              |
+| skills                                        | `.opencode/skill/**/SKILL.md`                                                 |
+| skills (as commands)                          | `.opencode/command/*.md`                                                      |
+| `subagents`                                   | `.opencode/agent/*.md` when `writeAgents` is enabled                          |
 
 ### User scope
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` or composed prompt | `~/.config/opencode/AGENTS.md` |
-| MCP layer | `~/.config/opencode/opencode.jsonc` under `mcp` |
-| adapter config | `~/.config/opencode/opencode.jsonc` |
-| skills | `~/.opencode/skill/**/SKILL.md` |
-| skills (as commands) | `~/.opencode/command/*.md` |
+| stax source                                   | Target                                          |
+| --------------------------------------------- | ----------------------------------------------- |
+| `surfaces/instructions.md` or composed prompt | `~/.config/opencode/AGENTS.md`                  |
+| MCP layer                                     | `~/.config/opencode/opencode.jsonc` under `mcp` |
+| adapter config                                | `~/.config/opencode/opencode.jsonc`             |
+| skills                                        | `~/.opencode/skill/**/SKILL.md`                 |
+| skills (as commands)                          | `~/.opencode/command/*.md`                      |
 
 ## Instruction files
 
@@ -96,6 +101,8 @@ The first match wins. At user scope, it reads `~/.config/opencode/AGENTS.md` and
 Additional instruction file paths can be configured via the `instructions` array in config, which accepts file paths, globs, and HTTP URLs.
 
 The adapter SHOULD write to `AGENTS.md` by default.
+
+When an artifact includes [38 — Instruction Trees](./38-instruction-trees.md), the adapter MAY map scoped instruction documents to configured `instructions` entries or equivalent project-scoped files, warning when exact hierarchy preservation is not possible.
 
 The adapter SHOULD choose the first available source in this order:
 
@@ -117,22 +124,22 @@ OpenCode uses JSONC (JSON with Comments) for configuration. Config files are dee
   "model": "anthropic/claude-sonnet-4-20250514",
   "agent": {
     "build": {
-      "model": "anthropic/claude-sonnet-4-20250514"
-    }
+      "model": "anthropic/claude-sonnet-4-20250514",
+    },
   },
   "mcp": {
     "github": {
       "type": "local",
       "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
       "environment": {
-        "GITHUB_TOKEN": "{env:GITHUB_TOKEN}"
-      }
+        "GITHUB_TOKEN": "{env:GITHUB_TOKEN}",
+      },
     },
     "analytics": {
       "type": "remote",
-      "url": "https://mcp.example.com/analytics"
-    }
-  }
+      "url": "https://mcp.example.com/analytics",
+    },
+  },
 }
 ```
 
@@ -184,12 +191,12 @@ Command content here with @file references.
 
 ### Frontmatter fields
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `description` | string | Shown in command palette |
-| `agent` | string | Which agent handles the command |
-| `model` | string | Model override |
-| `subtask` | boolean | Run as subtask |
+| Field         | Type    | Purpose                         |
+| ------------- | ------- | ------------------------------- |
+| `description` | string  | Shown in command palette        |
+| `agent`       | string  | Which agent handles the command |
+| `model`       | string  | Model override                  |
+| `subtask`     | boolean | Run as subtask                  |
 
 Subdirectories create namespaced commands (e.g., `command/git/commit.md` → `/git/commit`).
 
@@ -213,6 +220,8 @@ Agent-specific instructions here.
 ```
 
 This is opt-in because agent definitions are a higher-level concept that may conflict with existing user-defined agents.
+
+When a canonical subagents layer is present, the adapter SHOULD use it as the preferred source for generated agent definition files.
 
 ## Feature map
 
@@ -254,5 +263,7 @@ An implementation claiming exact OpenCode support SHOULD:
 4. write `AGENTS.md` when source instructions exist
 5. preserve skill directory structure under `.opencode/skill/`
 6. preserve command directory structure under `.opencode/command/`
-7. avoid writing state files, API keys, or auto-generated plugin artifacts
-8. warn or fail when lossy translations occur in `exact` mode
+7. materialize subagents to `.opencode/agent/*.md` when enabled and present
+8. preserve instruction-tree fidelity or warn when only configured `instructions` entries are possible
+9. avoid writing state files, API keys, or auto-generated plugin artifacts
+10. warn or fail when lossy translations occur in `exact` mode

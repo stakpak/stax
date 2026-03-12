@@ -1,0 +1,12 @@
+{
+  "title": "Overview",
+  "description": "What is stax and its philosophy",
+  "icon": "BookOpen",
+  "root": true,
+  "pages": [
+    "index",
+    "philosophy",
+    "architecture",
+    "roadmap"
+  ]
+}

@@ -1,0 +1,619 @@
+---
+title: "Registry, Discovery, and Install"
+description: "Draft design for search, install plans, and registry discovery"
+---
+
+> Draft design document. This is forward-looking and not part of stax `1.0.0` conformance.
+
+## Overview
+
+stax uses OCI as the transport and storage substrate for artifact bytes.
+
+That is necessary but not sufficient for a distribution standard.
+
+To become the default way agents are published and consumed, stax also needs a standard way to:
+
+- discover artifacts
+- search packages and agents
+- inspect compatibility before pulling
+- preview install impact
+- resolve publisher and trust metadata
+- install or import artifacts into consumer environments
+- promote and deprecate published artifacts without changing their digests
+
+This document defines the future registry and install layer for stax.
+
+## Design goals
+
+The registry and install model SHOULD:
+
+1. keep OCI as the source of truth for artifact bytes
+2. support search and discovery without requiring users to know raw OCI references
+3. preserve digest-first reproducibility
+4. allow public marketplaces and private enterprise registries to interoperate
+5. support local runtimes, hosted platforms, and cloud control planes
+6. make install impact inspectable before any files or imports are applied
+7. support promotion, deprecation, and yanking as metadata, not artifact mutation
+8. give operators enough summary data to decide whether an artifact is safe and supported before they inspect raw config
+
+## Non-goals
+
+This document does not define:
+
+- runtime execution behavior
+- job scheduling
+- orchestration topologies
+- billing or metering
+- session APIs
+
+## Terminology
+
+### Artifact registry
+
+An OCI-capable registry that stores stax manifests, layers, and referrers.
+
+### Discovery registry
+
+A service that indexes searchable package metadata and resolves logical package identities to immutable OCI digests.
+
+### Install broker
+
+A service that evaluates compatibility, trust policy, and target consumer settings to produce an install plan.
+
+### Package name
+
+A logical package identity independent of the underlying OCI repository path.
+
+### Version record
+
+A discovery metadata record describing one published version and its digest.
+
+### Channel
+
+A mutable named pointer to one immutable artifact digest.
+
+### Install plan
+
+A machine-readable plan describing what would be pulled, verified, and materialized or imported for a target consumer.
+
+## Core model
+
+The distribution stack has three layers:
+
+1. **Artifact bytes**
+   Stored in OCI registries and addressed by digest.
+2. **Discovery metadata**
+   Searchable registry metadata that points to published artifacts.
+3. **Install plans**
+   Consumer-specific resolution output describing what would be pulled, verified, and materialized or imported.
+
+The artifact digest remains the stable unit of trust and rollback.
+
+## Registry roles
+
+A stax-compatible registry MAY implement one or more of these roles:
+
+### Artifact registry
+
+Stores OCI manifests, layers, and referrers.
+
+### Discovery registry
+
+Indexes stax package metadata, compatibility, publisher identity, and lifecycle state for search and inspection.
+
+### Install broker
+
+Generates install plans for specific consumers or policy contexts.
+
+A single service MAY implement all three roles.
+
+## Canonical naming
+
+Artifacts SHOULD have a canonical package name independent of their OCI repository path.
+
+Recommended shape:
+
+```text
+<namespace>/<name>
+```
+
+Examples:
+
+```text
+acme/backend-engineer
+community/k8s-tools
+acme/platform-standards
+```
+
+Rules:
+
+- `namespace` and `name` MUST match `^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`
+- the full package name MUST be case-sensitive and normalized as published
+- a discovery registry MUST treat package names as unique within its namespace model
+
+The discovery layer maps canonical package names to one or more OCI repositories and digests.
+
+## Artifact kinds
+
+Discovery registries SHOULD index these initial kinds:
+
+- `agent`
+- `package`
+- `profile`
+- `source`
+
+Registries MAY expose richer product-facing categories in addition to these canonical kinds.
+
+## Package record
+
+A discovery registry SHOULD expose a package record with at least:
+
+```json
+{
+  "name": "acme/backend-engineer",
+  "kind": "agent",
+  "summary": "Senior backend engineering agent",
+  "description": "Portable backend engineering agent distributed as a stax artifact.",
+  "publisher": {
+    "id": "acme",
+    "displayName": "ACME",
+    "verified": true
+  },
+  "registry": {
+    "ociRepository": "ghcr.io/acme/agents/backend-engineer"
+  },
+  "compatibilitySummary": {
+    "runtimes": ["claude-code", "codex"],
+    "exactAvailable": true,
+    "hostedImport": false,
+    "requiredSecrets": 2
+  },
+  "trustSummary": {
+    "signed": true,
+    "verifiedPublisher": true
+  },
+  "maintenance": {
+    "status": "active",
+    "supportTier": "maintained"
+  },
+  "latest": {
+    "version": "3.1.0",
+    "digest": "sha256:abc..."
+  },
+  "channels": {
+    "stable": "sha256:abc...",
+    "beta": "sha256:def..."
+  },
+  "tags": ["backend", "golang", "code-review"],
+  "homepage": "https://example.com/backend-engineer",
+  "documentation": "https://example.com/docs/backend-engineer",
+  "license": "MIT"
+}
+```
+
+### Required package record fields
+
+- `name`
+- `kind`
+- `summary`
+- `publisher`
+- `registry.ociRepository`
+- `compatibilitySummary`
+- `trustSummary`
+- `maintenance`
+
+### Optional package record fields
+
+- `description`
+- `latest`
+- `channels`
+- `tags`
+- `homepage`
+- `documentation`
+- `license`
+
+### Operator-facing summaries
+
+Discovery registries SHOULD expose a concise operator summary that answers:
+
+- which runtimes are supported
+- whether exact materialization is available
+- whether hosted import is available
+- how many required secrets exist
+- whether workspace sources are required
+- whether the artifact is signed
+- whether the package is actively maintained
+
+## Version record
+
+Each published version SHOULD expose:
+
+- semver version
+- digest
+- published time
+- publisher identity
+- lifecycle state
+- compatibility metadata
+- trust metadata summary
+- support or maintenance status
+- referenced OCI repository
+
+Example:
+
+```json
+{
+  "name": "acme/backend-engineer",
+  "version": "3.1.0",
+  "digest": "sha256:abc...",
+  "publishedAt": "2026-03-11T12:00:00Z",
+  "lifecycle": {
+    "state": "active"
+  },
+  "compatibility": {
+    "adapters": [
+      { "runtime": "claude-code", "exactMode": true },
+      { "runtime": "codex", "exactMode": true },
+      { "runtime": "generic", "exactMode": false }
+    ]
+  },
+  "trust": {
+    "signed": true,
+    "approvals": ["prod-approved"],
+    "evaluations": ["smoke", "policy"]
+  },
+  "maintenance": {
+    "status": "active",
+    "supportTier": "maintained"
+  }
+}
+```
+
+### Required version record fields
+
+- `name`
+- `version`
+- `digest`
+- `publishedAt`
+- `lifecycle.state`
+- `maintenance.status`
+
+### Version uniqueness
+
+A discovery registry MUST NOT map one `(name, version)` pair to multiple digests.
+
+If a publisher attempts to republish the same `(name, version)` with a different digest, the registry MUST reject it unless the registry explicitly supports a separate mutable draft workflow outside this specification.
+
+## Lifecycle states
+
+Discovery registries SHOULD support these lifecycle states:
+
+- `active`
+- `deprecated`
+- `yanked`
+- `revoked`
+
+Semantics:
+
+- `active` means normally installable
+- `deprecated` means still installable but discouraged
+- `yanked` means hidden from normal resolution and new installs unless explicitly requested
+- `revoked` means failed trust policy and SHOULD NOT be installed
+
+Lifecycle metadata MUST NOT change artifact bytes.
+
+### Lifecycle rules
+
+- an `active` version MAY be resolved normally
+- a `deprecated` version MUST remain directly installable by exact version or digest
+- a `yanked` version MUST NOT be selected by default from tag-, range-, or channel-based resolution
+- a `revoked` version MUST fail installation unless the consumer runs with an explicit insecure override
+
+## Channels
+
+Registries SHOULD support mutable channels that point to immutable digests.
+
+Recommended initial channel names:
+
+- `stable`
+- `beta`
+- `canary`
+- `approved`
+
+Enterprises MAY define environment-specific channels such as:
+
+- `staging-approved`
+- `prod-approved`
+
+Channel movement is promotion metadata, not republishing.
+
+### Channel rules
+
+- a channel MUST resolve to exactly one digest at a time
+- moving a channel MUST NOT change the target artifact bytes
+- registries SHOULD record channel movement history with timestamp and actor identity
+
+## Compatibility metadata
+
+Discovery metadata SHOULD summarize compatibility without requiring a full pull.
+
+Recommended fields:
+
+- supported adapter runtimes
+- exact or best-effort support
+- runtime version ranges when known
+- required secrets count
+- workspace source requirements
+- profile dependencies
+- package dependencies
+
+This metadata is advisory. The pulled artifact remains authoritative.
+
+## Search
+
+Discovery registries SHOULD support search by:
+
+- package name
+- publisher
+- artifact kind
+- runtime compatibility
+- tags
+- verified publisher status
+- lifecycle state
+
+Search results SHOULD include:
+
+- package name
+- kind
+- summary
+- latest version or digest
+- publisher
+- trust summary
+- compatibility summary
+
+## Resolution model
+
+Consumers SHOULD support resolving an install target from one of:
+
+1. exact digest
+2. exact version
+3. channel name
+4. latest version subject to policy
+
+Resolution precedence:
+
+1. digest
+2. exact version
+3. channel
+4. latest allowed version
+
+Consumers MUST prefer an exact digest when one is provided.
+
+## Install model
+
+Install is the consumer-facing workflow built on top of pull, verify, and materialization.
+
+Conceptually:
+
+1. resolve user intent to a package version or digest
+2. fetch discovery metadata
+3. evaluate policy and trust requirements
+4. select a compatible adapter
+5. pull the artifact and required dependencies
+6. build an install plan
+7. materialize or import the artifact into the target consumer
+
+## Install request
+
+An install broker SHOULD accept a request equivalent to:
+
+```json
+{
+  "package": "acme/backend-engineer",
+  "selector": {
+    "version": "3.1.0"
+  },
+  "consumer": {
+    "type": "codex",
+    "scope": "project"
+  },
+  "policy": {
+    "verification": "require",
+    "allowYanked": false
+  },
+  "mode": "plan"
+}
+```
+
+### Selector fields
+
+Exactly one of the following SHOULD be provided:
+
+- `digest`
+- `version`
+- `channel`
+- `latest: true`
+
+## Install plan
+
+Before applying changes, consumers SHOULD be able to generate an install plan.
+
+Example:
+
+```json
+{
+  "artifact": {
+    "ref": "ghcr.io/acme/agents/backend-engineer:3.1.0",
+    "digest": "sha256:abc..."
+  },
+  "consumer": {
+    "type": "codex",
+    "scope": "project"
+  },
+  "selectedAdapter": {
+    "runtime": "codex",
+    "adapterVersion": "1.0.0"
+  },
+  "resolution": {
+    "package": "acme/backend-engineer",
+    "version": "3.1.0",
+    "channel": null
+  },
+  "actions": [
+    { "kind": "pull-artifact", "digest": "sha256:abc..." },
+    { "kind": "verify-signature", "required": true },
+    { "kind": "write-file", "target": "AGENTS.md" },
+    { "kind": "write-file", "target": ".codex/config.toml" },
+    { "kind": "write-directory", "target": ".agents/skills/" }
+  ],
+  "warnings": [],
+  "lossy": false
+}
+```
+
+### Required install plan fields
+
+- `artifact.digest`
+- `consumer`
+- `actions`
+- `warnings`
+- `lossy`
+
+### Action kinds
+
+Initial action kinds SHOULD include:
+
+- `pull-artifact`
+- `pull-referrer`
+- `verify-signature`
+- `verify-policy`
+- `write-file`
+- `write-directory`
+- `write-setting`
+- `import-api`
+- `attach-source`
+- `attach-profile`
+
+Consumers MAY expose additional action kinds.
+
+## Apply semantics
+
+If a consumer supports direct install, it SHOULD:
+
+1. generate or fetch an install plan
+2. display or log warnings
+3. verify trust requirements
+4. apply actions in dependency-safe order
+
+If any required verification step fails, the install MUST fail before mutating the target environment.
+
+## Discovery API
+
+A registry-compatible discovery API SHOULD expose endpoints equivalent to:
+
+```text
+GET /v1/packages
+GET /v1/packages/{name}
+GET /v1/packages/{name}/versions
+GET /v1/packages/{name}/versions/{version}
+GET /v1/packages/{name}/channels
+GET /v1/packages/{name}/channels/{channel}
+GET /v1/digests/{digest}
+POST /v1/install-plan
+POST /v1/promotions
+POST /v1/deprecations
+POST /v1/yanks
+```
+
+### Endpoint expectations
+
+#### `GET /v1/packages`
+
+Returns a filtered list of package records.
+
+Suggested query parameters:
+
+- `q`
+- `kind`
+- `publisher`
+- `runtime`
+- `tag`
+- `verified`
+- `state`
+- `page`
+- `page_size`
+
+#### `GET /v1/packages/{name}`
+
+Returns the package record for one logical package.
+
+#### `GET /v1/packages/{name}/versions`
+
+Returns version records in descending publish order unless another order is explicitly requested.
+
+#### `GET /v1/packages/{name}/versions/{version}`
+
+Returns one version record.
+
+#### `GET /v1/packages/{name}/channels/{channel}`
+
+Returns the current digest and metadata for that channel pointer.
+
+#### `GET /v1/digests/{digest}`
+
+Returns any known package or version records referring to the digest, plus lifecycle and trust summary.
+
+#### `POST /v1/install-plan`
+
+Accepts an install request and returns an install plan.
+
+## Error behavior
+
+Discovery registries SHOULD return structured errors with:
+
+- machine-readable code
+- human-readable message
+- optional details
+
+Suggested error codes:
+
+- `package_not_found`
+- `version_not_found`
+- `channel_not_found`
+- `digest_not_found`
+- `resolution_blocked`
+- `revoked_artifact`
+- `policy_violation`
+- `incompatible_consumer`
+
+## Enterprise mirror behavior
+
+Private registries SHOULD support:
+
+- copying artifacts by digest
+- copying referrers and related metadata
+- preserving original publisher identity
+- attaching local approvals without mutating the source artifact
+- enforcing namespace allowlists and deny lists
+
+## Relationship to OCI
+
+OCI remains the byte transport and storage layer.
+
+Discovery records MUST resolve to immutable OCI digests.
+
+Discovery metadata MAY be stored:
+
+- in a sidecar registry database
+- in registry-native annotations
+- in a separate indexed metadata service
+
+The storage mechanism is implementation-defined.
+
+## Open design questions
+
+The following need further design before standardization:
+
+1. whether discovery metadata should itself be publishable as OCI artifacts
+2. whether channels should be registry-native or modeled as signed metadata records
+3. whether install plans should be standardized as a stable JSON schema
+4. how much compatibility metadata should be duplicated outside the artifact

@@ -16,7 +16,7 @@ For stax to be viable across enterprises, hosted platforms, and public marketpla
 - whether it has been deprecated, yanked, or revoked
 - whether its declared packages, MCP servers, or capabilities violate policy
 
-This document defines the future trust and policy layer for stax.
+stax `1.0.0` already includes baseline referrers and verification behavior. This document extends that baseline into a fuller trust and policy layer for catalogs, promotion workflows, and enterprise admission control.
 
 ## Design goals
 

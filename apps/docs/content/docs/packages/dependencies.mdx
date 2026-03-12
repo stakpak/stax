@@ -1,0 +1,58 @@
+---
+title: Dependency Resolution
+description: How stax resolves package dependencies
+---
+
+stax resolves package dependencies into a deterministic graph at build time. The resolution algorithm ensures reproducible builds and clear conflict reporting.
+
+## Allowed References
+
+Package references can be one of three forms:
+
+| Form | Example |
+| --- | --- |
+| Relative local path | `./packages/local-overrides` |
+| OCI tag reference | `ghcr.io/myorg/packages/github-workflow:2.0.0` |
+| OCI digest reference | `ghcr.io/myorg/packages/git-utils@sha256:abc...` |
+
+Semver ranges, globs, and floating selectors such as `^1`, `~2`, or `latest` should not appear in committed manifests. Builders may allow them interactively but must resolve them into `stax.lock` and will warn.
+
+## Resolution Algorithm
+
+Builders resolve the dependency graph depth-first in declaration order:
+
+1. The artifact's direct `packages` list is traversed in source order
+2. Each package is resolved to an exact digest
+3. Transitive dependencies are resolved recursively
+4. A previously resolved `(ref, digest)` pair is deduplicated -- if the same ref resolves to the same digest at a different point in the tree, it is visited only once
+5. Circular dependencies fail validation with an error that includes the cycle path (e.g., `A -> B -> C -> A`)
+6. The dependency graph must not exceed a depth of 32 levels
+
+## Conflict Policy
+
+If the same package reference resolves to different digests in one dependency graph (a diamond dependency), the builder:
+
+1. Checks `stax.lock` -- if the lockfile pins an exact digest for the conflicting reference and all declarations are tag-based, the locked digest wins
+2. If no lockfile resolution is possible, fails with a dependency conflict error that identifies:
+   - The conflicting package reference
+   - The two or more digests it resolved to
+   - The dependency paths that produced each resolution
+
+The builder suggests resolution strategies in the error output, such as:
+
+- Pinning a specific digest in the agent's `packages` list
+- Running `stax build --refresh-lock` to resolve to the latest compatible version
+
+## Example
+
+Given this dependency graph:
+
+```text
+agent
+├── package-a:1.0.0
+│   └── shared-utils:1.0.0
+└── package-b:2.0.0
+    └── shared-utils:1.0.0
+```
+
+If both references to `shared-utils:1.0.0` resolve to the same digest, the package is included once. If they resolve to different digests, the builder reports a conflict.

@@ -10,11 +10,11 @@ This adapter targets the documented Cursor file contract described in [17 — Ru
 
 ## Scope model
 
-| Scope | Typical files |
-|------|---------------|
+| Scope   | Typical files                                                                                     |
+| ------- | ------------------------------------------------------------------------------------------------- |
 | Project | `.cursor/rules/*.mdc`, `.cursor/mcp.json`, `.cursor/skills/**`, `.cursor/hooks.json`, `AGENTS.md` |
-| User | `~/.cursor/rules/*.mdc`, `~/.cursor/mcp.json`, `~/.cursor/skills/**`, `~/.cursor/hooks.json` |
-| Legacy | `.cursorrules` (project root, deprecated in favor of `.cursor/rules/`) |
+| User    | `~/.cursor/rules/*.mdc`, `~/.cursor/mcp.json`, `~/.cursor/skills/**`, `~/.cursor/hooks.json`      |
+| Legacy  | `.cursorrules` (project root, deprecated in favor of `.cursor/rules/`)                            |
 
 In stax `1.0.0`, `@stax/cursor` SHOULD default to **project scope**.
 
@@ -25,17 +25,17 @@ interface CursorAdapterOptions {
   model?: string;
   modelParams?: Record<string, unknown>;
 
-  scope?: 'project' | 'user';
+  scope?: "project" | "user";
   exact?: boolean;
 
-  writeRules?: boolean;                // default: true
-  writeMcp?: boolean;                  // default: true
-  writeSkills?: boolean;               // default: true
-  writeInstructions?: boolean;         // default: true
+  writeRules?: boolean; // default: true
+  writeMcp?: boolean; // default: true
+  writeSkills?: boolean; // default: true
+  writeInstructions?: boolean; // default: true
 
-  legacyCursorrules?: boolean;         // default: false — emit .cursorrules instead of .cursor/rules/
+  legacyCursorrules?: boolean; // default: false — emit .cursorrules instead of .cursor/rules/
 
-  config?: Record<string, unknown>;    // Cursor-specific settings
+  config?: Record<string, unknown>; // Cursor-specific settings
 }
 ```
 
@@ -53,21 +53,21 @@ The compiled adapter config SHOULD use:
 
 ### Project scope
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` or composed prompt | `AGENTS.md` |
-| rules | `.cursor/rules/*.mdc` |
-| MCP layer | `.cursor/mcp.json` |
-| skills | `.cursor/skills/` |
+| stax source                                   | Target                |
+| --------------------------------------------- | --------------------- |
+| `surfaces/instructions.md` or composed prompt | `AGENTS.md`           |
+| rules                                         | `.cursor/rules/*.mdc` |
+| MCP layer                                     | `.cursor/mcp.json`    |
+| skills                                        | `.cursor/skills/`     |
 
 ### User scope
 
-| stax source | Target |
-|------------|--------|
+| stax source                                   | Target                                  |
+| --------------------------------------------- | --------------------------------------- |
 | `surfaces/instructions.md` or composed prompt | `~/.cursor/rules/stax-instructions.mdc` |
-| rules | `~/.cursor/rules/*.mdc` |
-| MCP layer | `~/.cursor/mcp.json` |
-| skills | `~/.cursor/skills/` |
+| rules                                         | `~/.cursor/rules/*.mdc`                 |
+| MCP layer                                     | `~/.cursor/mcp.json`                    |
+| skills                                        | `~/.cursor/skills/`                     |
 
 ## `AGENTS.md` generation
 
@@ -89,14 +89,14 @@ Cursor uses `.mdc` or `.md` files in `.cursor/rules/` with YAML frontmatter.
 
 Each canonical stax rule SHOULD be translated to a `.cursor/rules/<rule-id>.mdc` file with the following frontmatter mapping:
 
-| stax rule field | Cursor frontmatter field |
-|----------------|--------------------------|
-| `scope: 'always'` | `alwaysApply: true` |
-| `scope: 'auto'` | `alwaysApply: false` + `description` (required) |
-| `scope: 'glob'` | `globs` array |
+| stax rule field   | Cursor frontmatter field                           |
+| ----------------- | -------------------------------------------------- |
+| `scope: 'always'` | `alwaysApply: true`                                |
+| `scope: 'auto'`   | `alwaysApply: false` + `description` (required)    |
+| `scope: 'glob'`   | `globs` array                                      |
 | `scope: 'manual'` | `alwaysApply: false`, no `globs`, no `description` |
-| `globs` | `globs` |
-| `id` | filename stem |
+| `globs`           | `globs`                                            |
+| `id`              | filename stem                                      |
 
 ### Example output
 

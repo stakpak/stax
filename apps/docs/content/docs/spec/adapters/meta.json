@@ -1,0 +1,12 @@
+{
+  "pages": [
+    "claude-code",
+    "openclaw",
+    "codex",
+    "openclaw-profile",
+    "cursor",
+    "github-copilot",
+    "windsurf",
+    "opencode"
+  ]
+}

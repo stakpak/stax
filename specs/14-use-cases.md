@@ -11,22 +11,22 @@ This document illustrates how stax is used in real-world scenarios. Each use cas
 A developer packages their personal agent configuration and materializes it on multiple machines.
 
 ```typescript
-import { defineAgent } from 'stax';
-import claudeCode from '@stax/claude-code';
+import { defineAgent } from "stax";
+import claudeCode from "@stax/claude-code";
 
 export default defineAgent({
-  name: 'my-dev-agent',
-  version: '1.0.0',
-  description: 'My personal development agent',
-  adapter: claudeCode({ model: 'claude-sonnet-4-1' }),
-  prompt: './SYSTEM_PROMPT.md',
-  rules: './rules/',
-  skills: './skills/',
-  mcp: './mcp-servers.ts',
+  name: "my-dev-agent",
+  version: "1.0.0",
+  description: "My personal development agent",
+  adapter: claudeCode({ model: "claude-sonnet-4-1" }),
+  prompt: "./SYSTEM_PROMPT.md",
+  rules: "./rules/",
+  skills: "./skills/",
+  mcp: "./mcp-servers.ts",
   secrets: [
-    { key: 'ANTHROPIC_API_KEY', required: true },
-    { key: 'GITHUB_TOKEN', required: true }
-  ]
+    { key: "ANTHROPIC_API_KEY", required: true },
+    { key: "GITHUB_TOKEN", required: true },
+  ],
 });
 ```
 
@@ -43,21 +43,21 @@ stax materialize ghcr.io/myuser/my-dev-agent:1.0.0 --out ~/.config/my-agent
 An organization publishes coding standards, MCP servers, skills, and knowledge as a reusable package.
 
 ```typescript
-import { definePackage } from 'stax';
+import { definePackage } from "stax";
 
 export default definePackage({
-  name: 'acme-standards',
-  version: '2.0.0',
-  description: 'ACME engineering standards for all agents',
-  author: 'acme',
-  mcp: './mcp-servers.ts',
-  rules: './rules/',
-  skills: './skills/',
-  knowledge: './knowledge/',
+  name: "acme-standards",
+  version: "2.0.0",
+  description: "ACME engineering standards for all agents",
+  author: "acme",
+  mcp: "./mcp-servers.ts",
+  rules: "./rules/",
+  skills: "./skills/",
+  knowledge: "./knowledge/",
   secrets: [
-    { key: 'GITHUB_TOKEN', required: true },
-    { key: 'JIRA_TOKEN', required: true }
-  ]
+    { key: "GITHUB_TOKEN", required: true },
+    { key: "JIRA_TOKEN", required: true },
+  ],
 });
 ```
 
@@ -242,21 +242,21 @@ This supports:
 
 ## Summary
 
-| Use case | Key value |
-|----------|-----------|
-| Solo developer | Portability across machines |
-| Organization | Shared standards and workflows |
-| Persona replication | Efficient variants via OCI dedup |
-| Multi-runtime | Same brain, different targets |
-| Community ecosystem | Reusable skill and tool packs |
-| Versioned evolution | Reproducibility and rollback |
-| Referrer metadata | Signatures, evals, approvals, memory |
-| CI/CD | Automated build and publish |
-| Air-gapped enterprise | Controlled internal distribution |
-| Regulated workflows | Auditability and trust |
-| Workspace memory | Scoped learning without mutating base artifacts |
-| Compatibility fallback | Graceful runtime degradation |
-| Remote hosted distribution | One artifact consumed by cloud platforms |
-| Autonomous cloud promotion | Promote the same digest across environments |
-| Marketplace distribution | Neutral discovery and installation |
-| Private mirror | Controlled enterprise artifact flow |
+| Use case                   | Key value                                       |
+| -------------------------- | ----------------------------------------------- |
+| Solo developer             | Portability across machines                     |
+| Organization               | Shared standards and workflows                  |
+| Persona replication        | Efficient variants via OCI dedup                |
+| Multi-runtime              | Same brain, different targets                   |
+| Community ecosystem        | Reusable skill and tool packs                   |
+| Versioned evolution        | Reproducibility and rollback                    |
+| Referrer metadata          | Signatures, evals, approvals, memory            |
+| CI/CD                      | Automated build and publish                     |
+| Air-gapped enterprise      | Controlled internal distribution                |
+| Regulated workflows        | Auditability and trust                          |
+| Workspace memory           | Scoped learning without mutating base artifacts |
+| Compatibility fallback     | Graceful runtime degradation                    |
+| Remote hosted distribution | One artifact consumed by cloud platforms        |
+| Autonomous cloud promotion | Promote the same digest across environments     |
+| Marketplace distribution   | Neutral discovery and installation              |
+| Private mirror             | Controlled enterprise artifact flow             |

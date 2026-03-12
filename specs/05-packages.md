@@ -19,27 +19,25 @@ Packages do not contain a prompt or persona in spec `1.0.0`.
 ## definePackage()
 
 ```typescript
-import { definePackage } from 'stax';
+import { definePackage } from "stax";
 
 export default definePackage({
-  name: 'github-workflow',
-  version: '2.0.0',
-  description: 'MCP servers and skills for GitHub workflows.',
-  author: 'myorg',
-  license: 'MIT',
-  tags: ['github', 'pr', 'code-review'],
+  name: "github-workflow",
+  version: "2.0.0",
+  description: "MCP servers and skills for GitHub workflows.",
+  author: "myorg",
+  license: "MIT",
+  tags: ["github", "pr", "code-review"],
 
-  mcp: './mcp-servers.ts',
-  skills: './skills/',
-  rules: './rules/',
-  knowledge: './knowledge/',
-  surfaces: './surfaces/',
+  mcp: "./mcp-servers.ts",
+  skills: "./skills/",
+  rules: "./rules/",
+  knowledge: "./knowledge/",
+  surfaces: "./surfaces/",
 
-  packages: ['ghcr.io/myorg/packages/git-utils:1.0.0'],
+  packages: ["ghcr.io/myorg/packages/git-utils:1.0.0"],
 
-  secrets: [
-    { key: 'GITHUB_TOKEN', required: true },
-  ],
+  secrets: [{ key: "GITHUB_TOKEN", required: true }],
 });
 ```
 
@@ -87,6 +85,7 @@ If the same package reference resolves to different digests in one dependency gr
    - the dependency paths that produced each resolution
 
 Builders SHOULD suggest resolution strategies in the error output, such as:
+
 - pinning a specific digest in the agent's `packages` list
 - running `stax build --refresh-lock` to resolve to the latest compatible version
 
@@ -106,14 +105,14 @@ Precedence order:
 
 ### Merge table
 
-| Layer | Merge unit | Conflict key | Rule |
-|------|------------|--------------|------|
-| MCP | server object | server name | Replace entire server object at the highest-precedence definition |
-| Skills | top-level skill directory | skill name | Higher precedence replaces the entire skill directory |
-| Rules | rule file | rule `id` if present, else archive path | Higher precedence replaces matching rule; otherwise append in precedence order |
-| Knowledge | archive path | normalized path | Higher precedence replaces matching path |
-| Surfaces | surface file | basename | Higher precedence replaces the entire file |
-| Secrets | secret key | `key` | Higher precedence replaces entire declaration |
+| Layer     | Merge unit                | Conflict key                            | Rule                                                                           |
+| --------- | ------------------------- | --------------------------------------- | ------------------------------------------------------------------------------ |
+| MCP       | server object             | server name                             | Replace entire server object at the highest-precedence definition              |
+| Skills    | top-level skill directory | skill name                              | Higher precedence replaces the entire skill directory                          |
+| Rules     | rule file                 | rule `id` if present, else archive path | Higher precedence replaces matching rule; otherwise append in precedence order |
+| Knowledge | archive path              | normalized path                         | Higher precedence replaces matching path                                       |
+| Surfaces  | surface file              | basename                                | Higher precedence replaces the entire file                                     |
+| Secrets   | secret key                | `key`                                   | Higher precedence replaces entire declaration                                  |
 
 ### Rationale
 
@@ -175,9 +174,7 @@ Higher precedence replaces the full declaration, including:
   "packages": {
     "ghcr.io/myorg/packages/github-workflow:2.0.0": {
       "digest": "sha256:abc...",
-      "dependencies": [
-        "ghcr.io/myorg/packages/git-utils:1.0.0"
-      ]
+      "dependencies": ["ghcr.io/myorg/packages/git-utils:1.0.0"]
     },
     "ghcr.io/myorg/packages/git-utils:1.0.0": {
       "digest": "sha256:def...",

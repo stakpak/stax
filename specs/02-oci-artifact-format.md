@@ -6,12 +6,12 @@ A stax artifact is an OCI image manifest with a custom `artifactType`, a stax co
 
 stax defines four primary artifact types:
 
-| What | artifactType |
-|------|--------------|
-| Agent | `application/vnd.stax.agent.v1` |
-| Package | `application/vnd.stax.package.v1` |
-| Runtime profile | `application/vnd.stax.profile.v1` |
-| Workspace source | `application/vnd.stax.source.v1` |
+| What             | artifactType                      |
+| ---------------- | --------------------------------- |
+| Agent            | `application/vnd.stax.agent.v1`   |
+| Package          | `application/vnd.stax.package.v1` |
+| Runtime profile  | `application/vnd.stax.profile.v1` |
+| Workspace source | `application/vnd.stax.source.v1`  |
 
 A consumer MUST treat stax artifacts as **agent distribution artifacts**, not runtime images or executable containers.
 
@@ -25,26 +25,28 @@ application/vnd.stax.config.v1+json
 
 ### Specialized config blob media types
 
-| Config blob | Media type |
-|-------------|------------|
+| Config blob            | Media type                                    |
+| ---------------------- | --------------------------------------------- |
 | Runtime profile config | `application/vnd.stax.profile.config.v1+json` |
-| Source artifact config | `application/vnd.stax.source.config.v1+json` |
+| Source artifact config | `application/vnd.stax.source.config.v1+json`  |
 
 ### Layers
 
-| Layer | Media type | Cardinality per artifact |
-|------|------------|--------------------------|
-| Persona | `application/vnd.stax.persona.v1+json` | `0..1` |
-| Prompt | `application/vnd.stax.prompt.v1+markdown` | `0..1` |
-| MCP | `application/vnd.stax.mcp.v1+json` | `0..1` |
-| Skills | `application/vnd.stax.skills.v1.tar+gzip` | `0..1` |
-| Rules | `application/vnd.stax.rules.v1.tar+gzip` | `0..1` |
-| Knowledge | `application/vnd.stax.knowledge.v1.tar+gzip` | `0..1` |
-| Memory | `application/vnd.stax.memory.v1.tar+gzip` | `0..1` |
-| Surfaces | `application/vnd.stax.surfaces.v1.tar+gzip` | `0..1` |
-| Secrets | `application/vnd.stax.secrets.v1+json` | `0..1` |
-| Packages | `application/vnd.stax.packages.v1+json` | `0..1` |
-| Source snapshot | `application/vnd.stax.source.snapshot.v1.tar+gzip` | source artifact only |
+| Layer            | Media type                                          | Cardinality per artifact |
+| ---------------- | --------------------------------------------------- | ------------------------ |
+| Persona          | `application/vnd.stax.persona.v1+json`              | `0..1`                   |
+| Prompt           | `application/vnd.stax.prompt.v1+markdown`           | `0..1`                   |
+| MCP              | `application/vnd.stax.mcp.v1+json`                  | `0..1`                   |
+| Skills           | `application/vnd.stax.skills.v1.tar+gzip`           | `0..1`                   |
+| Rules            | `application/vnd.stax.rules.v1.tar+gzip`            | `0..1`                   |
+| Knowledge        | `application/vnd.stax.knowledge.v1.tar+gzip`        | `0..1`                   |
+| Memory           | `application/vnd.stax.memory.v1.tar+gzip`           | `0..1`                   |
+| Surfaces         | `application/vnd.stax.surfaces.v1.tar+gzip`         | `0..1`                   |
+| Instruction tree | `application/vnd.stax.instruction-tree.v1.tar+gzip` | `0..1`                   |
+| Subagents        | `application/vnd.stax.subagents.v1+json`            | `0..1`                   |
+| Secrets          | `application/vnd.stax.secrets.v1+json`              | `0..1`                   |
+| Packages         | `application/vnd.stax.packages.v1+json`             | `0..1`                   |
+| Source snapshot  | `application/vnd.stax.source.snapshot.v1.tar+gzip`  | source artifact only     |
 
 An artifact MUST NOT contain more than one layer of the same stax media type.
 
@@ -149,10 +151,12 @@ Layers SHOULD be emitted in this order for stable manifests and efficient cache 
 4. MCP
 5. Secrets
 6. Packages
-7. Surfaces
-8. Prompt
-9. Persona
-10. Memory
+7. Instruction tree
+8. Surfaces
+9. Prompt
+10. Persona
+11. Subagents
+12. Memory
 
 Ordering does not change semantics, but builders SHOULD follow the canonical ordering above.
 
@@ -160,37 +164,39 @@ Ordering does not change semantics, but builders SHOULD follow the canonical ord
 
 ### Required manifest annotations
 
-| Key | Required | Description |
-|-----|----------|-------------|
-| `org.opencontainers.image.created` | Yes | RFC 3339 timestamp |
-| `org.opencontainers.image.version` | Yes | Agent or package version |
-| `org.opencontainers.image.title` | Yes | Artifact name |
-| `dev.stax.spec.version` | Yes | stax spec version |
-| `dev.stax.adapter.type` | Agent only | Adapter identifier |
-| `dev.stax.adapter.runtime` | Agent only | Runtime family |
+| Key                                | Required   | Description              |
+| ---------------------------------- | ---------- | ------------------------ |
+| `org.opencontainers.image.created` | Yes        | RFC 3339 timestamp       |
+| `org.opencontainers.image.version` | Yes        | Agent or package version |
+| `org.opencontainers.image.title`   | Yes        | Artifact name            |
+| `dev.stax.spec.version`            | Yes        | stax spec version        |
+| `dev.stax.adapter.type`            | Agent only | Adapter identifier       |
+| `dev.stax.adapter.runtime`         | Agent only | Runtime family           |
 
 ### Optional manifest annotations
 
-| Key | Description |
-|-----|-------------|
-| `org.opencontainers.image.description` | Description |
-| `org.opencontainers.image.vendor` | Author or organization |
-| `dev.stax.persona` | Active persona name |
-| `dev.stax.lock.digest` | Digest of `stax.lock` used for build |
+| Key                                    | Description                          |
+| -------------------------------------- | ------------------------------------ |
+| `org.opencontainers.image.description` | Description                          |
+| `org.opencontainers.image.vendor`      | Author or organization               |
+| `dev.stax.persona`                     | Active persona name                  |
+| `dev.stax.lock.digest`                 | Digest of `stax.lock` used for build |
 
 ### Layer annotations
 
-| Key | Layer | Description |
-|-----|-------|-------------|
-| `org.opencontainers.image.title` | all | Friendly file name |
-| `dev.stax.persona.name` | persona | Persona identifier |
-| `dev.stax.mcp.count` | mcp | Number of servers |
-| `dev.stax.skills.count` | skills | Number of skills |
-| `dev.stax.rules.count` | rules | Number of rules |
-| `dev.stax.knowledge.files` | knowledge | Number of files |
-| `dev.stax.memory.entries` | memory | Number of memory files |
-| `dev.stax.memory.snapshot` | memory | `seed` or `snapshot` |
-| `dev.stax.surfaces.count` | surfaces | Number of named runtime-facing documents |
+| Key                               | Layer            | Description                              |
+| --------------------------------- | ---------------- | ---------------------------------------- |
+| `org.opencontainers.image.title`  | all              | Friendly file name                       |
+| `dev.stax.persona.name`           | persona          | Persona identifier                       |
+| `dev.stax.mcp.count`              | mcp              | Number of servers                        |
+| `dev.stax.skills.count`           | skills           | Number of skills                         |
+| `dev.stax.rules.count`            | rules            | Number of rules                          |
+| `dev.stax.knowledge.files`        | knowledge        | Number of files                          |
+| `dev.stax.memory.entries`         | memory           | Number of memory files                   |
+| `dev.stax.memory.snapshot`        | memory           | `seed` or `snapshot`                     |
+| `dev.stax.surfaces.count`         | surfaces         | Number of named runtime-facing documents |
+| `dev.stax.instruction-tree.count` | instruction tree | Number of scoped instruction files       |
+| `dev.stax.subagents.count`        | subagents        | Number of bundled subagents              |
 
 ## Config blob requirements
 
@@ -210,12 +216,12 @@ Workspace source artifacts use `application/vnd.stax.source.v1` and SHOULD store
 
 stax does not require referrers, but standardizes common ones so tools can interoperate.
 
-| Referrer artifactType | Purpose |
-|-----------------------|---------|
-| `application/vnd.stax.signature.v1` | Signatures and attestations |
-| `application/vnd.stax.evaluation.v1` | Benchmark or eval results |
-| `application/vnd.stax.approval.v1` | Human approval records |
-| `application/vnd.stax.memory-snapshot.v1` | Runtime memory snapshots |
+| Referrer artifactType                     | Purpose                     |
+| ----------------------------------------- | --------------------------- |
+| `application/vnd.stax.signature.v1`       | Signatures and attestations |
+| `application/vnd.stax.evaluation.v1`      | Benchmark or eval results   |
+| `application/vnd.stax.approval.v1`        | Human approval records      |
+| `application/vnd.stax.memory-snapshot.v1` | Runtime memory snapshots    |
 
 ### Signature referrer baseline
 

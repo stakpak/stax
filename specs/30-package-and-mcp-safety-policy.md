@@ -170,9 +170,7 @@ A consumer or policy engine SHOULD be able to emit a result equivalent to:
   "mcp": {
     "servers": 3,
     "blocked": [],
-    "warnings": [
-      "remote MCP URL uses external domain"
-    ]
+    "warnings": ["remote MCP URL uses external domain"]
   }
 }
 ```

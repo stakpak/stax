@@ -1,0 +1,32 @@
+{
+  "name": "stax",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:web": "turbo -F web dev",
+    "check": "oxlint && oxfmt --write",
+    "test": "turbo test",
+    "test:run": "turbo test",
+    "test:coverage": "turbo test:coverage"
+  },
+  "dependencies": {
+    "@stax/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@stax/config": "workspace:*",
+    "oxfmt": "^0.26.0",
+    "oxlint": "^1.41.0",
+    "turbo": "^2.8.12",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@10.28.1"
+}

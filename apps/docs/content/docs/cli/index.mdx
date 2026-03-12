@@ -1,0 +1,53 @@
+---
+title: CLI Overview
+description: The stax reference CLI for building, validating, and distributing agent artifacts
+---
+
+`stax` is the reference CLI for building, validating, inspecting, materializing, and publishing stax artifacts.
+
+The CLI is both a user tool and a conformance reference for the specification.
+
+<Callout type="info" title="Think Docker, but for agents">
+The stax CLI follows the same mental model as Docker:
+
+- `stax build` is the agent equivalent of `docker build`
+- `stax push` is the agent equivalent of `docker push`
+- `stax pull` is the agent equivalent of `docker pull`
+
+Consumers may then materialize or import the pulled artifact into a specific runtime or platform.
+</Callout>
+
+## Command Reference
+
+### Authoring
+
+<Cards>
+  <Card title="stax init" href="/docs/cli/init" description="Scaffold a new agent or package project" />
+  <Card title="stax build" href="/docs/cli/build" description="Compile definitions and produce OCI layers" />
+  <Card title="stax build-source" href="/docs/cli/build-source" description="Build cacheable workspace source artifacts" />
+  <Card title="stax validate" href="/docs/cli/validate" description="Validate definitions without producing artifacts" />
+</Cards>
+
+### Distribution
+
+<Cards>
+  <Card title="stax push" href="/docs/cli/push" description="Push built artifact to OCI registry" />
+  <Card title="stax pull" href="/docs/cli/pull" description="Pull artifact from registry" />
+  <Card title="stax login" href="/docs/cli/login" description="Authenticate with OCI registry" />
+</Cards>
+
+### Consumption
+
+<Cards>
+  <Card title="stax materialize" href="/docs/cli/materialize" description="Resolve and translate to runtime-native files" />
+  <Card title="stax plan-install" href="/docs/cli/plan-install" description="Generate machine-readable install plan" />
+  <Card title="stax inspect" href="/docs/cli/inspect" description="Display artifact metadata and layers" />
+  <Card title="stax extract" href="/docs/cli/extract" description="Extract canonical layers for debugging" />
+</Cards>
+
+### Verification
+
+<Cards>
+  <Card title="stax diff" href="/docs/cli/diff" description="Compare two artifacts or projects" />
+  <Card title="stax verify" href="/docs/cli/verify" description="Verify signatures or attestations" />
+</Cards>

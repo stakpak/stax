@@ -6,7 +6,7 @@
 
 For stax to work as a broad distribution standard, consumers need to know whether an artifact is likely to work before they pull and materialize it.
 
-`1.0.0` includes adapter metadata, but that is not enough for discovery, install planning, enterprise policy, or hosted platform import flows.
+`1.0.0` now includes baseline install-plan and compatibility preview behavior, but adapter metadata alone is still not enough for discovery, enterprise policy, or hosted platform import flows.
 
 This document defines a future compatibility and capability metadata layer for stax artifacts.
 

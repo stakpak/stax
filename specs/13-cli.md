@@ -14,7 +14,7 @@ Conceptually:
 
 Consumers may then materialize or import the pulled artifact into a specific runtime or platform.
 
-Search, install, promotion, mirror, and hosted-import workflows beyond this baseline are forward draft work described in [23 — Registry, Discovery, and Install](./23-registry-discovery-install.md), [31 — Registry Lifecycle, Promotion, and Mirroring](./31-registry-lifecycle-and-mirroring.md), and [32 — Distribution CLI Operations](./32-distribution-cli-operations.md).
+Baseline compatibility preview and install-plan output are part of the core CLI surface. Search, full registry-mediated install, promotion, mirror, and richer hosted-import workflows beyond this baseline are forward draft work described in [23 — Registry, Discovery, and Install](./23-registry-discovery-install.md), [31 — Registry Lifecycle, Promotion, and Mirroring](./31-registry-lifecycle-and-mirroring.md), and [32 — Distribution CLI Operations](./32-distribution-cli-operations.md).
 
 ## Commands
 
@@ -39,6 +39,7 @@ stax build --persona maya-chen
 stax build --all-personas
 stax build --dry-run
 stax build --refresh-lock
+stax build --symlink-mode flatten
 ```
 
 Output: artifact stored in the local cache (`~/.stax/cache/`).
@@ -87,6 +88,7 @@ Resolve an artifact and translate it into runtime-native files or another consum
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --out ./output
 stax materialize ./dist/backend-engineer.oci --adapter codex --out ./codex-output
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --json
+stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --plan --consumer codex
 ```
 
 A conforming implementation SHOULD support:
@@ -95,6 +97,24 @@ A conforming implementation SHOULD support:
 - machine-readable JSON output
 - warnings for lossy translations
 - import-plan output for non-filesystem consumers when applicable
+
+### `stax plan-install`
+
+Generate a machine-readable install plan without applying changes.
+
+```bash
+stax plan-install ghcr.io/myorg/agents/backend-engineer:3.1.0 --consumer codex
+stax plan-install ghcr.io/myorg/agents/backend-engineer:3.1.0 --consumer acme-cloud --json
+```
+
+A conforming implementation SHOULD include:
+
+- selected adapter
+- compatibility reasoning
+- fidelity summary
+- planned writes or remote targets
+- warnings
+- trust summary when available
 
 ### `stax inspect`
 
@@ -188,20 +208,20 @@ Optional project-level configuration:
 
 ```typescript
 export default {
-  registry: 'ghcr.io/myorg/agents',
-  defaultPersona: 'maya-chen',
+  registry: "ghcr.io/myorg/agents",
+  defaultPersona: "maya-chen",
   failOnLossyMaterialization: false,
 };
 ```
 
 ## Exit codes
 
-| Code | Meaning |
-|------|---------|
-| 0 | Success |
-| 1 | Validation error |
-| 2 | Build error |
-| 3 | Registry error |
-| 4 | Package resolution error |
-| 5 | Materialization compatibility error |
-| 6 | Signature / verification error |
+| Code | Meaning                             |
+| ---- | ----------------------------------- |
+| 0    | Success                             |
+| 1    | Validation error                    |
+| 2    | Build error                         |
+| 3    | Registry error                      |
+| 4    | Package resolution error            |
+| 5    | Materialization compatibility error |
+| 6    | Signature / verification error      |

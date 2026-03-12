@@ -4,6 +4,25 @@
 
 stax exists to become the standard way agents are described, packaged, versioned, verified, distributed, promoted, and installed across every environment where agents run.
 
+## Current Commercial Wedge
+
+The long-term vision remains broad, but the near-term commercial wedge should be narrower:
+
+**stax should first win as the distribution and governance layer for coding-agent assets.**
+
+That means:
+
+- instructions
+- path-scoped instruction trees
+- subagents
+- skills
+- rules
+- MCP configuration
+- shared source context
+- approvals, policy, and promotion metadata
+
+This wedge is concrete, urgent, and aligned with the runtimes that already expose installable file contracts.
+
 The long-term goal is simple:
 
 **Any agent, for any runtime, in any environment, should have one canonical distribution format.**
@@ -60,6 +79,12 @@ It should become the standard for:
 - enabling discovery, installation, rollback, and governance
 
 In the future, "ship the agent" should mean "publish a stax artifact."
+
+In the near term, "ship the agent" should more specifically mean:
+
+- build a canonical artifact for a coding-agent asset bundle
+- approve and promote it through policy
+- materialize or import it into one or more runtimes without hand-editing
 
 ## What stax Is Not
 
@@ -154,12 +179,14 @@ The canonical brain of an agent:
 
 - persona
 - prompt
+- instruction trees
 - surfaces
+- subagents
 - MCP
 - skills
 - rules
 - knowledge
-- seed memory
+- optional seed memory
 - secret declarations
 - adapter metadata
 

@@ -15,18 +15,18 @@ Scores are from 1 to 5.
 
 ## Matrix
 
-| Competitor | Category | Portability | Distribution and governance | Runtime reach | Enterprise trust | Ecosystem pull | Threat to `stax` | Positioning read |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Anthropic Claude Code | Vendor runtime | 1 | 2 | 1 | 3 | 4 | 4 | Strong de facto format inside its own ecosystem; weak as a neutral standard |
-| OpenAI Codex | Vendor runtime | 1 | 2 | 1 | 3 | 4 | 4 | Same pattern as Claude Code; important because of distribution via OpenAI's developer base |
-| GitHub Copilot | Vendor runtime and platform | 2 | 3 | 2 | 4 | 5 | 5 | Biggest de facto enterprise threat because GitHub already owns repos, policy, and developer workflows |
-| Microsoft AgentSchema | Open schema standard | 4 | 2 | 2 | 4 | 3 | 4 | Direct schema-level competition, but less mature on OCI-style distribution and artifact lifecycle |
-| Oracle Agent Spec | Open schema standard | 4 | 2 | 3 | 2 | 2 | 3 | Strong portability story on paper; weaker current ecosystem gravity |
-| LangGraph Platform / LangSmith Deployment | Agent framework and deployment platform | 2 | 4 | 3 | 4 | 5 | 4 | Strong for teams willing to live inside one framework and hosted stack |
-| Google ADK | Agent framework | 2 | 3 | 3 | 4 | 4 | 3 | Strong developer and cloud adjacency; less obviously a neutral packaging standard |
-| AWS Bedrock Agents | Cloud agent platform | 1 | 4 | 2 | 5 | 4 | 4 | Strong enterprise-hosted alternative when portability is not a priority |
-| CrewAI Enterprise | Agent framework and enterprise platform | 2 | 3 | 2 | 3 | 3 | 3 | Credible for workflow-heavy buyers; less powerful as a neutral artifact layer |
-| MCP Registry | Adjacent registry and protocol infrastructure | 3 | 2 | 4 | 3 | 5 | 3 | Complementary and strategically important; `stax` should integrate, not compete |
+| Competitor                                | Category                                      | Portability | Distribution and governance | Runtime reach | Enterprise trust | Ecosystem pull | Threat to `stax` | Positioning read                                                                                      |
+| ----------------------------------------- | --------------------------------------------- | ----------: | --------------------------: | ------------: | ---------------: | -------------: | ---------------: | ----------------------------------------------------------------------------------------------------- |
+| Anthropic Claude Code                     | Vendor runtime                                |           1 |                           2 |             1 |                3 |              4 |                4 | Strong de facto format inside its own ecosystem; weak as a neutral standard                           |
+| OpenAI Codex                              | Vendor runtime                                |           1 |                           2 |             1 |                3 |              4 |                4 | Same pattern as Claude Code; important because of distribution via OpenAI's developer base            |
+| GitHub Copilot                            | Vendor runtime and platform                   |           2 |                           3 |             2 |                4 |              5 |                5 | Biggest de facto enterprise threat because GitHub already owns repos, policy, and developer workflows |
+| Microsoft AgentSchema                     | Open schema standard                          |           4 |                           2 |             2 |                4 |              3 |                4 | Direct schema-level competition, but less mature on OCI-style distribution and artifact lifecycle     |
+| Oracle Agent Spec                         | Open schema standard                          |           4 |                           2 |             3 |                2 |              2 |                3 | Strong portability story on paper; weaker current ecosystem gravity                                   |
+| LangGraph Platform / LangSmith Deployment | Agent framework and deployment platform       |           2 |                           4 |             3 |                4 |              5 |                4 | Strong for teams willing to live inside one framework and hosted stack                                |
+| Google ADK                                | Agent framework                               |           2 |                           3 |             3 |                4 |              4 |                3 | Strong developer and cloud adjacency; less obviously a neutral packaging standard                     |
+| AWS Bedrock Agents                        | Cloud agent platform                          |           1 |                           4 |             2 |                5 |              4 |                4 | Strong enterprise-hosted alternative when portability is not a priority                               |
+| CrewAI Enterprise                         | Agent framework and enterprise platform       |           2 |                           3 |             2 |                3 |              3 |                3 | Credible for workflow-heavy buyers; less powerful as a neutral artifact layer                         |
+| MCP Registry                              | Adjacent registry and protocol infrastructure |           3 |                           2 |             4 |                3 |              5 |                3 | Complementary and strategically important; `stax` should integrate, not compete                       |
 
 ## Notes by competitor
 

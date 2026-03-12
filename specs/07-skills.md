@@ -50,16 +50,16 @@ Fix GitHub issue $ARGUMENTS.
 
 ## Frontmatter schema
 
-| Field | Type | Required | Description |
-|------|------|----------|-------------|
-| `name` | string | Yes | Skill name |
-| `description` | string | Yes | Human-readable summary |
-| `allowed-tools` | string[] | No | Tool permission hints |
-| `model` | string | No | Model override hint |
-| `user-invocable` | boolean | No | Whether users may call it directly |
-| `argument-hint` | string | No | Placeholder text for expected arguments |
-| `priority` | number | No | Ordering hint in UIs |
-| `tags` | string[] | No | Discovery metadata |
+| Field            | Type     | Required | Description                             |
+| ---------------- | -------- | -------- | --------------------------------------- |
+| `name`           | string   | Yes      | Skill name                              |
+| `description`    | string   | Yes      | Human-readable summary                  |
+| `allowed-tools`  | string[] | No       | Tool permission hints                   |
+| `model`          | string   | No       | Model override hint                     |
+| `user-invocable` | boolean  | No       | Whether users may call it directly      |
+| `argument-hint`  | string   | No       | Placeholder text for expected arguments |
+| `priority`       | number   | No       | Ordering hint in UIs                    |
+| `tags`           | string[] | No       | Discovery metadata                      |
 
 ### Validation
 
@@ -72,12 +72,12 @@ Fix GitHub issue $ARGUMENTS.
 
 Supported variables in `SKILL.md` body:
 
-| Variable | Description |
-|----------|-------------|
-| `$ARGUMENTS` | Full argument string |
-| `$ARGUMENTS[N]` | Positional argument, zero-based |
+| Variable            | Description                                       |
+| ------------------- | ------------------------------------------------- |
+| `$ARGUMENTS`        | Full argument string                              |
+| `$ARGUMENTS[N]`     | Positional argument, zero-based                   |
 | `${STAX_SKILL_DIR}` | Absolute path to the materialized skill directory |
-| `${STAX_WORKSPACE}` | Workspace root if known |
+| `${STAX_WORKSPACE}` | Workspace root if known                           |
 
 ### Substitution rules
 

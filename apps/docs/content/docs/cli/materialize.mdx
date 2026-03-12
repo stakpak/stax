@@ -1,0 +1,34 @@
+---
+title: stax materialize
+description: Resolve an artifact and translate it into runtime-native files
+---
+
+Resolve an artifact and translate it into runtime-native files or another consumer-native installation payload.
+
+## Usage
+
+```bash
+stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --out ./output
+stax materialize ./dist/backend-engineer.oci --adapter codex --out ./codex-output
+stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --json
+stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --plan --consumer codex
+```
+
+## Options
+
+| Flag | Description |
+| --- | --- |
+| `--out` | Output directory for materialized files |
+| `--adapter` | Override the adapter to use |
+| `--json` | Output machine-readable JSON |
+| `--plan` | Preview materialization without writing |
+| `--consumer` | Target consumer for plan output |
+
+## Supported Output
+
+A conforming implementation SHOULD support:
+
+- Filesystem output
+- Machine-readable JSON output
+- Warnings for lossy translations
+- Import-plan output for non-filesystem consumers when applicable

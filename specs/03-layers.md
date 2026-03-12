@@ -8,23 +8,25 @@ This document defines layer construction, validation, deterministic packaging ru
 
 ## Layer summary
 
-| Layer | Media type | Format | Mutable |
-|------|------------|--------|---------|
-| Persona | `application/vnd.stax.persona.v1+json` | Canonical JSON | No |
-| Prompt | `application/vnd.stax.prompt.v1+markdown` | UTF-8 Markdown | No |
-| MCP | `application/vnd.stax.mcp.v1+json` | Canonical JSON | No |
-| Skills | `application/vnd.stax.skills.v1.tar+gzip` | Tarball | No |
-| Rules | `application/vnd.stax.rules.v1.tar+gzip` | Tarball | No |
-| Knowledge | `application/vnd.stax.knowledge.v1.tar+gzip` | Tarball | No |
-| Memory | `application/vnd.stax.memory.v1.tar+gzip` | Tarball | Seed: No / Snapshot: Yes |
-| Surfaces | `application/vnd.stax.surfaces.v1.tar+gzip` | Tarball | No |
-| Secrets | `application/vnd.stax.secrets.v1+json` | Canonical JSON | No |
-| Packages | `application/vnd.stax.packages.v1+json` | Canonical JSON | No |
-| Source snapshot | `application/vnd.stax.source.snapshot.v1.tar+gzip` | Tarball | No |
+| Layer            | Media type                                          | Format         | Mutable                  |
+| ---------------- | --------------------------------------------------- | -------------- | ------------------------ |
+| Persona          | `application/vnd.stax.persona.v1+json`              | Canonical JSON | No                       |
+| Prompt           | `application/vnd.stax.prompt.v1+markdown`           | UTF-8 Markdown | No                       |
+| MCP              | `application/vnd.stax.mcp.v1+json`                  | Canonical JSON | No                       |
+| Skills           | `application/vnd.stax.skills.v1.tar+gzip`           | Tarball        | No                       |
+| Rules            | `application/vnd.stax.rules.v1.tar+gzip`            | Tarball        | No                       |
+| Knowledge        | `application/vnd.stax.knowledge.v1.tar+gzip`        | Tarball        | No                       |
+| Memory           | `application/vnd.stax.memory.v1.tar+gzip`           | Tarball        | Seed: No / Snapshot: Yes |
+| Surfaces         | `application/vnd.stax.surfaces.v1.tar+gzip`         | Tarball        | No                       |
+| Instruction tree | `application/vnd.stax.instruction-tree.v1.tar+gzip` | Tarball        | No                       |
+| Subagents        | `application/vnd.stax.subagents.v1+json`            | Canonical JSON | No                       |
+| Secrets          | `application/vnd.stax.secrets.v1+json`              | Canonical JSON | No                       |
+| Packages         | `application/vnd.stax.packages.v1+json`             | Canonical JSON | No                       |
+| Source snapshot  | `application/vnd.stax.source.snapshot.v1.tar+gzip`  | Tarball        | No                       |
 
 ## Deterministic build rules
 
-All conforming builders MUST apply the following rules to tar-backed layers (`skills`, `rules`, `knowledge`, `memory`, `surfaces`, and `source snapshots`).
+All conforming builders MUST apply the following rules to tar-backed layers (`skills`, `rules`, `knowledge`, `memory`, `surfaces`, `instruction trees`, and `source snapshots`).
 
 ### Archive entry rules
 
@@ -56,10 +58,29 @@ All conforming builders MUST apply the following rules to tar-backed layers (`sk
 
 ### Safety rules
 
-- Symlinks MUST be rejected
+- Symlinks MUST be rejected unless the builder is explicitly run with `--symlink-mode flatten` for a layer that permits flattening
 - Hard links MUST be rejected
 - Device files, FIFOs, and sockets MUST be rejected
 - Files outside the selected directory tree MUST NOT be packaged
+
+### Controlled symlink flattening
+
+Builders MAY support a controlled `flatten` mode for symlinked inputs in these tar-backed layers only:
+
+- `skills`
+- `rules`
+- `knowledge`
+- `surfaces`
+- `instruction tree`
+
+When `--symlink-mode flatten` is enabled:
+
+- each symlink target MUST resolve within the project root after normalization
+- builders MUST package the resolved file bytes, not the symlink entry itself
+- builders MUST reject dangling symlinks
+- builders MUST reject symlink cycles
+- builders MUST preserve deterministic archive ordering after flattening
+- builders SHOULD annotate the build output or config metadata to indicate flattening occurred
 
 ## Ignore rules
 
@@ -172,6 +193,24 @@ Validation rules:
 - Builders SHOULD annotate the layer with `dev.stax.surfaces.count`
 - Consumers MUST preserve file bytes for one-to-one mapped targets such as OpenClaw workspace files
 
+## Instruction tree layer
+
+The instruction tree layer is a deterministic gzipped tarball of the `instruction-tree/` directory.
+
+It contains path-scoped instruction documents for runtimes that discover instructions hierarchically by directory or scope. See [38 — Instruction Trees](./38-instruction-trees.md).
+
+Validation rules:
+
+- scoped instruction files MUST be Markdown files ending in `.md`
+- duplicate normalized archive paths MUST be rejected
+- builders SHOULD annotate the layer with `dev.stax.instruction-tree.count`
+
+## Subagents layer
+
+The subagents layer is compiled from `defineSubagents()` and stored as canonical JSON.
+
+See [37 — Subagents and Agent Bundles](./37-subagents-and-agent-bundles.md).
+
 ## Secrets layer
 
 The secrets layer contains canonical JSON with declared secret keys and metadata only.
@@ -220,17 +259,17 @@ Consumers SHOULD cache source snapshot layers by digest and SHOULD reuse the sam
 
 Builders SHOULD enforce the following default limits and MUST allow users to override them explicitly:
 
-| Layer | Default max uncompressed size | Rationale |
-|-------|-------------------------------|-----------|
-| Knowledge | 256 MB | Largest expected layer; prevents accidental binary bloat |
-| Skills | 64 MB | Skills are Markdown + templates |
-| Rules | 16 MB | Rules are Markdown files |
-| Surfaces | 16 MB | Surfaces are Markdown files |
-| Memory | 64 MB | Memory accumulates over time |
-| Persona | 1 MB | Single JSON document |
-| Prompt | 1 MB | Single Markdown document |
-| MCP | 1 MB | Single JSON document |
-| Secrets | 1 MB | Single JSON document |
+| Layer     | Default max uncompressed size | Rationale                                                |
+| --------- | ----------------------------- | -------------------------------------------------------- |
+| Knowledge | 256 MB                        | Largest expected layer; prevents accidental binary bloat |
+| Skills    | 64 MB                         | Skills are Markdown + templates                          |
+| Rules     | 16 MB                         | Rules are Markdown files                                 |
+| Surfaces  | 16 MB                         | Surfaces are Markdown files                              |
+| Memory    | 64 MB                         | Memory accumulates over time                             |
+| Persona   | 1 MB                          | Single JSON document                                     |
+| Prompt    | 1 MB                          | Single Markdown document                                 |
+| MCP       | 1 MB                          | Single JSON document                                     |
+| Secrets   | 1 MB                          | Single JSON document                                     |
 
 Builders MUST warn when any single file in a tarball layer exceeds 10 MB. Builders SHOULD warn when the total uncompressed knowledge layer exceeds 100 MB.
 
@@ -250,7 +289,7 @@ A builder MUST fail the build if any of the following occur:
 
 - duplicate stax layer media types in one artifact
 - invalid archive paths
-- rejected file types (symlink, socket, device, FIFO)
+- rejected file types (symlink when not flattened, socket, device, FIFO)
 - unresolved declared source path
 - duplicate normalized paths in a tarball
 - malformed JSON or invalid frontmatter in source files

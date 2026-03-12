@@ -2,11 +2,11 @@
 
 ## Overview
 
-Materialization is the consumer-side process of turning a canonical stax artifact into runtime-native files, settings, and directories.
+Materialization is the consumer-side process of turning a canonical stax artifact into runtime-native files, settings, API payloads, bundles, and remote objects.
 
 This spec exists so that different consumers can produce predictably similar outputs from the same artifact.
 
-In `1.0.0`, materialization is primarily filesystem-oriented. Hosted-platform import flows and install-plan standardization are forward draft work described in [25 — Hosted Platform Adapter Contract](./25-hosted-platform-adapter-contract.md).
+In `1.0.0`, filesystem materialization remains the most exact mode for many runtimes, but non-filesystem consumers are first-class. Richer marketplace and broker workflows remain forward draft work described in [25 — Hosted Platform Adapter Contract](./25-hosted-platform-adapter-contract.md).
 
 ## Materialization modes
 
@@ -27,9 +27,9 @@ A conforming consumer SHOULD execute materialization in this order:
 4. **Resolve workspace sources** — pull and prepare any referenced source artifacts described in [22 — Workspace Sources](./22-workspace-sources.md)
 5. **Merge canonical layers** — apply package merge semantics from [05 — Packages](./05-packages.md)
 6. **Render prompt templates** — substitute persona values into prompt text
-7. **Translate canonical layers** — map prompt, persona, surfaces, rules, skills, MCP, and adapter config into runtime-native outputs
+7. **Translate canonical layers** — map prompt, persona, surfaces, instruction trees, subagents, rules, skills, MCP, and adapter config into runtime-native outputs
 8. **Validate required secrets** — ensure all required secrets are available before launch when the consumer is preparing an executable environment
-9. **Emit outputs** — write files, directories, settings, and prepared workspaces or return a machine-readable plan
+9. **Emit outputs** — write files, directories, settings, remote payloads, or return a machine-readable plan
 
 ## Canonical materialized model
 
@@ -38,9 +38,11 @@ Before runtime-specific translation, a consumer SHOULD construct an in-memory ca
 ```typescript
 interface MaterializedAgent {
   config: AgentConfig;
-  prompt?: string;                    // rendered prompt
+  prompt?: string; // rendered prompt
   persona?: PersonaDefinition;
   surfaces?: MaterializedSurface[];
+  instructionTree?: MaterializedInstructionNode[];
+  subagents?: MaterializedSubagent[];
   workspaceSources?: MaterializedWorkspaceSource[];
   mcp?: McpConfig;
   skills?: MaterializedSkill[];
@@ -74,8 +76,7 @@ Examples:
 - Claude Code: `CLAUDE.md`, `.mcp.json`, `.claude/settings.json`, `.claude/skills/`
 - OpenClaw: `<workspace>/AGENTS.md`, `<workspace>/SOUL.md`, `<workspace>/TOOLS.md`, `<workspace>/skills/`
 - Codex: `AGENTS.md`, `.codex/config.toml`
-
-Future non-`1.0.0` adapters MAY target other runtimes such as Cursor, Windsurf, or hosted platforms.
+- Hosted platform: `POST /v1/agents/import`, object records, or import bundles
 
 ## Lossy translation
 
@@ -115,9 +116,26 @@ Consumers SHOULD support a JSON mode that includes:
 
 - selected adapter
 - written targets or planned targets
+- compatibility summary
+- fidelity class
+- lossy flag
 - warnings
 - unsupported features
 - merged package provenance
+
+## Install-plan baseline
+
+Consumers SHOULD be able to produce an install plan without mutating a filesystem or remote consumer.
+
+A baseline install plan SHOULD include:
+
+- selected adapter
+- consumer identity
+- compatibility result
+- fidelity result
+- planned targets
+- warnings
+- trust summary when available
 
 ## Provenance and warnings
 

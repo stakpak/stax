@@ -62,18 +62,18 @@ The config blob MUST include:
 Profiles are defined in TypeScript.
 
 ```typescript
-import { defineProfile } from 'stax';
+import { defineProfile } from "stax";
 
 export default defineProfile({
-  name: 'ahmed-personal-openclaw',
-  version: '1.0.0',
-  profileType: 'openclaw',
-  description: 'Portable OpenClaw profile defaults for my personal setup.',
+  name: "ahmed-personal-openclaw",
+  version: "1.0.0",
+  profileType: "openclaw",
+  description: "Portable OpenClaw profile defaults for my personal setup.",
 
   openclaw: {
     agent: {
-      model: 'anthropic/claude-opus-4-1',
-      workspace: '~/.openclaw/workspace',
+      model: "anthropic/claude-opus-4-1",
+      workspace: "~/.openclaw/workspace",
       skipBootstrap: false,
     },
     skills: {
@@ -85,14 +85,14 @@ export default defineProfile({
     gateway: {
       port: 18789,
       auth: {
-        mode: 'token',
+        mode: "token",
       },
     },
   },
 
   secrets: [
-    { key: 'OPENAI_API_KEY', required: false },
-    { key: 'ANTHROPIC_API_KEY', required: false },
+    { key: "OPENAI_API_KEY", required: false },
+    { key: "ANTHROPIC_API_KEY", required: false },
   ],
 });
 ```
@@ -101,16 +101,16 @@ export default defineProfile({
 
 ```typescript
 interface RuntimeProfileDefinition {
-  specVersion?: '1.0.0';
+  specVersion?: "1.0.0";
 
   name: string;
   version: string;
-  profileType: 'openclaw';
+  profileType: "openclaw";
   description?: string;
   author?: string;
   tags?: string[];
 
-  openclaw: Record<string, unknown>;   // validated against the allowed portable subset
+  openclaw: Record<string, unknown>; // validated against the allowed portable subset
   secrets?: SecretDeclaration[];
 }
 ```

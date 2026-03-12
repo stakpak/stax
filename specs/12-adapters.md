@@ -20,39 +20,43 @@ All adapters MUST compile to the same shape.
 
 ```typescript
 interface AdapterConfig {
-  type: string;                         // e.g. "claude-code"
-  runtime: string;                      // e.g. "claude-code"
-  adapterVersion: string;               // schema version for this adapter payload
+  type: string; // e.g. "claude-code"
+  runtime: string; // e.g. "claude-code"
+  adapterVersion: string; // schema version for this adapter payload
+  runtimeVersionRange?: string; // tested runtime-version range for exact claims
   model?: string;
   modelParams?: Record<string, unknown>;
-  config: Record<string, unknown>;      // runtime-specific options
-  features: AdapterFeatureMap;          // translation capabilities
-  targets?: MaterializationTarget[];    // runtime-native files/settings
+  importMode?: "filesystem" | "api" | "bundle" | "object-map";
+  fidelity?: "byte-exact" | "schema-exact" | "best-effort" | "unsupported";
+  config: Record<string, unknown>; // runtime-specific options
+  features: AdapterFeatureMap; // translation capabilities
+  targets?: MaterializationTarget[]; // runtime-native files/settings
 }
 
 interface AdapterFeatureMap {
-  prompt?: 'native' | 'embedded' | 'unsupported';
-  persona?: 'native' | 'embedded' | 'unsupported';
-  rules?: 'native' | 'embedded' | 'unsupported';
-  skills?: 'native' | 'unsupported';
-  mcp?: 'native' | 'translated' | 'unsupported';
-  surfaces?: 'native' | 'translated' | 'unsupported';
-  secrets?: 'native' | 'consumer-only';
-  toolPermissions?: 'native' | 'translated' | 'unsupported';
-  modelConfig?: 'native' | 'translated' | 'unsupported';
+  prompt?: "native" | "embedded" | "unsupported";
+  persona?: "native" | "embedded" | "unsupported";
+  rules?: "native" | "embedded" | "unsupported";
+  skills?: "native" | "unsupported";
+  mcp?: "native" | "translated" | "unsupported";
+  surfaces?: "native" | "translated" | "unsupported";
+  secrets?: "native" | "consumer-only";
+  toolPermissions?: "native" | "translated" | "unsupported";
+  modelConfig?: "native" | "translated" | "unsupported";
   exactMode?: boolean;
 }
 
 interface MaterializationTarget {
-  kind: 'file' | 'directory' | 'setting';
+  kind: "file" | "directory" | "setting" | "api" | "bundle" | "object";
   path: string;
   description?: string;
-  scope?: 'user' | 'project' | 'workspace' | 'local';
+  scope?: "user" | "project" | "workspace" | "local" | "remote" | "account" | "organization";
   exact?: boolean;
+  mediaType?: string;
 }
 ```
 
-`path` MAY represent a virtual or API-facing target identity for non-filesystem consumers, but filesystem-style targets remain the canonical model in `1.0.0`.
+`path` MAY represent a virtual or API-facing target identity for non-filesystem consumers.
 
 Consumers MUST treat unknown `config` fields as adapter-specific. Consumers SHOULD ignore unknown additive fields within a supported `adapterVersion` major.
 
@@ -73,6 +77,7 @@ The `exactMode` field in `AdapterFeatureMap` indicates whether the adapter suppo
 - `exactMode: true` — the adapter declares that its `targets` list is complete and covers the runtime's full file contract. Consumers operating in `exact` materialization mode (see [15 — Materialization](./15-materialization.md)) SHOULD prefer adapters with `exactMode: true`
 - `exactMode: false` or omitted — the adapter provides best-effort targets. Consumers operating in `exact` mode MUST warn or fail if `exactMode` is not `true`
 - `exactMode` is an adapter-level declaration about capability, not a consumer-level mode selector. The consumer's materialization mode (`portable` vs `exact`) determines behavior; `exactMode` on the adapter tells the consumer whether exact materialization is feasible
+- Adapters claiming `exactMode: true` SHOULD declare `runtimeVersionRange`. Consumers SHOULD treat missing runtime-version information as a weaker exactness claim and MAY downgrade it to `best-effort` for policy purposes
 
 ### Adapter versioning
 
@@ -97,18 +102,18 @@ Although `config` is typed as `Record<string, unknown>`, consumers MUST apply th
 ## Usage
 
 ```typescript
-import { defineAgent } from 'stax';
-import claudeCode from '@stax/claude-code';
+import { defineAgent } from "stax";
+import claudeCode from "@stax/claude-code";
 
 export default defineAgent({
-  name: 'backend-engineer',
-  version: '3.1.0',
+  name: "backend-engineer",
+  version: "3.1.0",
   adapter: claudeCode({
-    model: 'claude-opus-4-1',
+    model: "claude-opus-4-1",
     modelParams: { temperature: 0.3 },
     permissions: {
-      allowedTools: ['Read', 'Edit', 'Bash', 'Grep'],
-      denyRules: ['Bash(rm -rf *)'],
+      allowedTools: ["Read", "Edit", "Bash", "Grep"],
+      denyRules: ["Bash(rm -rf *)"],
     },
   }),
 });
@@ -120,11 +125,11 @@ export default defineAgent({
 
 ```typescript
 claudeCode({
-  model: 'claude-opus-4-1',
+  model: "claude-opus-4-1",
   modelParams: { temperature: 0.3 },
   permissions: {
-    allowedTools: ['Read', 'Edit', 'Bash', 'Grep', 'Write'],
-    denyRules: ['Bash(rm -rf *)'],
+    allowedTools: ["Read", "Edit", "Bash", "Grep", "Write"],
+    denyRules: ["Bash(rm -rf *)"],
   },
 });
 ```
@@ -144,9 +149,9 @@ For Claude Code, adapters SHOULD support an exact materialization mode that writ
 
 ```typescript
 codex({
-  model: 'gpt-5-codex',
-  approval: 'on-request',
-  sandbox: 'workspace-write',
+  model: "gpt-5-codex",
+  approval: "on-request",
+  sandbox: "workspace-write",
 });
 ```
 
@@ -178,19 +183,31 @@ OpenClaw adapters SHOULD preserve exact Markdown bytes for mapped surface files 
 
 ```typescript
 generic({
-  model: 'any-model-id',
-  runtime: 'my-custom-runtime',
-  config: {}
+  model: "any-model-id",
+  runtime: "my-custom-runtime",
+  importMode: "api",
+  fidelity: "schema-exact",
+  config: {},
 });
 ```
 
 `@stax/generic` is the escape hatch for remote, hosted, and cloud consumers that do not yet have a first-class exact adapter contract.
 
+`@stax/generic` MUST declare:
+
+- `importMode`
+- `fidelity`
+- at least one target
+
+Generic adapters SHOULD also declare a schema or API reference in `config`.
+
+Consumers MUST treat generic adapters as **non-certifiable** for exactness unless a stricter adapter-specific contract exists.
+
 ### `@stax/cursor`
 
 ```typescript
 cursor({
-  model: 'claude-sonnet-4',
+  model: "claude-sonnet-4",
   writeRules: true,
   writeMcp: true,
   writeSkills: true,
@@ -210,7 +227,7 @@ Cursor adapters SHOULD translate canonical rules to MDC frontmatter format with 
 
 ```typescript
 githubCopilot({
-  model: 'claude-sonnet-4',
+  model: "claude-sonnet-4",
   writeInstructions: true,
   writePathInstructions: true,
   writeMcp: true,
@@ -231,7 +248,7 @@ Copilot adapters SHOULD translate glob-scoped rules to `.instructions.md` files 
 
 ```typescript
 windsurf({
-  model: 'claude-sonnet-4',
+  model: "claude-sonnet-4",
   writeRules: true,
   writeInstructions: true,
 });
@@ -249,9 +266,9 @@ Windsurf adapters SHOULD translate canonical rules to Windsurf trigger frontmatt
 
 ```typescript
 opencode({
-  model: 'anthropic/claude-sonnet-4-20250514',
+  model: "anthropic/claude-sonnet-4-20250514",
   agent: {
-    build: { model: 'anthropic/claude-sonnet-4-20250514' },
+    build: { model: "anthropic/claude-sonnet-4-20250514" },
   },
 });
 ```
@@ -273,13 +290,13 @@ Hosted-platform adapters are directionally in scope for stax, but they are not d
 
 The `AdapterFeatureMap` uses three translation strategies. Their meanings are:
 
-| Value | Meaning | When to use |
-|-------|---------|-------------|
-| `native` | The runtime has a first-class mechanism for this feature. The consumer writes it to a dedicated file or setting. | Claude Code skills → `.claude/skills/`, OpenClaw surfaces → named workspace files |
-| `embedded` | The runtime has no dedicated mechanism. The consumer embeds the content into another surface, typically the prompt or instruction file. | Persona → embedded as text in `CLAUDE.md` |
-| `translated` | The runtime has a mechanism, but the canonical format requires structural transformation (not just file placement). | MCP canonical JSON → `.mcp.json` with different key names; surfaces → renamed workspace files |
-| `unsupported` | The runtime cannot represent this feature at all. The consumer MUST warn and MAY omit it. | Skills on a runtime with no skill support |
-| `consumer-only` | The feature is meaningful but resolution happens entirely at the consumer layer, not in the adapter. | Secrets — the adapter declares needs, the consumer resolves values |
+| Value           | Meaning                                                                                                                                 | When to use                                                                                   |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `native`        | The runtime has a first-class mechanism for this feature. The consumer writes it to a dedicated file or setting.                        | Claude Code skills → `.claude/skills/`, OpenClaw surfaces → named workspace files             |
+| `embedded`      | The runtime has no dedicated mechanism. The consumer embeds the content into another surface, typically the prompt or instruction file. | Persona → embedded as text in `CLAUDE.md`                                                     |
+| `translated`    | The runtime has a mechanism, but the canonical format requires structural transformation (not just file placement).                     | MCP canonical JSON → `.mcp.json` with different key names; surfaces → renamed workspace files |
+| `unsupported`   | The runtime cannot represent this feature at all. The consumer MUST warn and MAY omit it.                                               | Skills on a runtime with no skill support                                                     |
+| `consumer-only` | The feature is meaningful but resolution happens entirely at the consumer layer, not in the adapter.                                    | Secrets — the adapter declares needs, the consumer resolves values                            |
 
 Adapter authors MUST use `embedded` when content is inlined into a prompt-like file, and `translated` when content is written to a dedicated file but requires structural changes.
 
@@ -307,24 +324,22 @@ Consumers SHOULD NOT silently drop material features such as rules, MCP servers,
 ## Creating custom adapters
 
 ```typescript
-import { defineAdapter } from 'stax';
+import { defineAdapter } from "stax";
 
 export default defineAdapter<MyRuntimeOptions>((options) => ({
-  type: 'my-runtime',
-  runtime: 'my-runtime',
-  adapterVersion: '1.0.0',
+  type: "my-runtime",
+  runtime: "my-runtime",
+  adapterVersion: "1.0.0",
   model: options.model,
   config: {
     sandbox: options.sandbox,
   },
   features: {
-    prompt: 'embedded',
-    rules: 'embedded',
-    mcp: 'unsupported',
+    prompt: "embedded",
+    rules: "embedded",
+    mcp: "unsupported",
   },
-  targets: [
-    { kind: 'file', path: 'MY_RUNTIME.md', description: 'Instructions' }
-  ]
+  targets: [{ kind: "file", path: "MY_RUNTIME.md", description: "Instructions" }],
 }));
 ```
 

@@ -1,0 +1,105 @@
+---
+title: Defining a Package
+description: How to define a reusable package using definePackage()
+---
+
+Packages are reusable configuration bundles published as OCI artifacts. They are the main unit of sharing in the stax ecosystem.
+
+A package can contain any combination of:
+
+- MCP server configurations
+- Skills
+- Rules
+- Knowledge
+- Surfaces
+- Secret declarations
+- Dependencies on other packages
+
+Packages do not contain a prompt or persona.
+
+## definePackage()
+
+```typescript
+import { definePackage } from "stax";
+
+export default definePackage({
+  name: "github-workflow",
+  version: "2.0.0",
+  description: "MCP servers and skills for GitHub workflows.",
+  author: "myorg",
+  license: "MIT",
+  tags: ["github", "pr", "code-review"],
+
+  mcp: "./mcp-servers.ts",
+  skills: "./skills/",
+  rules: "./rules/",
+  knowledge: "./knowledge/",
+  surfaces: "./surfaces/",
+
+  packages: ["ghcr.io/myorg/packages/git-utils:1.0.0"],
+
+  secrets: [{ key: "GITHUB_TOKEN", required: true }],
+});
+```
+
+## Fields
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | Yes | Package identifier (same naming rules as agents) |
+| `version` | `string` | Yes | Valid semver version |
+| `description` | `string` | Yes | Human-readable description |
+| `author` | `string` | No | Author or organization |
+| `license` | `string` | No | SPDX license identifier |
+| `tags` | `string[]` | No | Unique, case-sensitive tags |
+
+## Layer Source Paths
+
+| Field | Points to | Description |
+| --- | --- | --- |
+| `mcp` | File | MCP server configuration |
+| `skills` | Directory | Skill definitions |
+| `rules` | Directory | Rule files |
+| `knowledge` | Directory | Knowledge documents |
+| `surfaces` | Directory | Surface files |
+
+## Package References
+
+Packages can depend on other packages. The same reference formats apply as for agents:
+
+- Relative local path: `./packages/shared-utils`
+- OCI tag reference: `ghcr.io/myorg/packages/git-utils:1.0.0`
+- OCI digest reference: `ghcr.io/myorg/packages/git-utils@sha256:abc...`
+
+## OCI Artifact Type
+
+Packages use the same OCI manifest shape as agents but with a distinct artifact type:
+
+```text
+artifactType: application/vnd.stax.package.v1
+```
+
+The config blob contains `kind: "package"`.
+
+## Directory Structure
+
+```text
+my-package/
+├── package.ts
+├── mcp-servers.ts
+├── skills/
+├── rules/
+├── knowledge/
+├── surfaces/
+├── .staxignore
+└── stax.lock
+```
+
+## Publishing Guidance
+
+Package authors should:
+
+- Publish immutable semver tags
+- Sign released artifacts
+- Pin transitive dependencies via `stax.lock`
+- Avoid breaking package behavior behind unchanged tags

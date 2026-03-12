@@ -30,16 +30,16 @@ tags:
 
 ## Frontmatter fields
 
-| Field | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `id` | string | No | archive path | Stable rule identifier |
-| `scope` | enum | No | `always` | `always`, `glob`, `auto`, `manual` |
-| `globs` | string[] | No | `[]` | File patterns for `glob` scope |
-| `priority` | number | No | `100` | Lower runs earlier |
-| `severity` | enum | No | `warn` | `info`, `warn`, `error` |
-| `description` | string | No | — | Short summary |
-| `tags` | string[] | No | `[]` | Discovery metadata |
-| `triggers` | string[] | No | `[]` | Optional keywords for `auto` selection |
+| Field         | Type     | Required | Default      | Description                            |
+| ------------- | -------- | -------- | ------------ | -------------------------------------- |
+| `id`          | string   | No       | archive path | Stable rule identifier                 |
+| `scope`       | enum     | No       | `always`     | `always`, `glob`, `auto`, `manual`     |
+| `globs`       | string[] | No       | `[]`         | File patterns for `glob` scope         |
+| `priority`    | number   | No       | `100`        | Lower runs earlier                     |
+| `severity`    | enum     | No       | `warn`       | `info`, `warn`, `error`                |
+| `description` | string   | No       | —            | Short summary                          |
+| `tags`        | string[] | No       | `[]`         | Discovery metadata                     |
+| `triggers`    | string[] | No       | `[]`         | Optional keywords for `auto` selection |
 
 ## Scope semantics
 
@@ -86,12 +86,12 @@ Rules without conflicts are concatenated in canonical rule order defined in [05 
 
 Each runtime has different rule mechanisms:
 
-| Runtime | Common target |
-|---------|---------------|
+| Runtime     | Common target                        |
+| ----------- | ------------------------------------ |
 | Claude Code | `CLAUDE.md` or embedded instructions |
-| Codex | `AGENTS.md` or embedded instructions |
-| Cursor | `.cursor/rules/*.md` |
-| Windsurf | `.windsurf/rules/*.md` |
+| Codex       | `AGENTS.md` or embedded instructions |
+| Cursor      | `.cursor/rules/*.md`                 |
+| Windsurf    | `.windsurf/rules/*.md`               |
 
 Adapters define how much fidelity is preserved. Consumers SHOULD warn when fields such as `priority`, `severity`, or `manual` cannot be represented natively.
 

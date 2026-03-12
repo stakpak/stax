@@ -51,13 +51,13 @@ Agents reference source artifacts via `workspaceSources`.
 
 ```typescript
 export default defineAgent({
-  name: 'reviewer-agent',
-  version: '1.0.0',
+  name: "reviewer-agent",
+  version: "1.0.0",
   workspaceSources: [
     {
-      id: 'backend',
-      ref: 'ghcr.io/acme/sources/backend@sha256:abc123...',
-      mountPath: '/workspace/backend',
+      id: "backend",
+      ref: "ghcr.io/acme/sources/backend@sha256:abc123...",
+      mountPath: "/workspace/backend",
       writable: true,
       required: true,
     },
@@ -70,11 +70,11 @@ export default defineAgent({
 ```typescript
 interface WorkspaceSourceReference {
   id: string;
-  ref: string;                         // OCI ref to a source artifact
-  mountPath: string;                   // Absolute target path in runtime workspace
-  writable?: boolean;                  // Default: false
-  required?: boolean;                  // Default: true
-  subpath?: string;                    // Optional subdirectory inside snapshot
+  ref: string; // OCI ref to a source artifact
+  mountPath: string; // Absolute target path in runtime workspace
+  writable?: boolean; // Default: false
+  required?: boolean; // Default: true
+  subpath?: string; // Optional subdirectory inside snapshot
 }
 ```
 
@@ -82,11 +82,11 @@ interface WorkspaceSourceReference {
 
 ```typescript
 interface SourceArtifactConfig {
-  specVersion?: '1.0.0';
-  kind: 'source';
+  specVersion?: "1.0.0";
+  kind: "source";
   name: string;
   version: string;
-  sourceType: 'git' | 'archive' | 'directory';
+  sourceType: "git" | "archive" | "directory";
   description?: string;
 
   origin?: {
@@ -99,7 +99,7 @@ interface SourceArtifactConfig {
   snapshot?: {
     preparedFromPath?: string;
     sparse?: string[];
-    submodules?: 'excluded' | 'included';
+    submodules?: "excluded" | "included";
     fileCount?: number;
   };
 }

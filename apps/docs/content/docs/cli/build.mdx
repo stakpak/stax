@@ -1,0 +1,31 @@
+---
+title: stax build
+description: Compile TypeScript definitions and produce deterministic OCI layers
+---
+
+Compile TypeScript definitions, resolve packages, produce deterministic OCI layers, and write `stax.lock` when needed.
+
+## Usage
+
+```bash
+stax build
+stax build --persona maya-chen
+stax build --all-personas
+stax build --dry-run
+stax build --refresh-lock
+stax build --symlink-mode flatten
+```
+
+## Options
+
+| Flag | Description |
+| --- | --- |
+| `--persona` | Build for a specific persona |
+| `--all-personas` | Build for all defined personas |
+| `--dry-run` | Preview build without writing artifacts |
+| `--refresh-lock` | Force refresh of the lockfile |
+| `--symlink-mode` | Control symlink handling (`flatten`) |
+
+## Output
+
+Artifact stored in the local cache (`~/.stax/cache/`).

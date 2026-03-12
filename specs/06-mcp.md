@@ -6,34 +6,36 @@ MCP (Model Context Protocol) servers are how agents interact with external syste
 
 The artifact describes **what servers exist and what they require**. Adapters and consumers decide how those servers are translated into runtime-native configuration.
 
+stax is intentionally complementary to the official MCP Registry. When an MCP server is sourced from a registry entry, stax SHOULD preserve that provenance so policy engines and catalogs can distinguish between inline MCP definitions and registry-backed ones.
+
 ## defineMcp()
 
 ```typescript
-import { defineMcp } from 'stax';
+import { defineMcp } from "stax";
 
 export default defineMcp({
   servers: {
     github: {
-      command: 'npx',
-      args: ['-y', '@modelcontextprotocol/server-github'],
-      secrets: ['GITHUB_TOKEN'],
-      description: 'GitHub API for repos, issues, and PRs',
-      enabledTools: ['get_issue', 'create_pr'],
-      cwd: '/workspace',
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-github"],
+      secrets: ["GITHUB_TOKEN"],
+      description: "GitHub API for repos, issues, and PRs",
+      enabledTools: ["get_issue", "create_pr"],
+      cwd: "/workspace",
       env: {
-        GITHUB_API_URL: 'https://api.github.com'
+        GITHUB_API_URL: "https://api.github.com",
       },
     },
     analytics: {
-      url: 'https://mcp.internal.company.com/analytics',
-      transport: 'http',
+      url: "https://mcp.internal.company.com/analytics",
+      transport: "http",
       headers: {
-        'x-team': 'platform'
+        "x-team": "platform",
       },
-      secrets: ['ANALYTICS_TOKEN'],
-      description: 'Internal analytics platform'
-    }
-  }
+      secrets: ["ANALYTICS_TOKEN"],
+      description: "Internal analytics platform",
+    },
+  },
 });
 ```
 
@@ -41,7 +43,7 @@ export default defineMcp({
 
 ```typescript
 interface McpConfig {
-  specVersion?: '1.0.0';
+  specVersion?: "1.0.0";
   servers: Record<string, McpServer>;
 }
 
@@ -49,25 +51,31 @@ type McpServer = McpStdioServer | McpHttpServer;
 
 interface McpServerBase {
   description?: string;
-  secrets?: string[];                  // Declared secret keys
+  secrets?: string[]; // Declared secret keys
   enabledTools?: string[];
   disabledTools?: string[];
-  enabled?: boolean;                   // Default: true
-  connectTimeoutMs?: number;           // Hint only
-  metadata?: Record<string, string>;   // Informational only
+  enabled?: boolean; // Default: true
+  connectTimeoutMs?: number; // Hint only
+  metadata?: Record<string, string>; // Informational only
+  registryRef?: {
+    registry?: string; // e.g. "official"
+    package: string; // registry package or server identifier
+    version?: string;
+    digest?: string;
+  };
 }
 
 interface McpStdioServer extends McpServerBase {
   command: string;
   args?: string[];
-  env?: Record<string, string>;        // Static, non-secret env vars only
+  env?: Record<string, string>; // Static, non-secret env vars only
   cwd?: string;
 }
 
 interface McpHttpServer extends McpServerBase {
   url: string;
-  transport: 'http' | 'sse';
-  headers?: Record<string, string>;    // Static, non-secret headers only
+  transport: "http" | "sse";
+  headers?: Record<string, string>; // Static, non-secret headers only
 }
 ```
 
@@ -80,13 +88,14 @@ interface McpHttpServer extends McpServerBase {
 - `env` and `headers` MUST NOT contain secret values
 - Every key listed in `secrets` MUST be declared in the merged secrets set of the consuming artifact
 - `enabledTools` and `disabledTools` SHOULD NOT overlap; builders SHOULD fail on overlap
+- if `registryRef.digest` is present, consumers SHOULD treat it as the strongest provenance identifier for policy and audit purposes
 
 ## Secret references
 
 MCP servers reference secrets by key name only.
 
 ```typescript
-secrets: ['GITHUB_TOKEN']
+secrets: ["GITHUB_TOKEN"];
 ```
 
 The actual value is resolved by the consumer.
@@ -96,6 +105,16 @@ The actual value is resolved by the consumer.
 When packages are merged, MCP servers are merged by server name using **replace semantics**.
 
 If a higher-precedence source defines `github`, it replaces the entire lower-precedence `github` object.
+
+## Registry provenance
+
+When an MCP server originates from an MCP registry record:
+
+- builders SHOULD preserve a `registryRef`
+- consumers SHOULD display registry provenance in inspect and install-plan output
+- policy engines SHOULD be able to reason about registry origin independently from the resolved runtime config
+
+stax does not replace MCP Registry discovery. It packages resolved MCP intent alongside optional registry provenance.
 
 ## Compiled JSON example
 

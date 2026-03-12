@@ -1,0 +1,95 @@
+---
+title: What is stax?
+description: stax is a distribution standard for AI agents
+---
+
+<Callout type="info" title="Spec Version 1.0.0">
+This documentation covers **stax spec version `1.0.0`**. The specification is actively being developed. All compiled JSON payloads include `specVersion: "1.0.0"`.
+</Callout>
+
+stax is a **distribution standard** for AI agents. It defines how to describe, bundle, version, validate, verify, and distribute agent artifacts as OCI artifacts.
+
+stax artifacts are the agent equivalent of `docker build`, `docker push`, and `docker pull`: authors build and publish immutable agent artifacts, and consumers pull, inspect, verify, materialize, install, or import them into the environments where agents run.
+
+stax does **not** run agents, orchestrate them, or manage their lifecycle. Those concerns belong to runtimes, orchestrators, IDEs, CLIs, hosted agent platforms, and cloud systems built on top of the format.
+
+stax is to agents what the OCI Image Spec is to containers, what `package.json` is to JavaScript packages, and what `Chart.yaml` is to Helm charts.
+
+<Cards>
+  <Card title="Philosophy" href="/docs/overview/philosophy" description="Why agents need a distribution standard and the core thesis behind stax" />
+  <Card title="Architecture" href="/docs/overview/architecture" description="Core objects, the seven jobs, and conformance levels" />
+  <Card title="Roadmap" href="/docs/overview/roadmap" description="Implementation status and what's coming next" />
+</Cards>
+
+## Current Focus
+
+In the current market, stax is best understood first as a standard for **coding-agent asset distribution**. The broader vision still applies, but the most mature current fit is for:
+
+- Instructions and instruction trees
+- Subagents
+- Skills
+- Rules
+- MCP configuration
+- Shared source context
+- Approvals, policy, and promotion metadata
+
+## The Core Thesis
+
+Software won because it became packageable.
+
+Containers became standard once there was a portable image format. Kubernetes became practical once workloads could be described declaratively. Package ecosystems scaled once artifacts were versioned, signed, addressable, and installable.
+
+Agents are still early because most of the ecosystem is stuck in pre-package form:
+
+- Prompts in Markdown
+- Skills in folders
+- MCP config in runtime-specific JSON
+- Runtime-specific instruction files
+- Ad hoc memory directories
+- Undocumented assumptions about tools, sources, and environment
+
+<Callout type="idea" title="The stax insight">
+Today an "agent" is usually a pile of files tied to one tool. **stax turns that into a real artifact** — versioned, portable, verifiable, and distributable.
+</Callout>
+
+## What stax Is
+
+stax is the **distribution layer for agents**. It is the standard for:
+
+<Cards>
+  <Card title="Authoring" description="Define agent artifacts with a TypeScript-first SDK" />
+  <Card title="Bundling" description="Package the canonical brain: persona, prompt, skills, rules, MCP, knowledge" />
+  <Card title="Dependencies" description="Express portable dependencies on packages and source artifacts" />
+  <Card title="Packaging" description="Build reusable agent packages for shared behavior and context" />
+  <Card title="Publishing" description="Push to OCI registries with versioning and content addressing" />
+  <Card title="Verification" description="Sign and verify supply chain integrity with Sigstore" />
+  <Card title="Promotion" description="Promote artifacts across dev, staging, and production environments" />
+  <Card title="Materialization" description="Translate artifacts into runtime-native formats for any target" />
+  <Card title="Discovery" description="Search, install, update, and roll back agent artifacts" />
+</Cards>
+
+## What stax Is Not
+
+stax is intentionally **not**:
+
+- An agent runtime
+- An orchestrator
+- A scheduler
+- A workflow engine
+- A session manager
+- An execution loop
+- A hosting platform
+- A queue processor
+- A secret manager
+- An observability system
+- A multi-agent topology engine
+
+Those products may consume stax, extend stax, or integrate with stax. They should not be collapsed into stax itself.
+
+## The Standard stax Should Become
+
+- **OCI for agent artifacts**
+- **npm for reusable agent packages**
+- **Helm-like for installable agent bundles**
+- **Sigstore-aware for agent trust**
+- **A universal import/export layer between agent runtimes**

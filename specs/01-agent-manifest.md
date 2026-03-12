@@ -2,7 +2,7 @@
 
 ## Overview
 
-The agent manifest is the root definition of an agent artifact. It declares identity, optional layer sources, runtime hints, package dependencies, secret requirements, optional workspace source dependencies, and the adapter used to materialize or import the artifact for a target consumer environment.
+The agent manifest is the root definition of an agent artifact. It declares identity, optional layer sources, runtime hints, package dependencies, secret requirements, optional workspace source dependencies, optional subagent and instruction-tree sources, and the adapter used to materialize or import the artifact for a target consumer environment.
 
 Agents are authored in TypeScript using `defineAgent()` and compiled to JSON for the OCI config blob.
 
@@ -19,82 +19,85 @@ Path resolution rules:
 - Builders MUST resolve symlinks before checking containment. If the resolved target is outside the project root, the builder MUST reject the path.
 - Paths containing `..` segments MUST be normalized before containment checking. A path that escapes the project root after normalization MUST be rejected.
 - `--allow-outside-root` MUST NOT be the default. Builders SHOULD warn prominently when this flag is used.
+- Builders SHOULD default to `--symlink-mode reject`. Builders MAY support `--symlink-mode flatten` for selected directory-backed layers as defined in [03 — Layers](./03-layers.md).
 
 ## defineAgent()
 
 ```typescript
-import { defineAgent } from 'stax';
-import claudeCode from '@stax/claude-code';
+import { defineAgent } from "stax";
+import claudeCode from "@stax/claude-code";
 
 export default defineAgent({
-  name: 'backend-engineer',
-  version: '3.1.0',
-  description: 'Senior backend engineer with Go and distributed systems expertise.',
-  author: 'myorg',
-  license: 'MIT',
-  tags: ['code-review', 'architecture', 'golang'],
-  url: 'https://github.com/myorg/backend-engineer',
+  name: "backend-engineer",
+  version: "3.1.0",
+  description: "Senior backend engineer with Go and distributed systems expertise.",
+  author: "myorg",
+  license: "MIT",
+  tags: ["code-review", "architecture", "golang"],
+  url: "https://github.com/myorg/backend-engineer",
 
   adapter: claudeCode({
-    model: 'claude-opus-4-1',
+    model: "claude-opus-4-1",
     modelParams: { temperature: 0.3 },
   }),
   adapterFallback: [
     {
-      type: 'generic',
-      runtime: 'generic',
-      adapterVersion: '1.0.0',
-      model: 'any-model-id',
+      type: "generic",
+      runtime: "generic",
+      adapterVersion: "1.0.0",
+      model: "any-model-id",
       config: {},
       features: {},
     },
   ],
 
-  persona: './personas/maya-chen.ts',
-  prompt: './SYSTEM_PROMPT.md',
-  mcp: './mcp-servers.ts',
-  skills: './skills/',
-  rules: './rules/',
-  knowledge: './knowledge/',
-  memory: './memory/',
-  surfaces: './surfaces/',
+  persona: "./personas/maya-chen.ts",
+  prompt: "./SYSTEM_PROMPT.md",
+  mcp: "./mcp-servers.ts",
+  skills: "./skills/",
+  rules: "./rules/",
+  knowledge: "./knowledge/",
+  memory: "./memory/",
+  surfaces: "./surfaces/",
+  instructionTree: "./instruction-tree/",
+  subagents: "./subagents.ts",
 
   hints: {
-    isolation: 'microvm',
+    isolation: "microvm",
     capabilities: {
       shell: true,
       network: {
-        mode: 'restricted',
-        allowlist: ['api.anthropic.com', 'api.github.com'],
+        mode: "restricted",
+        allowlist: ["api.anthropic.com", "api.github.com"],
       },
       filesystem: {
-        workspace: '/workspace',
-        writable: ['/workspace'],
-        denyRead: ['**/.env', '**/*credentials*'],
+        workspace: "/workspace",
+        writable: ["/workspace"],
+        denyRead: ["**/.env", "**/*credentials*"],
       },
     },
   },
 
   secrets: [
-    { key: 'ANTHROPIC_API_KEY', required: true, kind: 'api-key' },
-    { key: 'GITHUB_TOKEN', required: true, kind: 'token' },
-    { key: 'SLACK_WEBHOOK', required: false, kind: 'url' },
+    { key: "ANTHROPIC_API_KEY", required: true, kind: "api-key" },
+    { key: "GITHUB_TOKEN", required: true, kind: "token" },
+    { key: "SLACK_WEBHOOK", required: false, kind: "url" },
   ],
 
   workspaceSources: [
     {
-      id: 'backend-repo',
-      ref: 'ghcr.io/myorg/sources/backend@sha256:abcdef123456...',
-      mountPath: '/workspace/backend',
+      id: "backend-repo",
+      ref: "ghcr.io/myorg/sources/backend@sha256:abcdef123456...",
+      mountPath: "/workspace/backend",
       writable: true,
       required: true,
     },
   ],
 
   packages: [
-    'ghcr.io/myorg/packages/github-workflow:2.0.0',
-    'ghcr.io/myorg/packages/org-standards@sha256:0123456789abcdef...',
-    './packages/local-team-overrides',
+    "ghcr.io/myorg/packages/github-workflow:2.0.0",
+    "ghcr.io/myorg/packages/org-standards@sha256:0123456789abcdef...",
+    "./packages/local-team-overrides",
   ],
 });
 ```
@@ -103,7 +106,7 @@ export default defineAgent({
 
 ```typescript
 interface AgentDefinition {
-  specVersion?: '1.0.0';
+  specVersion?: "1.0.0";
 
   // Identity
   name: string;
@@ -127,6 +130,8 @@ interface AgentDefinition {
   knowledge?: string;
   memory?: string;
   surfaces?: string;
+  instructionTree?: string;
+  subagents?: string;
 
   // Runtime hints
   hints?: RuntimeHints;
@@ -142,7 +147,7 @@ interface AgentDefinition {
 }
 
 interface RuntimeHints {
-  isolation?: 'process' | 'container' | 'gvisor' | 'microvm';
+  isolation?: "process" | "container" | "gvisor" | "microvm";
   capabilities?: {
     shell?: boolean;
     processes?: boolean;
@@ -153,7 +158,7 @@ interface RuntimeHints {
 }
 
 interface NetworkHint {
-  mode: 'none' | 'restricted' | 'full';
+  mode: "none" | "restricted" | "full";
   allowlist?: string[];
 }
 
@@ -167,7 +172,7 @@ interface SecretDeclaration {
   key: string;
   required: boolean;
   description?: string;
-  kind?: 'api-key' | 'token' | 'password' | 'certificate' | 'connection-string' | 'url' | 'opaque';
+  kind?: "api-key" | "token" | "password" | "certificate" | "connection-string" | "url" | "opaque";
   exposeAs?: { env?: string; file?: string };
 }
 
@@ -175,43 +180,47 @@ type PackageReference = string;
 
 interface WorkspaceSourceReference {
   id: string;
-  ref: string;                         // OCI ref to a source artifact
-  mountPath: string;                   // Where the consumer should materialize it
-  writable?: boolean;                  // Default: false
-  required?: boolean;                  // Default: true
-  subpath?: string;                    // Optional subdirectory inside the source artifact
+  ref: string; // OCI ref to a source artifact
+  mountPath: string; // Where the consumer should materialize it
+  writable?: boolean; // Default: false
+  required?: boolean; // Default: true
+  subpath?: string; // Optional subdirectory inside the source artifact
 }
 
 interface AdapterConfig {
-  type: string;                         // Adapter identifier, e.g. "claude-code"
-  runtime: string;                      // Runtime family, e.g. "claude-code"
-  adapterVersion: string;               // Adapter schema version
+  type: string; // Adapter identifier, e.g. "claude-code"
+  runtime: string; // Runtime family, e.g. "claude-code"
+  adapterVersion: string; // Adapter schema version
+  runtimeVersionRange?: string; // Tested runtime-version range for exact claims
   model?: string;
   modelParams?: Record<string, unknown>;
+  importMode?: "filesystem" | "api" | "bundle" | "object-map";
+  fidelity?: "byte-exact" | "schema-exact" | "best-effort" | "unsupported";
   config: Record<string, unknown>;
   features: AdapterFeatureMap;
   targets?: MaterializationTarget[];
 }
 
 interface AdapterFeatureMap {
-  prompt?: 'native' | 'embedded' | 'unsupported';
-  persona?: 'native' | 'embedded' | 'unsupported';
-  rules?: 'native' | 'embedded' | 'unsupported';
-  skills?: 'native' | 'unsupported';
-  mcp?: 'native' | 'translated' | 'unsupported';
-  surfaces?: 'native' | 'translated' | 'unsupported';
-  secrets?: 'native' | 'consumer-only';
-  toolPermissions?: 'native' | 'translated' | 'unsupported';
-  modelConfig?: 'native' | 'translated' | 'unsupported';
+  prompt?: "native" | "embedded" | "unsupported";
+  persona?: "native" | "embedded" | "unsupported";
+  rules?: "native" | "embedded" | "unsupported";
+  skills?: "native" | "unsupported";
+  mcp?: "native" | "translated" | "unsupported";
+  surfaces?: "native" | "translated" | "unsupported";
+  secrets?: "native" | "consumer-only";
+  toolPermissions?: "native" | "translated" | "unsupported";
+  modelConfig?: "native" | "translated" | "unsupported";
   exactMode?: boolean;
 }
 
 interface MaterializationTarget {
-  kind: 'file' | 'directory' | 'setting';
+  kind: "file" | "directory" | "setting" | "api" | "bundle" | "object";
   path: string;
   description?: string;
-  scope?: 'user' | 'project' | 'workspace' | 'local';
+  scope?: "user" | "project" | "workspace" | "local" | "remote" | "account" | "organization";
   exact?: boolean;
+  mediaType?: string;
 }
 ```
 
@@ -225,10 +234,10 @@ interface MaterializationTarget {
 
 ### Paths
 
-- `persona`, `prompt`, and `mcp` MUST resolve to files
-- `skills`, `rules`, `knowledge`, `memory`, and `surfaces` MUST resolve to directories
+- `persona`, `prompt`, `mcp`, and `subagents` MUST resolve to files
+- `skills`, `rules`, `knowledge`, `memory`, `surfaces`, and `instructionTree` MUST resolve to directories
 - Missing optional paths MUST be treated as validation errors if declared explicitly
-- Symlinks MUST be rejected — builders MUST NOT follow or package symlinks in any source path (see also [03 — Layers](./03-layers.md) which applies the same rule at the archive level)
+- Symlinks MUST be rejected by default. Builders MAY allow symlink flattening only when explicitly invoked with `--symlink-mode flatten` and only for the layers permitted by [03 — Layers](./03-layers.md).
 
 ### Workspace sources
 
@@ -267,7 +276,7 @@ Consumers MUST NOT select a fallback adapter if the primary adapter is compatibl
 
 The OCI config blob for an agent MUST use media type `application/vnd.stax.config.v1+json` and MUST contain canonical JSON with stable key ordering.
 
-If `surfaces` are present, the config blob SHOULD record that fact so consumers can distinguish artifacts that support exact runtime file materialization from those that only provide a single prompt.
+If `surfaces` or `instructionTree` are present, the config blob SHOULD record that fact so consumers can distinguish artifacts that support exact runtime file materialization from those that only provide a single prompt.
 
 ### Canonical config example
 
@@ -323,9 +332,7 @@ If `surfaces` are present, the config blob SHOULD record that fact so consumers 
       "required": true
     }
   ],
-  "packages": [
-    "ghcr.io/myorg/packages/github-workflow:2.0.0"
-  ]
+  "packages": ["ghcr.io/myorg/packages/github-workflow:2.0.0"]
 }
 ```
 
@@ -333,26 +340,26 @@ If `surfaces` are present, the config blob SHOULD record that fact so consumers 
 
 ### In the manifest
 
-| Field | Why |
-|------|-----|
-| Identity fields | Defines what the artifact is |
-| Adapter and fallback | Declares intended runtimes |
-| Layer paths and surfaces | Defines the agent brain and exact runtime-facing documents |
-| Runtime hints | Communicates non-binding requirements and recommendations |
-| Secret declarations | Declares needed secret keys |
-| Workspace source references | Declares shared repo/workspace dependencies |
-| Package references | Defines composition |
+| Field                                                   | Why                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Identity fields                                         | Defines what the artifact is                                                         |
+| Adapter and fallback                                    | Declares intended runtimes                                                           |
+| Layer paths, surfaces, instruction trees, and subagents | Defines the agent brain, exact runtime-facing documents, and bundled delegate agents |
+| Runtime hints                                           | Communicates non-binding requirements and recommendations                            |
+| Secret declarations                                     | Declares needed secret keys                                                          |
+| Workspace source references                             | Declares shared repo/workspace dependencies                                          |
+| Package references                                      | Defines composition                                                                  |
 
 ### Out of the manifest
 
-| Concern | Why it's out |
-|--------|---------------|
+| Concern                     | Why it's out         |
+| --------------------------- | -------------------- |
 | Secret values and providers | Environment-specific |
-| Resource limits | Operational |
-| Replicas | Orchestration |
-| Retry policy | Runtime-specific |
-| Session timeout | Operational |
-| Scheduling and topology | Orchestration |
+| Resource limits             | Operational          |
+| Replicas                    | Orchestration        |
+| Retry policy                | Runtime-specific     |
+| Session timeout             | Operational          |
+| Scheduling and topology     | Orchestration        |
 
 ## Directory structure
 

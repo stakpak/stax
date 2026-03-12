@@ -13,12 +13,12 @@ This adapter targets the documented Codex file contract described in [17 — Run
 
 ## Scope model
 
-| Scope | Typical files |
-|------|---------------|
-| User | `~/.codex/config.toml`, `~/.codex/AGENTS.md`, `$HOME/.agents/skills/**` |
-| Project | `.codex/config.toml`, `AGENTS.md`, `.agents/skills/**` |
-| System / admin | `/etc/codex/config.toml`, `/etc/codex/skills/**` |
-| State | `~/.codex/auth.json`, `~/.codex/history.jsonl`, logs, caches |
+| Scope          | Typical files                                                           |
+| -------------- | ----------------------------------------------------------------------- |
+| User           | `~/.codex/config.toml`, `~/.codex/AGENTS.md`, `$HOME/.agents/skills/**` |
+| Project        | `.codex/config.toml`, `AGENTS.md`, `.agents/skills/**`                  |
+| System / admin | `/etc/codex/config.toml`, `/etc/codex/skills/**`                        |
+| State          | `~/.codex/auth.json`, `~/.codex/history.jsonl`, logs, caches            |
 
 In stax `1.0.0`, `@stax/codex` SHOULD default to **project scope**.
 
@@ -29,19 +29,19 @@ interface CodexAdapterOptions {
   model?: string;
   modelParams?: Record<string, unknown>;
 
-  scope?: 'project' | 'user';
+  scope?: "project" | "user";
   exact?: boolean;
 
-  approval?: 'untrusted' | 'on-request' | 'never';
-  sandbox?: 'read-only' | 'workspace-write' | 'danger-full-access';
+  approval?: "untrusted" | "on-request" | "never";
+  sandbox?: "read-only" | "workspace-write" | "danger-full-access";
   allowLoginShell?: boolean;
 
-  writeConfig?: boolean;               // default: true
-  writeInstructions?: boolean;         // default: true
-  writeSkills?: boolean;               // default: true
-  writeMcp?: boolean;                  // default: true
+  writeConfig?: boolean; // default: true
+  writeInstructions?: boolean; // default: true
+  writeSkills?: boolean; // default: true
+  writeMcp?: boolean; // default: true
 
-  config?: Record<string, unknown>;    // extra Codex TOML keys
+  config?: Record<string, unknown>; // extra Codex TOML keys
 }
 ```
 
@@ -59,21 +59,22 @@ The compiled adapter config SHOULD use:
 
 ### Project scope
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` or composed prompt | `AGENTS.md` |
-| skills | `.agents/skills/**` |
-| MCP layer | `.codex/config.toml` under `[mcp_servers.*]` |
-| adapter config | `.codex/config.toml` |
+| stax source                                   | Target                                       |
+| --------------------------------------------- | -------------------------------------------- |
+| `surfaces/instructions.md` or composed prompt | `AGENTS.md`                                  |
+| `instructionTree`                             | `<scoped-path>/AGENTS.md`                    |
+| skills                                        | `.agents/skills/**`                          |
+| MCP layer                                     | `.codex/config.toml` under `[mcp_servers.*]` |
+| adapter config                                | `.codex/config.toml`                         |
 
 ### User scope
 
-| stax source | Target |
-|------------|--------|
-| `surfaces/instructions.md` or composed prompt | `~/.codex/AGENTS.md` |
-| skills | `$HOME/.agents/skills/**` |
-| MCP layer | `~/.codex/config.toml` under `[mcp_servers.*]` |
-| adapter config | `~/.codex/config.toml` |
+| stax source                                   | Target                                         |
+| --------------------------------------------- | ---------------------------------------------- |
+| `surfaces/instructions.md` or composed prompt | `~/.codex/AGENTS.md`                           |
+| skills                                        | `$HOME/.agents/skills/**`                      |
+| MCP layer                                     | `~/.codex/config.toml` under `[mcp_servers.*]` |
+| adapter config                                | `~/.codex/config.toml`                         |
 
 ## `AGENTS.md` behavior
 
@@ -89,12 +90,15 @@ Codex instruction discovery is hierarchical.
 
 ### stax mapping policy
 
-stax packages one canonical instruction surface by default. Therefore, `@stax/codex` in `1.0.0` targets one exact file location at a time:
+stax supports both one canonical instruction surface and an optional instruction tree:
+
+- without `instructionTree`, `@stax/codex` targets one exact file location at a time
+- with [38 — Instruction Trees](./38-instruction-trees.md), the adapter MAY materialize a discovered multi-directory AGENTS hierarchy
+
+Root mapping remains:
 
 - project root `AGENTS.md`, or
 - user `~/.codex/AGENTS.md`
-
-Packaging an entire discovered multi-directory AGENTS tree is out of scope for `1.0.0` and would require a future extension.
 
 ## `config.toml` generation
 
@@ -177,5 +181,6 @@ An implementation claiming exact Codex support SHOULD:
 1. write valid TOML to `.codex/config.toml` or `~/.codex/config.toml`
 2. preserve project skill directories under `.agents/skills/`
 3. write exact `AGENTS.md` when source instructions exist
-4. avoid writing state or credential files
-5. warn or fail when composition or unsupported TOML fields make output lossy
+4. materialize instruction-tree entries to scoped `AGENTS.md` files when present
+5. avoid writing state or credential files
+6. warn or fail when composition or unsupported TOML fields make output lossy

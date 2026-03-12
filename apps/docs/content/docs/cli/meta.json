@@ -1,0 +1,26 @@
+{
+  "title": "CLI",
+  "description": "The stax command-line interface",
+  "icon": "Terminal",
+  "root": true,
+  "pages": [
+    "index",
+    "---Commands---",
+    "init",
+    "build",
+    "build-source",
+    "validate",
+    "materialize",
+    "plan-install",
+    "inspect",
+    "push",
+    "pull",
+    "extract",
+    "diff",
+    "verify",
+    "login",
+    "---Configuration---",
+    "config",
+    "exit-codes"
+  ]
+}
