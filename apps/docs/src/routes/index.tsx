@@ -12,7 +12,16 @@ import {
   Workflow,
 } from "lucide-react";
 
+import { createMetadata } from "@/lib/metadata";
+
 export const Route = createFileRoute("/")({
+  head: () =>
+    createMetadata({
+      path: "/",
+      title: "stax — Distribution Standard for AI Agents",
+      description:
+        "Describe, package, version, verify, and distribute AI agent artifacts as OCI artifacts. One canonical format for every runtime.",
+    }),
   component: Home,
 });
 

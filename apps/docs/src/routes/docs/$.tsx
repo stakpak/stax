@@ -16,6 +16,7 @@ import { Suspense } from "react";
 
 import { useMDXComponents } from "@/components/mdx";
 import { baseOptions, gitConfig } from "@/lib/layout.shared";
+import { createMetadata, DEFAULT_DESCRIPTION } from "@/lib/metadata";
 import { source } from "@/lib/source";
 
 const tabConfig: Record<string, { icon: React.ReactNode; description: string; color: string }> = {
@@ -56,6 +57,14 @@ function getSectionTheme(path: string) {
 }
 
 export const Route = createFileRoute("/docs/$")({
+  head: ({ loaderData }) =>
+    createMetadata({
+      path: loaderData?.path ? `/docs/${loaderData.path}` : "/docs",
+      title: loaderData?.title ? `${loaderData.title} — stax docs` : "stax docs",
+      description: loaderData?.description || DEFAULT_DESCRIPTION,
+      type: "article",
+      noindex: loaderData?.path?.includes("draft/") ?? false,
+    }),
   component: Page,
   loader: async ({ params }) => {
     const slugs = params._splat?.split("/") ?? [];
@@ -76,6 +85,8 @@ const serverLoader = createServerFn({
     return {
       slugs: page.slugs,
       path: page.path,
+      title: page.data.title,
+      description: page.data.description,
       pageTree: await source.serializePageTree(source.getPageTree()),
     };
   });
