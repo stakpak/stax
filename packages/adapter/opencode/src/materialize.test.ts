@@ -62,10 +62,10 @@ describe("opencode materialize", () => {
     expect(content).toContain("test-server");
   });
 
-  it("should write skills to .opencode/skill/<name>.md", async () => {
+  it("should write skills to .opencode/skill/<name>/SKILL.md", async () => {
     const result = await materialize(createContext());
-    expect(result.files.has(".opencode/skill/search.md")).toBe(true);
-    expect(result.files.get(".opencode/skill/search.md")).toContain("Search for things");
+    expect(result.files.has(".opencode/skill/search/SKILL.md")).toBe(true);
+    expect(result.files.get(".opencode/skill/search/SKILL.md")).toContain("Search for things");
   });
 
   it("should not include MCP in opencode.jsonc when mcp is absent", async () => {

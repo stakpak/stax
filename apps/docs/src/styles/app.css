@@ -563,8 +563,6 @@ code {
   color: var(--stax-term-text);
 }
 
-
-
 .stax-term--green {
   color: var(--stax-term-green);
 }
@@ -1636,8 +1634,6 @@ code {
     transform: translateY(0);
   }
 }
-
-
 
 @keyframes reveal {
   from {

@@ -259,7 +259,7 @@ export interface MemoryMeta {
 // ─── Rules ──────────────────────────────────────────────
 
 export interface RuleDefinition {
-  id: string;
+  id?: string;
   scope: "always" | "glob" | "auto" | "manual";
   globs?: string[];
   priority?: number;

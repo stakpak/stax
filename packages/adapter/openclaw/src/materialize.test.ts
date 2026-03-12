@@ -92,10 +92,10 @@ describe("openclaw materialize", () => {
     expect(result.files.get("IDENTITY.md")).toBe("Identity info");
   });
 
-  it("should write skills to skills/<name>.md", async () => {
+  it("should write skills to skills/<name>/SKILL.md", async () => {
     const result = await materialize(createContext());
-    expect(result.files.has("skills/search.md")).toBe(true);
-    expect(result.files.get("skills/search.md")).toContain("Search for things");
+    expect(result.files.has("skills/search/SKILL.md")).toBe(true);
+    expect(result.files.get("skills/search/SKILL.md")).toContain("Search for things");
   });
 
   it("should write memory files to memory/", async () => {

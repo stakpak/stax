@@ -302,7 +302,16 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
   const configCanonical = canonicalJson(config);
   const configBlob = await writeBlob(configCanonical);
 
-  // 7. Build manifest
+  // 7. Build manifest with annotations
+  const annotations: Record<string, string> = {
+    "org.opencontainers.image.created": "1970-01-01T00:00:00.000Z",
+    "org.opencontainers.image.version": def.version as string,
+    "org.opencontainers.image.title": def.name as string,
+    "dev.stax.spec.version": (def.specVersion as string) ?? "1.0.0",
+    "dev.stax.adapter.type": (def.adapter as Record<string, unknown>)?.type as string,
+    "dev.stax.adapter.runtime": (def.adapter as Record<string, unknown>)?.runtime as string,
+  };
+
   const manifest = {
     schemaVersion: 2,
     mediaType: "application/vnd.oci.image.manifest.v1+json",
@@ -313,6 +322,7 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
       size: configBlob.size,
     },
     layers,
+    annotations,
   };
 
   const manifestJson = canonicalJson(manifest);

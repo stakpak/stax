@@ -4,19 +4,15 @@ const nameRegex = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const semverRegex =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
-const featureValueSchema = z.enum(["native", "embedded", "unsupported"]).optional();
-const mcpFeatureValueSchema = z.enum(["native", "translated", "unsupported"]).optional();
-const secretsFeatureValueSchema = z.enum(["native", "consumer-only"]).optional();
-
 const adapterFeatureMapSchema = z
   .object({
-    prompt: featureValueSchema,
-    persona: featureValueSchema,
-    rules: featureValueSchema,
-    skills: z.enum(["native", "unsupported"]).optional(),
-    mcp: mcpFeatureValueSchema,
-    surfaces: z.enum(["native", "translated", "unsupported"]).optional(),
-    secrets: secretsFeatureValueSchema,
+    prompt: z.enum(["native", "embedded", "unsupported"]).optional(),
+    persona: z.enum(["native", "embedded", "unsupported"]).optional(),
+    rules: z.enum(["native", "embedded", "translated", "unsupported"]).optional(),
+    skills: z.enum(["native", "translated", "unsupported"]).optional(),
+    mcp: z.enum(["native", "translated", "unsupported"]).optional(),
+    surfaces: z.enum(["native", "embedded", "translated", "unsupported"]).optional(),
+    secrets: z.enum(["native", "consumer-only"]).optional(),
     toolPermissions: z.enum(["native", "translated", "unsupported"]).optional(),
     modelConfig: z.enum(["native", "translated", "unsupported"]).optional(),
     exactMode: z.boolean().optional(),

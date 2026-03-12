@@ -6,6 +6,7 @@ const PACKAGES_MEDIA_TYPE = "application/vnd.stax.packages.v1+json";
 
 /**
  * Resolve package references depth-first in declaration order.
+ * Detects conflicts when the same reference resolves to different digests.
  */
 export async function resolvePackages(references: string[]): Promise<ResolveResult> {
   if (references.length === 0) {
@@ -13,6 +14,7 @@ export async function resolvePackages(references: string[]): Promise<ResolveResu
   }
 
   const resolved = new Map<string, ResolvedPackage>(); // keyed by "ref|digest"
+  const refToDigest = new Map<string, string>(); // tracks ref → digest for conflict detection
   const result: ResolvedPackage[] = [];
   const warnings: string[] = [];
 
@@ -35,9 +37,23 @@ export async function resolvePackages(references: string[]): Promise<ResolveResu
     const digestHex = await sha256hex(new TextEncoder().encode(manifestJson));
     const digest = `sha256:${digestHex}`;
 
+    // Diamond conflict detection: same ref, different digest
+    const existingDigest = refToDigest.get(ref);
+    if (existingDigest !== undefined) {
+      if (existingDigest !== digest) {
+        throw new Error(
+          `Dependency conflict: package "${ref}" resolves to different digests: ${existingDigest} vs ${digest}`,
+        );
+      }
+      // Same ref+digest already resolved, skip
+      return;
+    }
+
     // Dedup check
     const key = `${ref}|${digest}`;
     if (resolved.has(key)) return;
+
+    refToDigest.set(ref, digest);
 
     // Find packages layer to get dependencies
     const packagesLayer = manifest.layers.find((l) => l.mediaType === PACKAGES_MEDIA_TYPE);

@@ -81,10 +81,10 @@ describe("github-copilot materialize", () => {
     expect(server.type).toBe("sse");
   });
 
-  it("should write skills to .github/skills/<name>.md", async () => {
+  it("should write skills to .github/skills/<name>/SKILL.md", async () => {
     const result = await materialize(createContext());
-    expect(result.files.has(".github/skills/search.md")).toBe(true);
-    expect(result.files.get(".github/skills/search.md")).toContain("Search for things");
+    expect(result.files.has(".github/skills/search/SKILL.md")).toBe(true);
+    expect(result.files.get(".github/skills/search/SKILL.md")).toContain("Search for things");
   });
 
   it("should write rules to .github/instructions/<id>.instructions.md", async () => {

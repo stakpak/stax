@@ -2,10 +2,13 @@ import type { AdapterConfig } from "@stax/core";
 
 export interface GitHubCopilotOptions {
   model?: string;
+  modelParams?: Record<string, unknown>;
   writeInstructions?: boolean;
   writePathInstructions?: boolean;
   writeMcp?: boolean;
   writeSkills?: boolean;
+  writeAgentsMd?: boolean;
+  writeAgents?: boolean;
 }
 
 export default function githubCopilot(options?: GitHubCopilotOptions): AdapterConfig {
@@ -15,9 +18,17 @@ export default function githubCopilot(options?: GitHubCopilotOptions): AdapterCo
     runtime: "github-copilot",
     adapterVersion: "1.0.0",
     model: opts.model,
+    modelParams: opts.modelParams,
     importMode: "filesystem",
     fidelity: "best-effort",
-    config: {},
+    config: {
+      writeInstructions: opts.writeInstructions,
+      writePathInstructions: opts.writePathInstructions,
+      writeMcp: opts.writeMcp,
+      writeSkills: opts.writeSkills,
+      writeAgentsMd: opts.writeAgentsMd,
+      writeAgents: opts.writeAgents,
+    },
     features: {
       prompt: "native",
       persona: "embedded",
@@ -46,6 +57,12 @@ export default function githubCopilot(options?: GitHubCopilotOptions): AdapterCo
       { kind: "file", path: ".vscode/mcp.json", scope: "workspace", description: "MCP config" },
       { kind: "directory", path: ".github/skills/", scope: "workspace", description: "Skills" },
       { kind: "file", path: "AGENTS.md", scope: "workspace", description: "Root instructions" },
+      {
+        kind: "directory",
+        path: ".github/agents/",
+        scope: "workspace",
+        description: "Agent definitions",
+      },
     ],
   };
 }

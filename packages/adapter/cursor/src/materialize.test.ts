@@ -89,10 +89,10 @@ describe("cursor materialize", () => {
     expect(server.args).toEqual(["-y", "test-mcp"]);
   });
 
-  it("should write skills to .cursor/skills/<name>.md", async () => {
+  it("should write skills to .cursor/skills/<name>/SKILL.md", async () => {
     const result = await materialize(createContext());
-    expect(result.files.has(".cursor/skills/search.md")).toBe(true);
-    expect(result.files.get(".cursor/skills/search.md")).toContain("Search for things");
+    expect(result.files.has(".cursor/skills/search/SKILL.md")).toBe(true);
+    expect(result.files.get(".cursor/skills/search/SKILL.md")).toContain("Search for things");
   });
 
   it("should not write mcp.json when mcp is absent", async () => {

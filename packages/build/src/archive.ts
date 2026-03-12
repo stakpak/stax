@@ -2,36 +2,67 @@ import { gzipSync } from "node:zlib";
 
 /**
  * Create a deterministic tar+gzip archive.
- * Rules: sorted paths, mtime=0, uid/gid=0, mode 0644/0755, gzip level 6, OS=0xFF.
+ * Rules: sorted paths, directory entries before children, mtime=0, uid/gid=0,
+ * uname/gname empty, mode 0644/0755, gzip level 6, OS=0xFF.
  */
 export async function createDeterministicTarGz(
   files: Map<string, Uint8Array>,
 ): Promise<Uint8Array> {
   // Validate paths
-  for (const path of files.keys()) {
-    if (path.startsWith("/")) {
-      throw new Error(`Invalid path: "${path}". Paths must not start with /`);
+  for (const filePath of files.keys()) {
+    if (filePath.startsWith("/")) {
+      throw new Error(`Invalid path: "${filePath}". Paths must not start with /`);
     }
-    if (path.startsWith("./")) {
-      throw new Error(`Invalid path: "${path}". Paths must not start with ./`);
+    if (filePath.startsWith("./")) {
+      throw new Error(`Invalid path: "${filePath}". Paths must not start with ./`);
     }
-    if (path.includes("..")) {
-      throw new Error(`Invalid path: "${path}". Paths must not contain .. segments`);
+    if (filePath.includes("..")) {
+      throw new Error(`Invalid path: "${filePath}". Paths must not contain .. segments`);
     }
-    if (path.includes("\0")) {
-      throw new Error(`Invalid path: "${path}". Paths must not contain null bytes`);
+    if (filePath.includes("\0")) {
+      throw new Error(`Invalid path: "${filePath}". Paths must not contain null bytes`);
     }
   }
 
-  // Sort paths lexicographically
+  // Check for duplicate normalized paths
+  const normalizedPaths = new Set<string>();
+  for (const filePath of files.keys()) {
+    const normalized = filePath.toLowerCase();
+    if (normalizedPaths.has(normalized)) {
+      throw new Error(`Duplicate normalized path: "${filePath}"`);
+    }
+    normalizedPaths.add(normalized);
+  }
+
+  // Sort paths lexicographically (UTF-8 byte order — for ASCII this matches JS sort)
   const sortedPaths = [...files.keys()].sort();
 
-  // Build tar archive
+  // Collect directory entries that need to be emitted
+  const directories = new Set<string>();
+  for (const filePath of sortedPaths) {
+    const parts = filePath.split("/");
+    for (let i = 1; i < parts.length; i++) {
+      directories.add(parts.slice(0, i).join("/") + "/");
+    }
+  }
+  // Build tar archive with directory entries before children
   const blocks: Uint8Array[] = [];
+  const emittedDirs = new Set<string>();
 
-  for (const path of sortedPaths) {
-    const content = files.get(path)!;
-    const header = createTarHeader(path, content.length);
+  for (const filePath of sortedPaths) {
+    // Emit any parent directories not yet emitted
+    const parts = filePath.split("/");
+    for (let i = 1; i < parts.length; i++) {
+      const dirPath = parts.slice(0, i).join("/") + "/";
+      if (!emittedDirs.has(dirPath)) {
+        blocks.push(createTarHeader(dirPath, 0, true));
+        emittedDirs.add(dirPath);
+      }
+    }
+
+    // Emit file entry
+    const content = files.get(filePath)!;
+    const header = createTarHeader(filePath, content.length, false);
     blocks.push(header);
     blocks.push(content);
 
@@ -72,16 +103,16 @@ export async function createDeterministicTarGz(
   return result;
 }
 
-function createTarHeader(path: string, size: number): Uint8Array {
+function createTarHeader(filePath: string, size: number, isDirectory: boolean): Uint8Array {
   const header = new Uint8Array(512);
   const encoder = new TextEncoder();
 
   // File name (0-99)
-  const nameBytes = encoder.encode(path);
+  const nameBytes = encoder.encode(filePath);
   header.set(nameBytes.slice(0, 100), 0);
 
-  // File mode (100-107) - 0644
-  writeOctal(header, 100, 8, 0o644);
+  // File mode (100-107) - 0755 for directories, 0644 for regular files
+  writeOctal(header, 100, 8, isDirectory ? 0o755 : 0o644);
 
   // Owner ID (108-115) - 0
   writeOctal(header, 108, 8, 0);
@@ -95,8 +126,8 @@ function createTarHeader(path: string, size: number): Uint8Array {
   // Modification time (136-147) - 0
   writeOctal(header, 136, 12, 0);
 
-  // Type flag (156) - '0' for regular file
-  header[156] = 0x30; // '0'
+  // Type flag (156) - '5' for directory, '0' for regular file
+  header[156] = isDirectory ? 0x35 : 0x30;
 
   // Magic (257-262) - "ustar\0"
   const magic = encoder.encode("ustar\0");
@@ -105,6 +136,9 @@ function createTarHeader(path: string, size: number): Uint8Array {
   // Version (263-264) - "00"
   header[263] = 0x30;
   header[264] = 0x30;
+
+  // uname (265-296) - empty (already zeroed)
+  // gname (297-328) - empty (already zeroed)
 
   // Compute checksum
   // First, fill checksum field with spaces

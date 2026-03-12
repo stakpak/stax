@@ -60,10 +60,10 @@ describe("codex materialize", () => {
     expect(content).toContain("test-server");
   });
 
-  it("should write skills to .agents/skills/<name>.md", async () => {
+  it("should write skills to .agents/skills/<name>/SKILL.md", async () => {
     const result = await materialize(createContext());
-    expect(result.files.has(".agents/skills/search.md")).toBe(true);
-    expect(result.files.get(".agents/skills/search.md")).toContain("Search for things");
+    expect(result.files.has(".agents/skills/search/SKILL.md")).toBe(true);
+    expect(result.files.get(".agents/skills/search/SKILL.md")).toContain("Search for things");
   });
 
   it("should append rules to AGENTS.md", async () => {

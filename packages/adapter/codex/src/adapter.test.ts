@@ -33,8 +33,8 @@ describe("codex adapter", () => {
   });
 
   it("should pass approval mode to config", () => {
-    const config = codex({ approval: "auto-edit" });
-    expect(config.config.approval).toBe("auto-edit");
+    const config = codex({ approval: "on-request" });
+    expect(config.config.approval).toBe("on-request");
   });
 
   it("should pass sandbox mode to config", () => {
@@ -79,7 +79,7 @@ describe("codex adapter", () => {
   });
 
   it("should accept all valid approval modes", () => {
-    const modes = ["suggest", "auto-edit", "on-request"] as const;
+    const modes = ["untrusted", "on-request", "never"] as const;
     for (const approval of modes) {
       const config = codex({ approval });
       expect(config.config.approval).toBe(approval);
@@ -87,7 +87,7 @@ describe("codex adapter", () => {
   });
 
   it("should accept all valid sandbox modes", () => {
-    const modes = ["workspace-write", "workspace-read", "none"] as const;
+    const modes = ["read-only", "workspace-write", "danger-full-access"] as const;
     for (const sandbox of modes) {
       const config = codex({ sandbox });
       expect(config.config.sandbox).toBe(sandbox);
@@ -95,7 +95,7 @@ describe("codex adapter", () => {
   });
 
   it("should set fidelity to byte-exact in exact mode", () => {
-    const config = codex({ approval: "suggest", sandbox: "workspace-write" });
+    const config = codex({ approval: "untrusted", sandbox: "workspace-write" });
     // When not exact, should be best-effort
     expect(config.fidelity).toBe("best-effort");
   });

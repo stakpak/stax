@@ -3,6 +3,12 @@ export const ARTIFACT_TYPE_PACKAGE = "application/vnd.stax.package.v1";
 export const ARTIFACT_TYPE_PROFILE = "application/vnd.stax.profile.v1";
 export const ARTIFACT_TYPE_SOURCE = "application/vnd.stax.source.v1";
 
+export const CONFIG_MEDIA_TYPES = {
+  agent: "application/vnd.stax.config.v1+json",
+  profile: "application/vnd.stax.profile.config.v1+json",
+  source: "application/vnd.stax.source.config.v1+json",
+} as const;
+
 export const LAYER_MEDIA_TYPES = {
   config: "application/vnd.stax.config.v1+json",
   persona: "application/vnd.stax.persona.v1+json",
@@ -18,6 +24,13 @@ export const LAYER_MEDIA_TYPES = {
   secrets: "application/vnd.stax.secrets.v1+json",
   packages: "application/vnd.stax.packages.v1+json",
   sourceSnapshot: "application/vnd.stax.source.snapshot.v1.tar+gzip",
+} as const;
+
+export const REFERRER_TYPES = {
+  signature: "application/vnd.stax.signature.v1",
+  evaluation: "application/vnd.stax.evaluation.v1",
+  approval: "application/vnd.stax.approval.v1",
+  memorySnapshot: "application/vnd.stax.memory-snapshot.v1",
 } as const;
 
 /** Canonical layer ordering for stable digests */

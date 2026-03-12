@@ -3,6 +3,7 @@ import type { MergeResult } from "./types.ts";
 /**
  * Merge layers from resolved packages.
  * Higher priority wins on conflict (last declared = highest).
+ * Rules are sorted after merge per spec: precedence → priority → archive path.
  */
 export function mergeLayers(packages: unknown[]): MergeResult {
   if (packages.length === 0) {
@@ -11,14 +12,18 @@ export function mergeLayers(packages: unknown[]): MergeResult {
 
   let mcp: { servers: Record<string, unknown> } | undefined;
   let skills: { name: string; [k: string]: unknown }[] | undefined;
-  let rules: { id: string; [k: string]: unknown }[] | undefined;
+  let rules:
+    | { id?: string; priority?: number; archivePath?: string; [k: string]: unknown }[]
+    | undefined;
   let knowledge: { path: string; [k: string]: unknown }[] | undefined;
   let surfaces: { name: string; [k: string]: unknown }[] | undefined;
   let secrets: { key: string; [k: string]: unknown }[] | undefined;
   const warnings: string[] = [];
 
-  for (const pkg of packages) {
-    const p = pkg as Record<string, unknown>;
+  for (let pkgIdx = 0; pkgIdx < packages.length; pkgIdx++) {
+    const p = packages[pkgIdx] as Record<string, unknown>;
+    // Track precedence level for rules ordering
+    const precedenceLevel = pkgIdx;
 
     // MCP: merge by server name, higher priority replaces
     if (p.mcp) {
@@ -49,18 +54,19 @@ export function mergeLayers(packages: unknown[]): MergeResult {
       }
     }
 
-    // Rules: merge by id, higher priority replaces
+    // Rules: merge by id (or archive path), higher priority replaces
     if (p.rules) {
-      const incoming = p.rules as { id: string }[];
+      const incoming = p.rules as { id?: string; archivePath?: string }[];
       if (!rules) {
-        rules = [...incoming];
+        rules = incoming.map((r) => ({ ...r, _precedence: precedenceLevel }));
       } else {
         for (const rule of incoming) {
-          const idx = rules.findIndex((r) => r.id === rule.id);
+          const ruleKey = rule.id ?? rule.archivePath ?? "";
+          const idx = rules.findIndex((r) => (r.id ?? r.archivePath ?? "") === ruleKey);
           if (idx !== -1) {
-            rules[idx] = rule;
+            rules[idx] = { ...rule, _precedence: precedenceLevel };
           } else {
-            rules.push(rule);
+            rules.push({ ...rule, _precedence: precedenceLevel });
           }
         }
       }
@@ -115,6 +121,28 @@ export function mergeLayers(packages: unknown[]): MergeResult {
           }
         }
       }
+    }
+  }
+
+  // Sort rules by: precedence (lowest first), priority (ascending), archive path (ascending)
+  if (rules) {
+    rules.sort((a, b) => {
+      const precA = ((a as Record<string, unknown>)._precedence as number) ?? 0;
+      const precB = ((b as Record<string, unknown>)._precedence as number) ?? 0;
+      if (precA !== precB) return precA - precB;
+
+      const prioA = a.priority ?? 0;
+      const prioB = b.priority ?? 0;
+      if (prioA !== prioB) return prioA - prioB;
+
+      const pathA = a.archivePath ?? a.id ?? "";
+      const pathB = b.archivePath ?? b.id ?? "";
+      return pathA.localeCompare(pathB);
+    });
+
+    // Clean up internal _precedence field
+    for (const rule of rules) {
+      delete (rule as Record<string, unknown>)._precedence;
     }
   }
 

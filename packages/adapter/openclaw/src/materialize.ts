@@ -12,16 +12,45 @@ export async function materialize(context: MaterializeContext): Promise<Material
   const files = new Map<string, string | Uint8Array>();
   const warnings: string[] = [];
 
-  // AGENTS.md from prompt + rules
+  // Surface lookup — handles both {name, content} array format and SurfaceDefinition object format
+  const surfaceMap = new Map<string, string>();
+  if (context.surfaces) {
+    for (const surface of context.surfaces as unknown[]) {
+      if (typeof surface === "object" && surface !== null) {
+        if ("name" in surface && "content" in surface) {
+          // Array-of-{name, content} format
+          const s = surface as { name: string; content: string };
+          const name = s.name.replace(/\.md$/, "").replace(/^.*\//, "");
+          surfaceMap.set(name, s.content);
+        } else {
+          // SurfaceDefinition object format: { instructions?, persona?, tools?, ... }
+          const def = surface as Record<string, string | undefined>;
+          for (const [key, value] of Object.entries(def)) {
+            if (value) {
+              surfaceMap.set(key, value);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // AGENTS.md — primary source is surfaces/instructions.md, then prompt + rules
   let agentsMd = "";
 
+  const instructionsSurface = surfaceMap.get("instructions");
+  if (instructionsSurface) {
+    agentsMd += instructionsSurface;
+  }
+
   if (context.prompt) {
+    if (agentsMd) agentsMd += "\n\n";
     agentsMd += context.prompt;
   }
 
   if (context.rules && (context.rules as unknown[]).length > 0) {
-    const rulesSection = (context.rules as { id: string; content: string }[])
-      .map((r) => `## Rule: ${r.id}\n\n${r.content}`)
+    const rulesSection = (context.rules as { id?: string; content: string }[])
+      .map((r) => `## Rule: ${r.id ?? "unnamed"}\n\n${r.content}`)
       .join("\n\n");
     agentsMd += "\n\n" + rulesSection;
   }
@@ -30,8 +59,11 @@ export async function materialize(context: MaterializeContext): Promise<Material
     files.set("AGENTS.md", agentsMd);
   }
 
-  // SOUL.md from persona (native)
-  if (context.persona) {
+  // SOUL.md from persona (native) or surfaces/persona.md
+  const personaSurface = surfaceMap.get("persona");
+  if (personaSurface) {
+    files.set("SOUL.md", personaSurface);
+  } else if (context.persona) {
     const p = context.persona as {
       name: string;
       displayName?: string;
@@ -45,41 +77,21 @@ export async function materialize(context: MaterializeContext): Promise<Material
     files.set("SOUL.md", soul);
   }
 
-  // Surfaces — native support for dedicated files
-  if (context.surfaces) {
-    for (const surface of context.surfaces as unknown[]) {
-      // Handle array-of-{name, content} format
-      if (
-        typeof surface === "object" &&
-        surface !== null &&
-        "name" in surface &&
-        "content" in surface
-      ) {
-        const s = surface as { name: string; content: string };
-        const fileName = SURFACE_FILE_MAP[s.name];
-        if (fileName) {
-          files.set(fileName, s.content);
-        }
-      }
-      // Handle SurfaceDefinition object format
-      else if (typeof surface === "object" && surface !== null) {
-        const def = surface as Record<string, string | undefined>;
-        for (const [key, fileName] of Object.entries(SURFACE_FILE_MAP)) {
-          if (def[key]) {
-            files.set(fileName, def[key]!);
-          }
-        }
-      }
+  // Named surfaces — native, byte-exact from surface files
+  for (const [surfaceName, fileName] of Object.entries(SURFACE_FILE_MAP)) {
+    const content = surfaceMap.get(surfaceName);
+    if (content) {
+      files.set(fileName, content);
     }
   }
 
-  // Skills — native
+  // Skills — preserve directory structure: skills/<name>/SKILL.md
   if (context.skills) {
     for (const skill of context.skills as {
       name: string;
       content: string;
     }[]) {
-      files.set(`skills/${skill.name}.md`, skill.content);
+      files.set(`skills/${skill.name}/SKILL.md`, skill.content);
     }
   }
 

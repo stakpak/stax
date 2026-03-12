@@ -62,10 +62,12 @@ describe("windsurf materialize", () => {
     expect(result.files.get(".windsurf/workflows/search.md")).toContain("Search for things");
   });
 
-  it("should embed MCP servers into AGENTS.md", async () => {
+  it("should write MCP to user-scoped mcp_config.json", async () => {
     const result = await materialize(createContext());
-    const content = result.files.get("AGENTS.md") as string;
-    expect(content).toContain("test-server");
+    expect(result.files.has("~/.codeium/windsurf/mcp_config.json")).toBe(true);
+    const parsed = JSON.parse(result.files.get("~/.codeium/windsurf/mcp_config.json") as string);
+    expect(parsed.mcpServers["test-server"]).toBeDefined();
+    expect(parsed.mcpServers["test-server"].command).toBe("npx");
   });
 
   it("should handle empty context gracefully", async () => {
@@ -85,8 +87,9 @@ describe("windsurf materialize", () => {
     expect(hasWorkflows).toBe(false);
   });
 
-  it("should return empty warnings by default", async () => {
+  it("should emit warnings for lossy translations", async () => {
     const result = await materialize(createContext());
-    expect(result.warnings).toEqual([]);
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.warnings.some((w) => w.includes("user-scoped"))).toBe(true);
   });
 });

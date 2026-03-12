@@ -4,20 +4,39 @@ export async function materialize(context: MaterializeContext): Promise<Material
   const files = new Map<string, string | Uint8Array>();
   const warnings: string[] = [];
 
-  // AGENTS.md from prompt + persona
+  // AGENTS.md — spec composition order
   let agentsMd = "";
 
+  // Surface lookup
+  const surfaceMap = new Map<string, string>();
+  if (context.surfaces) {
+    for (const surface of context.surfaces as { name: string; content: string }[]) {
+      const name = surface.name.replace(/\.md$/, "").replace(/^.*\//, "");
+      surfaceMap.set(name, surface.content);
+    }
+  }
+
+  // 1. surfaces/instructions.md
+  const instructionsSurface = surfaceMap.get("instructions");
+  if (instructionsSurface) {
+    agentsMd += instructionsSurface;
+  }
+
+  // 2. prompt
+  if (context.prompt) {
+    if (agentsMd) agentsMd += "\n\n";
+    agentsMd += context.prompt;
+  }
+
+  // 3. persona
   if (context.persona) {
     const p = context.persona as {
       name: string;
       displayName?: string;
       role: string;
     };
-    agentsMd += `# ${p.displayName ?? p.name}\n\n**Role:** ${p.role}\n\n`;
-  }
-
-  if (context.prompt) {
-    agentsMd += context.prompt;
+    if (agentsMd) agentsMd += "\n\n";
+    agentsMd += `# ${p.displayName ?? p.name}\n\n**Role:** ${p.role}`;
   }
 
   if (agentsMd) {
@@ -27,26 +46,39 @@ export async function materialize(context: MaterializeContext): Promise<Material
   // Rules as .cursor/rules/<id>.mdc with frontmatter
   if (context.rules) {
     for (const rule of context.rules as {
-      id: string;
+      id?: string;
       scope: string;
       globs?: string[];
       description?: string;
       content: string;
     }[]) {
+      const ruleId = rule.id ?? "unnamed";
       let frontmatter = "---\n";
       if (rule.description) {
         frontmatter += `description: ${rule.description}\n`;
       }
+      // Globs as YAML array
       if (rule.globs && rule.globs.length > 0) {
-        frontmatter += `globs: ${rule.globs.join(", ")}\n`;
+        frontmatter += `globs:\n`;
+        for (const glob of rule.globs) {
+          frontmatter += `  - "${glob}"\n`;
+        }
       }
       if (rule.scope === "always") {
         frontmatter += `alwaysApply: true\n`;
+      } else if (rule.scope === "manual") {
+        // Manual scope: no globs, no description needed, not auto-applied
+        frontmatter += `alwaysApply: false\n`;
+        if (!rule.description) {
+          warnings.push(
+            `Rule "${ruleId}" has scope "manual" but no description; Cursor may not display it correctly`,
+          );
+        }
       } else {
         frontmatter += `alwaysApply: false\n`;
       }
       frontmatter += "---\n\n";
-      files.set(`.cursor/rules/${rule.id}.mdc`, frontmatter + rule.content);
+      files.set(`.cursor/rules/${ruleId}.mdc`, frontmatter + rule.content);
     }
   }
 
@@ -71,13 +103,13 @@ export async function materialize(context: MaterializeContext): Promise<Material
     files.set(".cursor/mcp.json", JSON.stringify({ mcpServers }, null, 2));
   }
 
-  // Skills
+  // Skills — preserve directory structure
   if (context.skills) {
     for (const skill of context.skills as {
       name: string;
       content: string;
     }[]) {
-      files.set(`.cursor/skills/${skill.name}.md`, skill.content);
+      files.set(`.cursor/skills/${skill.name}/SKILL.md`, skill.content);
     }
   }
 

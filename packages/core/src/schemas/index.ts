@@ -5,3 +5,11 @@ export { mcpSchema } from "./mcp.ts";
 export { subagentsSchema } from "./subagents.ts";
 export { secretSchema } from "./secret.ts";
 export { adapterSchema } from "./adapter.ts";
+export {
+  ruleSchema,
+  skillSchema,
+  surfaceDefinitionSchema,
+  instructionTreeSchema,
+  knowledgeManifestSchema,
+  memoryMetaSchema,
+} from "./layers.ts";
