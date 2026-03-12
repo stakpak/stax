@@ -32,18 +32,18 @@ description: How stax.lock ensures reproducible builds
 
 ## Fields
 
-| Field | Description |
-| --- | --- |
-| `lockVersion` | Lock file format version |
-| `specVersion` | stax spec version used during resolution |
-| `packages` | Map of package references to their resolved digests and dependencies |
+| Field         | Description                                                          |
+| ------------- | -------------------------------------------------------------------- |
+| `lockVersion` | Lock file format version                                             |
+| `specVersion` | stax spec version used during resolution                             |
+| `packages`    | Map of package references to their resolved digests and dependencies |
 
 Each package entry contains:
 
-| Field | Description |
-| --- | --- |
-| `digest` | Exact OCI digest (e.g., `sha256:abc...`) |
-| `dependencies` | List of transitive package references |
+| Field          | Description                              |
+| -------------- | ---------------------------------------- |
+| `digest`       | Exact OCI digest (e.g., `sha256:abc...`) |
+| `dependencies` | List of transitive package references    |
 
 ## CI Behavior
 

@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run src/index.ts",
-    "build": "bun build src/index.ts --compile --outfile dist/stax",
-    "test": "bun test src/__tests__/",
+    "dev": "bun --config ./bunfig.toml run src/index.ts",
+    "build": "bun run ./scripts/build.ts",
+    "test": "bun --config ./bunfig.toml test src/__tests__/",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {

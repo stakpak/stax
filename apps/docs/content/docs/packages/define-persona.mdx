@@ -33,18 +33,11 @@ export default definePersona({
   voice: {
     tone: "Professional but warm. Uses concrete examples.",
     codeComments: "minimal",
-    patterns: [
-      "Starts with positives before suggestions",
-      'Uses "we" when proposing improvements',
-    ],
+    patterns: ["Starts with positives before suggestions", 'Uses "we" when proposing improvements'],
     avoid: ["Overly academic language", "Unnecessary hedging"],
   },
 
-  values: [
-    "Correctness over speed",
-    "Explicit over implicit",
-    "Simplicity over cleverness",
-  ],
+  values: ["Correctness over speed", "Explicit over implicit", "Simplicity over cleverness"],
 
   preferences: {
     testing: "Table-driven tests, no mocks unless necessary.",
@@ -63,42 +56,42 @@ export default definePersona({
 
 ### Required Fields
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `name` | `string` | Identifier (same naming rules as agents) |
-| `displayName` | `string` | Human-readable name |
-| `role` | `string` | Role title |
+| Field         | Type     | Description                              |
+| ------------- | -------- | ---------------------------------------- |
+| `name`        | `string` | Identifier (same naming rules as agents) |
+| `displayName` | `string` | Human-readable name                      |
+| `role`        | `string` | Role title                               |
 
 ### Identity
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `background` | `string` | Experience and background summary |
-| `expertise.primary` | `string[]` | Core areas of expertise |
-| `expertise.secondary` | `string[]` | Supporting skills |
-| `expertise.learning` | `string[]` | Areas currently being learned |
+| Field                 | Type       | Description                       |
+| --------------------- | ---------- | --------------------------------- |
+| `background`          | `string`   | Experience and background summary |
+| `expertise.primary`   | `string[]` | Core areas of expertise           |
+| `expertise.secondary` | `string[]` | Supporting skills                 |
+| `expertise.learning`  | `string[]` | Areas currently being learned     |
 
 ### Personality and Voice
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `personality.traits` | `string[]` | Character traits |
-| `personality.communicationStyle` | `string` | One of: `direct`, `diplomatic`, `academic`, `casual`, `formal` |
-| `personality.verbosity` | `string` | One of: `minimal`, `concise`, `balanced`, `detailed`, `verbose` |
-| `voice.tone` | `string` | Tone description |
-| `voice.codeComments` | `string` | One of: `none`, `minimal`, `moderate`, `thorough` |
-| `voice.patterns` | `string[]` | Communication patterns to follow |
-| `voice.avoid` | `string[]` | Patterns to avoid |
+| Field                            | Type       | Description                                                     |
+| -------------------------------- | ---------- | --------------------------------------------------------------- |
+| `personality.traits`             | `string[]` | Character traits                                                |
+| `personality.communicationStyle` | `string`   | One of: `direct`, `diplomatic`, `academic`, `casual`, `formal`  |
+| `personality.verbosity`          | `string`   | One of: `minimal`, `concise`, `balanced`, `detailed`, `verbose` |
+| `voice.tone`                     | `string`   | Tone description                                                |
+| `voice.codeComments`             | `string`   | One of: `none`, `minimal`, `moderate`, `thorough`               |
+| `voice.patterns`                 | `string[]` | Communication patterns to follow                                |
+| `voice.avoid`                    | `string[]` | Patterns to avoid                                               |
 
 ### Values and Boundaries
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `values` | `string[]` | Guiding principles |
-| `preferences` | `Record<string, unknown>` | Domain-specific preferences |
-| `boundaries.willNot` | `string[]` | Actions the persona refuses |
-| `boundaries.always` | `string[]` | Actions the persona always takes |
-| `boundaries.escalates` | `string[]` | Situations requiring escalation |
+| Field                  | Type                      | Description                      |
+| ---------------------- | ------------------------- | -------------------------------- |
+| `values`               | `string[]`                | Guiding principles               |
+| `preferences`          | `Record<string, unknown>` | Domain-specific preferences      |
+| `boundaries.willNot`   | `string[]`                | Actions the persona refuses      |
+| `boundaries.always`    | `string[]`                | Actions the persona always takes |
+| `boundaries.escalates` | `string[]`                | Situations requiring escalation  |
 
 ## Persona Discovery
 

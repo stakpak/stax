@@ -11,10 +11,14 @@
     "build": "turbo build",
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
-    "check": "oxlint && oxfmt --write",
+    "lint": "oxlint .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "check": "pnpm lint && pnpm format",
     "test": "turbo test",
     "test:run": "turbo test",
-    "test:coverage": "turbo test:coverage"
+    "test:coverage": "turbo test:coverage",
+    "ci:check": "pnpm lint && pnpm format:check && pnpm check-types && pnpm test && pnpm build"
   },
   "dependencies": {
     "@stax/env": "workspace:*",

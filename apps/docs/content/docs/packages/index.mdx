@@ -14,6 +14,7 @@ stax provides a TypeScript-first authoring experience for defining agents and pa
     ```bash
     stax init --agent
     ```
+
   </Step>
   <Step>
     ### Define your agent
@@ -36,6 +37,7 @@ stax provides a TypeScript-first authoring experience for defining agents and pa
       },
     });
     ```
+
   </Step>
   <Step>
     ### Build the artifact
@@ -43,6 +45,7 @@ stax provides a TypeScript-first authoring experience for defining agents and pa
     ```bash
     stax build
     ```
+
   </Step>
   <Step>
     ### Push to a registry
@@ -50,6 +53,7 @@ stax provides a TypeScript-first authoring experience for defining agents and pa
     ```bash
     stax push ghcr.io/myorg/agents/backend-engineer:3.1.0
     ```
+
   </Step>
   <Step>
     ### Materialize into a runtime
@@ -57,6 +61,7 @@ stax provides a TypeScript-first authoring experience for defining agents and pa
     ```bash
     stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --out ./output
     ```
+
   </Step>
 </Steps>
 
@@ -91,7 +96,19 @@ After running `stax init --agent`, your project will look like this:
 ## Next Steps
 
 <Cards>
-  <Card title="Defining an Agent" href="/docs/packages/define-agent" description="Full reference for defineAgent() including identity, layers, adapters, secrets, and hints" />
-  <Card title="Defining a Package" href="/docs/packages/define-package" description="Create reusable bundles of skills, rules, MCP config, and knowledge" />
-  <Card title="Defining a Persona" href="/docs/packages/define-persona" description="Author rich persona definitions with traits, communication style, and prompt templates" />
+  <Card
+    title="Defining an Agent"
+    href="/docs/packages/define-agent"
+    description="Full reference for defineAgent() including identity, layers, adapters, secrets, and hints"
+  />
+  <Card
+    title="Defining a Package"
+    href="/docs/packages/define-package"
+    description="Create reusable bundles of skills, rules, MCP config, and knowledge"
+  />
+  <Card
+    title="Defining a Persona"
+    href="/docs/packages/define-persona"
+    description="Author rich persona definitions with traits, communication style, and prompt templates"
+  />
 </Cards>

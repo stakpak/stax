@@ -1,19 +1,34 @@
+import { VERSION, renderRootHelp } from "./command-helpers.ts";
+import type { CommandResult } from "./command-types.ts";
+import { commands, getCommand } from "./commands/index.ts";
+
+function printResult(result: CommandResult): never {
+  if (result.stdout) {
+    console.log(result.stdout);
+  }
+
+  if (result.stderr) {
+    console.error(result.stderr);
+  }
+
+  process.exit(result.code);
+}
+
 const args = process.argv.slice(2);
+const commandName = args[0];
 
-if (args[0] === "--help" || args[0] === "-h" || args.length === 0) {
-  console.log("stax - Stakpak CLI");
-  console.log("");
-  console.log("Usage: stax <command>");
-  console.log("");
-  console.log("Commands:");
-  console.log("  version   Show version");
-  process.exit(0);
+if (args.length === 0 || commandName === "--help" || commandName === "-h") {
+  printResult({ code: 0, stdout: renderRootHelp(commands) });
 }
 
-if (args[0] === "version") {
-  console.log("stax 0.0.1");
-  process.exit(0);
+if (commandName === "--version" || commandName === "-V") {
+  printResult({ code: 0, stdout: `stax ${VERSION}` });
 }
 
-console.error(`Unknown command: ${args[0]}`);
-process.exit(1);
+const command = commandName ? getCommand(commandName) : undefined;
+
+if (!commandName || !command) {
+  printResult({ code: 1, stderr: `Unknown command: ${commandName ?? ""}`.trim() });
+}
+
+printResult(command.run(args.slice(1)));

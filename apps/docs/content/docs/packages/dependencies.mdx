@@ -9,10 +9,10 @@ stax resolves package dependencies into a deterministic graph at build time. The
 
 Package references can be one of three forms:
 
-| Form | Example |
-| --- | --- |
-| Relative local path | `./packages/local-overrides` |
-| OCI tag reference | `ghcr.io/myorg/packages/github-workflow:2.0.0` |
+| Form                 | Example                                          |
+| -------------------- | ------------------------------------------------ |
+| Relative local path  | `./packages/local-overrides`                     |
+| OCI tag reference    | `ghcr.io/myorg/packages/github-workflow:2.0.0`   |
 | OCI digest reference | `ghcr.io/myorg/packages/git-utils@sha256:abc...` |
 
 Semver ranges, globs, and floating selectors such as `^1`, `~2`, or `latest` should not appear in committed manifests. Builders may allow them interactively but must resolve them into `stax.lock` and will warn.

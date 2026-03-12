@@ -42,38 +42,13 @@ const tabConfig: Record<string, { icon: React.ReactNode; description: string; co
 };
 
 const sectionThemes = {
-  overview: {
-    label: "Overview",
-    eyebrow: "Conceptual primer",
-    pathLabel: "docs/overview",
-    chip: "start here",
-  },
-  spec: {
-    label: "Specification",
-    eyebrow: "Normative reference",
-    pathLabel: "docs/spec",
-    chip: "canonical",
-  },
-  cli: {
-    label: "CLI",
-    eyebrow: "Command surface",
-    pathLabel: "docs/cli",
-    chip: "reference",
-  },
-  packages: {
-    label: "Packages",
-    eyebrow: "Composition layer",
-    pathLabel: "docs/packages",
-    chip: "authoring",
-  },
+  overview: { label: "Overview", eyebrow: "Conceptual primer" },
+  spec: { label: "Specification", eyebrow: "Normative reference" },
+  cli: { label: "CLI", eyebrow: "Command reference" },
+  packages: { label: "Packages", eyebrow: "Composition layer" },
 } as const;
 
-const defaultTheme = {
-  label: "Documentation",
-  eyebrow: "Deep dive",
-  pathLabel: "docs",
-  chip: "reference",
-};
+const defaultTheme = { label: "Documentation", eyebrow: "Reference" };
 
 function getSectionTheme(path: string) {
   const section = path.split("/")[0] as keyof typeof sectionThemes;
@@ -117,39 +92,28 @@ const clientLoader = browserCollections.docs.createClientLoader({
     },
   ) {
     const theme = getSectionTheme(path);
-    const pagePath = path.replace(/\.mdx$/, "");
 
     return (
       <DocsPage toc={toc} className="stax-docs-page">
         <div className="stax-doc-hero">
-          <div className="stax-doc-kicker">
-            <span className="stax-doc-kicker__dot" />
-            {theme.label}
+          <div className="stax-doc-eyebrow">
+            <span className="stax-doc-eyebrow__dot" />
+            {theme.eyebrow}
           </div>
-          <div className="stax-doc-overline">{theme.eyebrow}</div>
           <DocsTitle className="stax-doc-title">{frontmatter.title}</DocsTitle>
-          <DocsDescription className="stax-doc-description">
-            {frontmatter.description}
-          </DocsDescription>
-          <div className="stax-doc-meta">
-            <span className="stax-doc-chip">{theme.chip}</span>
-            <span className="stax-doc-chip stax-doc-chip--ghost">/{pagePath}</span>
-            <span className="stax-doc-chip stax-doc-chip--ghost">{theme.pathLabel}</span>
-          </div>
+          {frontmatter.description && (
+            <DocsDescription className="stax-doc-description">
+              {frontmatter.description}
+            </DocsDescription>
+          )}
         </div>
 
         <div className="stax-doc-toolbar">
-          <div className="stax-doc-toolbar__label">
-            <span className="stax-doc-toolbar__signal" />
-            page tools
-          </div>
-          <div className="stax-doc-toolbar__actions">
-            <MarkdownCopyButton markdownUrl={markdownUrl} />
-            <ViewOptionsPopover
-              markdownUrl={markdownUrl}
-              githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/content/docs/${path}`}
-            />
-          </div>
+          <MarkdownCopyButton markdownUrl={markdownUrl} />
+          <ViewOptionsPopover
+            markdownUrl={markdownUrl}
+            githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/content/docs/${path}`}
+          />
         </div>
 
         <DocsBody className="stax-prose">

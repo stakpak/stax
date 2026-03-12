@@ -15,6 +15,7 @@ The stax CLI follows the same mental model as Docker:
 - `stax pull` is the agent equivalent of `docker pull`
 
 Consumers may then materialize or import the pulled artifact into a specific runtime or platform.
+
 </Callout>
 
 ## Command Reference
@@ -22,10 +23,26 @@ Consumers may then materialize or import the pulled artifact into a specific run
 ### Authoring
 
 <Cards>
-  <Card title="stax init" href="/docs/cli/init" description="Scaffold a new agent or package project" />
-  <Card title="stax build" href="/docs/cli/build" description="Compile definitions and produce OCI layers" />
-  <Card title="stax build-source" href="/docs/cli/build-source" description="Build cacheable workspace source artifacts" />
-  <Card title="stax validate" href="/docs/cli/validate" description="Validate definitions without producing artifacts" />
+  <Card
+    title="stax init"
+    href="/docs/cli/init"
+    description="Scaffold a new agent or package project"
+  />
+  <Card
+    title="stax build"
+    href="/docs/cli/build"
+    description="Compile definitions and produce OCI layers"
+  />
+  <Card
+    title="stax build-source"
+    href="/docs/cli/build-source"
+    description="Build cacheable workspace source artifacts"
+  />
+  <Card
+    title="stax validate"
+    href="/docs/cli/validate"
+    description="Validate definitions without producing artifacts"
+  />
 </Cards>
 
 ### Distribution
@@ -39,15 +56,35 @@ Consumers may then materialize or import the pulled artifact into a specific run
 ### Consumption
 
 <Cards>
-  <Card title="stax materialize" href="/docs/cli/materialize" description="Resolve and translate to runtime-native files" />
-  <Card title="stax plan-install" href="/docs/cli/plan-install" description="Generate machine-readable install plan" />
-  <Card title="stax inspect" href="/docs/cli/inspect" description="Display artifact metadata and layers" />
-  <Card title="stax extract" href="/docs/cli/extract" description="Extract canonical layers for debugging" />
+  <Card
+    title="stax materialize"
+    href="/docs/cli/materialize"
+    description="Resolve and translate to runtime-native files"
+  />
+  <Card
+    title="stax plan-install"
+    href="/docs/cli/plan-install"
+    description="Generate machine-readable install plan"
+  />
+  <Card
+    title="stax inspect"
+    href="/docs/cli/inspect"
+    description="Display artifact metadata and layers"
+  />
+  <Card
+    title="stax extract"
+    href="/docs/cli/extract"
+    description="Extract canonical layers for debugging"
+  />
 </Cards>
 
 ### Verification
 
 <Cards>
   <Card title="stax diff" href="/docs/cli/diff" description="Compare two artifacts or projects" />
-  <Card title="stax verify" href="/docs/cli/verify" description="Verify signatures or attestations" />
+  <Card
+    title="stax verify"
+    href="/docs/cli/verify"
+    description="Verify signatures or attestations"
+  />
 </Cards>

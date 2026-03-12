@@ -10,7 +10,8 @@ Agents are authored in TypeScript using `defineAgent()` and compiled to JSON for
 ## defineAgent()
 
 <Callout type="info" title="Single Root Definition">
-A project must contain exactly one root agent definition file, typically `agent.ts`. All relative paths are resolved relative to the directory containing this file.
+  A project must contain exactly one root agent definition file, typically `agent.ts`. All relative
+  paths are resolved relative to the directory containing this file.
 </Callout>
 
 ```typescript title="agent.ts"
@@ -72,35 +73,36 @@ export default defineAgent({
 
 ## Identity Fields
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | Yes | Agent identifier. Must match `^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$` |
-| `version` | `string` | Yes | Valid semver version |
-| `description` | `string` | Yes | Human-readable description |
-| `author` | `string` | No | Author or organization |
-| `license` | `string` | No | SPDX license identifier |
-| `url` | `string` | No | Project URL |
-| `tags` | `string[]` | No | Unique, case-sensitive tags |
+| Field         | Type       | Required | Description                                                           |
+| ------------- | ---------- | -------- | --------------------------------------------------------------------- |
+| `name`        | `string`   | Yes      | Agent identifier. Must match `^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$` |
+| `version`     | `string`   | Yes      | Valid semver version                                                  |
+| `description` | `string`   | Yes      | Human-readable description                                            |
+| `author`      | `string`   | No       | Author or organization                                                |
+| `license`     | `string`   | No       | SPDX license identifier                                               |
+| `url`         | `string`   | No       | Project URL                                                           |
+| `tags`        | `string[]` | No       | Unique, case-sensitive tags                                           |
 
 ## Layer Source Paths
 
 These fields point to the files or directories that define each layer of your agent.
 
-| Field | Points to | Description |
-| --- | --- | --- |
-| `persona` | File | Persona definition (`definePersona()`) |
-| `prompt` | File | System prompt (Markdown) |
-| `mcp` | File | MCP server configuration |
-| `subagents` | File | Subagent definitions |
-| `skills` | Directory | Skill definitions |
-| `rules` | Directory | Rule files |
-| `knowledge` | Directory | Knowledge documents |
-| `memory` | Directory | Memory files |
-| `surfaces` | Directory | Surface files for exact runtime materialization |
-| `instructionTree` | Directory | Instruction tree files |
+| Field             | Points to | Description                                     |
+| ----------------- | --------- | ----------------------------------------------- |
+| `persona`         | File      | Persona definition (`definePersona()`)          |
+| `prompt`          | File      | System prompt (Markdown)                        |
+| `mcp`             | File      | MCP server configuration                        |
+| `subagents`       | File      | Subagent definitions                            |
+| `skills`          | Directory | Skill definitions                               |
+| `rules`           | Directory | Rule files                                      |
+| `knowledge`       | Directory | Knowledge documents                             |
+| `memory`          | Directory | Memory files                                    |
+| `surfaces`        | Directory | Surface files for exact runtime materialization |
+| `instructionTree` | Directory | Instruction tree files                          |
 
 <Callout type="warn" title="Path Resolution">
-All paths are resolved relative to `agent.ts`. Missing optional paths cause a validation error if explicitly declared.
+  All paths are resolved relative to `agent.ts`. Missing optional paths cause a validation error if
+  explicitly declared.
 </Callout>
 
 ## Adapter
@@ -142,11 +144,13 @@ secrets: [
   { key: "ANTHROPIC_API_KEY", required: true, kind: "api-key" },
   { key: "GITHUB_TOKEN", required: true, kind: "token" },
   { key: "SLACK_WEBHOOK", required: false, kind: "url" },
-]
+];
 ```
 
 <Callout type="error" title="Security">
-Secret **values** are never stored in the artifact. Only declarations (key names, kinds, and requirements) are included. The runtime or consumer is responsible for resolving actual secret values.
+  Secret **values** are never stored in the artifact. Only declarations (key names, kinds, and
+  requirements) are included. The runtime or consumer is responsible for resolving actual secret
+  values.
 </Callout>
 
 Available kinds: `api-key`, `token`, `password`, `certificate`, `connection-string`, `url`, `opaque`.
@@ -166,7 +170,8 @@ Each entry in `packages` must be one of:
 - An OCI digest reference: `ghcr.io/myorg/packages/org-standards@sha256:0123...`
 
 <Callout type="warn" title="Pinned References">
-Semver ranges and floating selectors like `latest` should not be used in committed manifests. The builder resolves them into `stax.lock`.
+  Semver ranges and floating selectors like `latest` should not be used in committed manifests. The
+  builder resolves them into `stax.lock`.
 </Callout>
 
 ## Workspace Sources
@@ -182,7 +187,7 @@ workspaceSources: [
     writable: true,
     required: true,
   },
-]
+];
 ```
 
 Each entry must have a unique `id`, reference an OCI source artifact by digest or exact tag, and specify an absolute `mountPath`.

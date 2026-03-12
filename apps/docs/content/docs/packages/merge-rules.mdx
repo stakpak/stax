@@ -17,14 +17,14 @@ Layers are merged with the following precedence (highest wins):
 
 Each layer type has specific merge rules:
 
-| Layer | Merge unit | Conflict key | Rule |
-| --- | --- | --- | --- |
-| MCP | Server object | Server name | Replace entire server object at the highest-precedence definition |
-| Skills | Top-level skill directory | Skill name | Higher precedence replaces the entire skill directory |
-| Rules | Rule file | Rule `id` if present, else archive path | Higher precedence replaces matching rule; otherwise append in precedence order |
-| Knowledge | Archive path | Normalized path | Higher precedence replaces matching path |
-| Surfaces | Surface file | Basename | Higher precedence replaces the entire file |
-| Secrets | Secret key | `key` | Higher precedence replaces entire declaration |
+| Layer     | Merge unit                | Conflict key                            | Rule                                                                           |
+| --------- | ------------------------- | --------------------------------------- | ------------------------------------------------------------------------------ |
+| MCP       | Server object             | Server name                             | Replace entire server object at the highest-precedence definition              |
+| Skills    | Top-level skill directory | Skill name                              | Higher precedence replaces the entire skill directory                          |
+| Rules     | Rule file                 | Rule `id` if present, else archive path | Higher precedence replaces matching rule; otherwise append in precedence order |
+| Knowledge | Archive path              | Normalized path                         | Higher precedence replaces matching path                                       |
+| Surfaces  | Surface file              | Basename                                | Higher precedence replaces the entire file                                     |
+| Secrets   | Secret key                | `key`                                   | Higher precedence replaces entire declaration                                  |
 
 ## Why Replace, Not Deep Merge
 

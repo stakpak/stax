@@ -44,24 +44,24 @@ export default definePackage({
 
 ## Fields
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | Yes | Package identifier (same naming rules as agents) |
-| `version` | `string` | Yes | Valid semver version |
-| `description` | `string` | Yes | Human-readable description |
-| `author` | `string` | No | Author or organization |
-| `license` | `string` | No | SPDX license identifier |
-| `tags` | `string[]` | No | Unique, case-sensitive tags |
+| Field         | Type       | Required | Description                                      |
+| ------------- | ---------- | -------- | ------------------------------------------------ |
+| `name`        | `string`   | Yes      | Package identifier (same naming rules as agents) |
+| `version`     | `string`   | Yes      | Valid semver version                             |
+| `description` | `string`   | Yes      | Human-readable description                       |
+| `author`      | `string`   | No       | Author or organization                           |
+| `license`     | `string`   | No       | SPDX license identifier                          |
+| `tags`        | `string[]` | No       | Unique, case-sensitive tags                      |
 
 ## Layer Source Paths
 
-| Field | Points to | Description |
-| --- | --- | --- |
-| `mcp` | File | MCP server configuration |
-| `skills` | Directory | Skill definitions |
-| `rules` | Directory | Rule files |
-| `knowledge` | Directory | Knowledge documents |
-| `surfaces` | Directory | Surface files |
+| Field       | Points to | Description              |
+| ----------- | --------- | ------------------------ |
+| `mcp`       | File      | MCP server configuration |
+| `skills`    | Directory | Skill definitions        |
+| `rules`     | Directory | Rule files               |
+| `knowledge` | Directory | Knowledge documents      |
+| `surfaces`  | Directory | Surface files            |
 
 ## Package References
 

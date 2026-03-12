@@ -4,7 +4,8 @@ description: stax is a distribution standard for AI agents
 ---
 
 <Callout type="info" title="Spec Version 1.0.0">
-This documentation covers **stax spec version `1.0.0`**. The specification is actively being developed. All compiled JSON payloads include `specVersion: "1.0.0"`.
+  This documentation covers **stax spec version `1.0.0`**. The specification is actively being
+  developed. All compiled JSON payloads include `specVersion: "1.0.0"`.
 </Callout>
 
 stax is a **distribution standard** for AI agents. It defines how to describe, bundle, version, validate, verify, and distribute agent artifacts as OCI artifacts.
@@ -16,9 +17,21 @@ stax does **not** run agents, orchestrate them, or manage their lifecycle. Those
 stax is to agents what the OCI Image Spec is to containers, what `package.json` is to JavaScript packages, and what `Chart.yaml` is to Helm charts.
 
 <Cards>
-  <Card title="Philosophy" href="/docs/overview/philosophy" description="Why agents need a distribution standard and the core thesis behind stax" />
-  <Card title="Architecture" href="/docs/overview/architecture" description="Core objects, the seven jobs, and conformance levels" />
-  <Card title="Roadmap" href="/docs/overview/roadmap" description="Implementation status and what's coming next" />
+  <Card
+    title="Philosophy"
+    href="/docs/overview/philosophy"
+    description="Why agents need a distribution standard and the core thesis behind stax"
+  />
+  <Card
+    title="Architecture"
+    href="/docs/overview/architecture"
+    description="Core objects, the seven jobs, and conformance levels"
+  />
+  <Card
+    title="Roadmap"
+    href="/docs/overview/roadmap"
+    description="Implementation status and what's coming next"
+  />
 </Cards>
 
 ## Current Focus
@@ -49,7 +62,8 @@ Agents are still early because most of the ecosystem is stuck in pre-package for
 - Undocumented assumptions about tools, sources, and environment
 
 <Callout type="idea" title="The stax insight">
-Today an "agent" is usually a pile of files tied to one tool. **stax turns that into a real artifact** — versioned, portable, verifiable, and distributable.
+  Today an "agent" is usually a pile of files tied to one tool. **stax turns that into a real
+  artifact** — versioned, portable, verifiable, and distributable.
 </Callout>
 
 ## What stax Is
@@ -58,13 +72,31 @@ stax is the **distribution layer for agents**. It is the standard for:
 
 <Cards>
   <Card title="Authoring" description="Define agent artifacts with a TypeScript-first SDK" />
-  <Card title="Bundling" description="Package the canonical brain: persona, prompt, skills, rules, MCP, knowledge" />
-  <Card title="Dependencies" description="Express portable dependencies on packages and source artifacts" />
-  <Card title="Packaging" description="Build reusable agent packages for shared behavior and context" />
-  <Card title="Publishing" description="Push to OCI registries with versioning and content addressing" />
+  <Card
+    title="Bundling"
+    description="Package the canonical brain: persona, prompt, skills, rules, MCP, knowledge"
+  />
+  <Card
+    title="Dependencies"
+    description="Express portable dependencies on packages and source artifacts"
+  />
+  <Card
+    title="Packaging"
+    description="Build reusable agent packages for shared behavior and context"
+  />
+  <Card
+    title="Publishing"
+    description="Push to OCI registries with versioning and content addressing"
+  />
   <Card title="Verification" description="Sign and verify supply chain integrity with Sigstore" />
-  <Card title="Promotion" description="Promote artifacts across dev, staging, and production environments" />
-  <Card title="Materialization" description="Translate artifacts into runtime-native formats for any target" />
+  <Card
+    title="Promotion"
+    description="Promote artifacts across dev, staging, and production environments"
+  />
+  <Card
+    title="Materialization"
+    description="Translate artifacts into runtime-native formats for any target"
+  />
   <Card title="Discovery" description="Search, install, update, and roll back agent artifacts" />
 </Cards>
 
