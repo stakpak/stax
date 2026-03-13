@@ -15,4 +15,5 @@ export {
   LAYER_MEDIA_TYPES,
   CONFIG_MEDIA_TYPES,
   REFERRER_TYPES,
+  LAYER_ORDER,
 } from "./constants.ts";

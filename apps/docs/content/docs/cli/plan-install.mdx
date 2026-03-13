@@ -1,63 +1,55 @@
 ---
 title: stax plan-install
-description: Preview materialization as a machine-readable install plan
+description: Preview rendered install actions without writing files
 ---
 
-Generate a machine-readable install plan without applying any changes. This lets consumers, platforms, and CI pipelines preview what materialization would produce — which adapter is selected, what files would be written, what fidelity to expect, and what warnings would be emitted.
+Generate a machine-readable plan from the same rendering pipeline used by `stax materialize`, but do not write anything to disk. This is useful for CI, review workflows, and platform integrations that need to inspect what would be written.
 
 ## Usage
 
 ```bash
 stax plan-install ghcr.io/myorg/agents/backend-engineer:3.1.0 --consumer codex
-stax plan-install ghcr.io/myorg/agents/backend-engineer:3.1.0 --consumer acme-cloud --json
+stax plan-install ghcr.io/myorg/agents/backend-engineer:3.1.0 --consumer codex --json
+stax plan-install ./artifact-dir --consumer claude-code --exact
 ```
 
 ## Options
 
-| Flag              | Description                           |
-| ----------------- | ------------------------------------- |
-| `--consumer <id>` | Target consumer or runtime identifier |
-| `--json`          | Output machine-readable JSON          |
+| Flag              | Description                             |
+| ----------------- | --------------------------------------- |
+| `--consumer <id>` | Target runtime / adapter                |
+| `--json`          | Emit machine-readable JSON              |
+| `--exact`         | Require a non-lossy plan when supported |
 
 ## Plan contents
 
-The install plan includes:
+The current reference CLI returns:
 
-| Field          | Description                                                |
-| -------------- | ---------------------------------------------------------- |
-| Adapter        | Which adapter would handle the translation                 |
-| Compatibility  | Whether the artifact is fully compatible with the target   |
-| Fidelity       | Expected translation fidelity (`full`, `high`, or `lossy`) |
-| Planned writes | List of files or remote targets that would be created      |
-| Warnings       | Lossy translation warnings, unsupported features           |
-| Trust summary  | Signature and attestation status (when available)          |
+| Field             | Description                                                   |
+| ----------------- | ------------------------------------------------------------- |
+| `selectedAdapter` | Adapter chosen for rendering                                  |
+| `fidelity`        | Render fidelity (`byte-exact`, `schema-exact`, `best-effort`) |
+| `lossy`           | Whether warnings or fidelity imply information loss           |
+| `actions`         | `mkdir` and `write` actions derived from rendered files       |
+| `warnings`        | Adapter and compatibility warnings                            |
+
+When `--json` is used, the CLI also includes a lightweight `compatibility` summary.
 
 ## Example output
 
 ```text
-Plan: materialize backend-engineer:3.1.0 → codex
+Install plan for ghcr.io/myorg/agents/backend-engineer:3.1.0
+  adapter: codex
+  fidelity: best-effort
+  lossy: false
 
-  Adapter:       codex v1.0.0
-  Compatibility: compatible
-  Fidelity:      high (2 warnings)
-
-  Planned writes:
-    AGENTS.md           (2.4 KB)
-    codex.toml          (0.3 KB)
-    .codex/skills/      (3 files, 4.1 KB)
-
-  Warnings:
-    ⚠ memory seeds not supported — will be skipped
-    ⚠ skill variable ${STAX_WORKSPACE} has no equivalent
+Actions:
+  [mkdir] .agents/skills/
+  [write] AGENTS.md
+  [write] .codex/config.toml
 ```
-
-## When to use plan-install
-
-- **Before materializing** — Preview what files will be written and whether any information will be lost
-- **In CI pipelines** — Generate plans for review before applying changes to production environments
-- **Platform integrations** — Non-filesystem consumers can use the JSON output to understand what configuration an artifact provides
 
 ## Related commands
 
-- [`stax materialize`](/docs/cli/materialize) — Apply the materialization (write files)
-- [`stax inspect`](/docs/cli/inspect) — View artifact metadata without planning materialization
+- [`stax materialize`](/docs/cli/materialize) — Render and write the files
+- [`stax inspect`](/docs/cli/inspect) — View artifact metadata without rendering

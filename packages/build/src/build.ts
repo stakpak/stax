@@ -1,43 +1,11 @@
 import { readFile, readdir, stat, lstat, realpath, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
+import { createPackageLayerPayload } from "@stax/core";
+import { ARTIFACT_TYPE_AGENT, CONFIG_MEDIA_TYPES, LAYER_MEDIA_TYPES, LAYER_ORDER } from "@stax/oci";
 import { canonicalJson } from "./canonical-json.ts";
 import { createDeterministicTarGz } from "./archive.ts";
 import type { BuildOptions, BuildResult, LayerResult } from "./types.ts";
-
-/** Layer media types - mirrored from @stax/oci constants */
-const LAYER_MEDIA_TYPES = {
-  config: "application/vnd.stax.config.v1+json",
-  persona: "application/vnd.stax.persona.v1+json",
-  prompt: "application/vnd.stax.prompt.v1+markdown",
-  mcp: "application/vnd.stax.mcp.v1+json",
-  skills: "application/vnd.stax.skills.v1.tar+gzip",
-  rules: "application/vnd.stax.rules.v1.tar+gzip",
-  knowledge: "application/vnd.stax.knowledge.v1.tar+gzip",
-  memory: "application/vnd.stax.memory.v1.tar+gzip",
-  surfaces: "application/vnd.stax.surfaces.v1.tar+gzip",
-  instructionTree: "application/vnd.stax.instruction-tree.v1.tar+gzip",
-  subagents: "application/vnd.stax.subagents.v1+json",
-  secrets: "application/vnd.stax.secrets.v1+json",
-  packages: "application/vnd.stax.packages.v1+json",
-} as const;
-
-const LAYER_ORDER = [
-  LAYER_MEDIA_TYPES.knowledge,
-  LAYER_MEDIA_TYPES.rules,
-  LAYER_MEDIA_TYPES.skills,
-  LAYER_MEDIA_TYPES.mcp,
-  LAYER_MEDIA_TYPES.secrets,
-  LAYER_MEDIA_TYPES.packages,
-  LAYER_MEDIA_TYPES.instructionTree,
-  LAYER_MEDIA_TYPES.surfaces,
-  LAYER_MEDIA_TYPES.prompt,
-  LAYER_MEDIA_TYPES.persona,
-  LAYER_MEDIA_TYPES.subagents,
-  LAYER_MEDIA_TYPES.memory,
-] as const;
-
-const ARTIFACT_TYPE_AGENT = "application/vnd.stax.agent.v1";
 
 /** Directories to always ignore when walking */
 const IGNORE_DIRS = new Set([".git", ".stax", "node_modules"]);
@@ -241,15 +209,10 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
 
   // Packages (inline in definition) — spec 03 requires structured format
   if (Array.isArray(def.packages) && def.packages.length > 0) {
-    const packagesPayload = {
-      specVersion: (def.specVersion as string) ?? "1.0.0",
-      packages: (def.packages as (string | Record<string, unknown>)[]).map((pkg) => {
-        if (typeof pkg === "string") {
-          return { ref: pkg, kind: "package" };
-        }
-        return pkg;
-      }),
-    };
+    const packagesPayload = createPackageLayerPayload(
+      (def.specVersion as string) ?? "1.0.0",
+      def.packages as string[],
+    );
     const canonical = canonicalJson(packagesPayload);
     const blob = await writeBlob(canonical);
     layers.push({ mediaType: LAYER_MEDIA_TYPES.packages, ...blob });
@@ -353,7 +316,7 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
     mediaType: "application/vnd.oci.image.manifest.v1+json",
     artifactType: ARTIFACT_TYPE_AGENT,
     config: {
-      mediaType: LAYER_MEDIA_TYPES.config,
+      mediaType: CONFIG_MEDIA_TYPES.agent,
       digest: configBlob.digest,
       size: configBlob.size,
     },

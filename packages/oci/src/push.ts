@@ -1,6 +1,18 @@
 import type { OciManifest } from "./types.ts";
+import { getRegistryAuthorizationHeader } from "./auth.ts";
 import { parseReference } from "./reference.ts";
 import { registryUrl, sha256hex } from "./registry.ts";
+
+async function createHeaders(
+  registry: string,
+  headers?: Record<string, string>,
+): Promise<Record<string, string>> {
+  const authorization = await getRegistryAuthorizationHeader(registry);
+  return {
+    ...headers,
+    ...(authorization ? { Authorization: authorization } : {}),
+  };
+}
 
 export async function push(
   reference: string,
@@ -14,12 +26,14 @@ export async function push(
   for (const [digest, data] of blobs) {
     const headRes = await fetch(`${baseUrl}/v2/${ref.repository}/blobs/${digest}`, {
       method: "HEAD",
+      headers: await createHeaders(ref.registry),
     });
     if (headRes.ok) continue;
 
     // Initiate upload
     const postRes = await fetch(`${baseUrl}/v2/${ref.repository}/blobs/uploads/`, {
       method: "POST",
+      headers: await createHeaders(ref.registry),
     });
     if (!postRes.ok) {
       throw new Error(`Failed to initiate blob upload: ${postRes.status}`);
@@ -30,12 +44,16 @@ export async function push(
       throw new Error("Missing Location header in upload response");
     }
 
+    const uploadUrl = new URL(location, baseUrl).toString();
+
     // Complete upload
-    const separator = location.includes("?") ? "&" : "?";
-    const putRes = await fetch(`${location}${separator}digest=${digest}`, {
+    const separator = uploadUrl.includes("?") ? "&" : "?";
+    const putRes = await fetch(`${uploadUrl}${separator}digest=${digest}`, {
       method: "PUT",
       body: data,
-      headers: { "Content-Type": "application/octet-stream" },
+      headers: await createHeaders(ref.registry, {
+        "Content-Type": "application/octet-stream",
+      }),
     });
     if (!putRes.ok) {
       throw new Error(`Failed to upload blob: ${putRes.status}`);
@@ -52,7 +70,9 @@ export async function push(
   const putRes = await fetch(`${baseUrl}/v2/${ref.repository}/manifests/${tagOrDigest}`, {
     method: "PUT",
     body: manifestBytes,
-    headers: { "Content-Type": "application/vnd.oci.image.manifest.v1+json" },
+    headers: await createHeaders(ref.registry, {
+      "Content-Type": "application/vnd.oci.image.manifest.v1+json",
+    }),
   });
   if (!putRes.ok) {
     throw new Error(`Failed to push manifest: ${putRes.status}`);

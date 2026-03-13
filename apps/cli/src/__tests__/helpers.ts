@@ -7,13 +7,14 @@ const CLI_ENTRY = join(import.meta.dir, "..", "index.ts");
  */
 export async function run(
   args: string[],
-  options?: { stdin?: string; cwd?: string },
+  options?: { stdin?: string; cwd?: string; env?: Record<string, string> },
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   const proc = Bun.spawn(["bun", "run", CLI_ENTRY, ...args], {
     stdout: "pipe",
     stderr: "pipe",
     stdin: options?.stdin ? "pipe" : undefined,
     cwd: options?.cwd,
+    env: options?.env ? { ...process.env, ...options.env } : undefined,
   });
 
   if (options?.stdin && proc.stdin) {

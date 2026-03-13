@@ -12,13 +12,14 @@ describe("push", () => {
     expect([0, 3]).toContain(exitCode);
   });
 
-  it("should accept --all-personas flag", async () => {
-    const { exitCode } = await run([
+  it("should reject unsupported --all-personas flag", async () => {
+    const { exitCode, stderr } = await run([
       "push",
       "--all-personas",
       "ghcr.io/myorg/agents/backend-engineer",
     ]);
-    expect([0, 3]).toContain(exitCode);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain("unknown flag --all-personas");
   });
 
   it("should exit with code 3 on registry error", async () => {
@@ -36,9 +37,9 @@ describe("push", () => {
     expect([0, 3]).toContain(exitCode);
   });
 
-  it("should push all persona variants with --all-personas", async () => {
-    const { exitCode } = await run(["push", "--all-personas", "ghcr.io/myorg/agents/backend"]);
-    expect([0, 2, 3]).toContain(exitCode);
+  it("should require a supported flag set", async () => {
+    const { exitCode } = await run(["push", "ghcr.io/myorg/agents/backend"]);
+    expect([0, 3]).toContain(exitCode);
   });
 
   it("should require built artifact before push", async () => {

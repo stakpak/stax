@@ -170,8 +170,9 @@ Each entry in `packages` must be one of:
 - An OCI digest reference: `ghcr.io/myorg/packages/org-standards@sha256:0123...`
 
 <Callout type="warn" title="Pinned References">
-  Semver ranges and floating selectors like `latest` should not be used in committed manifests. The
-  builder resolves them into `stax.lock`.
+  Semver ranges and floating selectors like `latest` should not be used in committed manifests.
+  Lockfile pinning is the intended model, but the current reference CLI does not yet write
+  `stax.lock` automatically.
 </Callout>
 
 ## Workspace Sources
@@ -218,3 +219,5 @@ Each entry must have a unique `id`, reference an OCI source artifact by digest o
     <File name="stax.lock" />
   </Folder>
 </Files>
+
+`stax.lock` is shown here as the intended lockfile. The current reference CLI does not yet emit it automatically during builds.

@@ -1,7 +1,5 @@
+import { SEMVER_REGEX } from "@stax/core";
 import type { Adapter } from "./types.ts";
-
-const SEMVER_REGEX =
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
 export function defineAdapter(adapter: Adapter): Adapter {
   if (!adapter.type || adapter.type.length === 0) {

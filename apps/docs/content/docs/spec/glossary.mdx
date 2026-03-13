@@ -85,7 +85,7 @@ A content-addressed blob in an OCI artifact. Each layer has a specific media typ
 
 ### Lockfile **(normative)**
 
-`stax.lock` — a JSON file recording the exact digest of every resolved dependency. Ensures reproducible builds across machines and time. See [Lockfile](/docs/packages/lockfile).
+`stax.lock` — the intended JSON lockfile format for recording the exact digest of every resolved dependency. Ensures reproducible builds across machines and time. The current reference CLI does not yet emit it automatically. See [Lockfile](/docs/packages/lockfile).
 
 ### Lossy **(normative)**
 
@@ -157,7 +157,7 @@ A Markdown file with YAML frontmatter that defines a reusable capability. Skills
 
 ### Source artifact **(normative)**
 
-An OCI artifact containing a workspace source snapshot (e.g., a Git checkout). Built with `stax build-source` and referenced by agents that need repository context. See [Workspace Sources](/docs/spec/workspace-sources).
+An OCI artifact containing a workspace source snapshot (e.g., a Git checkout). The model is defined in the spec and targeted by `stax build-source`, but the current reference CLI does not generate source artifacts yet. See [Workspace Sources](/docs/spec/workspace-sources).
 
 ### Surface **(normative)**
 

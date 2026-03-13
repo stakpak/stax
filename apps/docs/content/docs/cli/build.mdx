@@ -3,77 +3,57 @@ title: stax build
 description: Compile TypeScript definitions and produce deterministic OCI layers
 ---
 
-Compile TypeScript agent definitions, resolve package dependencies, produce deterministic OCI layers, and write `stax.lock` when dependencies change. This is the core command that turns your source files into an immutable, content-addressed artifact.
+Compile TypeScript agent or package definitions into deterministic OCI artifacts. `stax build` validates the selected entry, reads referenced layers from disk, and writes a local artifact directory under `.stax/artifacts/` by default.
 
 ## Usage
 
 ```bash
 stax build
+stax build .stax/backend/agent.ts
 stax build --persona maya-chen
 stax build --all-personas
-stax build --dry-run
-stax build --refresh-lock
 stax build --symlink-mode flatten
 ```
 
 ## Options
 
-| Flag               | Description                                                      |
-| ------------------ | ---------------------------------------------------------------- |
-| `--persona <name>` | Build for a specific persona only                                |
-| `--all-personas`   | Build separate artifacts for every defined persona               |
-| `--dry-run`        | Preview the build without writing artifacts to cache             |
-| `--refresh-lock`   | Force re-resolution of all dependencies and update `stax.lock`   |
-| `--symlink-mode`   | Control symlink handling: `flatten` resolves symlinks to targets |
+| Flag               | Description                                               |
+| ------------------ | --------------------------------------------------------- |
+| `--persona <name>` | Build for a specific persona only                         |
+| `--all-personas`   | Pass through persona fan-out selection to the builder     |
+| `--symlink-mode`   | Control symlink handling: `flatten` resolves file targets |
+
+## Entry discovery
+
+When run without an explicit entry path, `stax build` scans:
+
+- `.stax/<name>/agent.ts`
+- `.stax/<name>/package.ts`
+
+If exactly one entry is found, it is built automatically. If multiple entries exist, the CLI asks you to choose one explicitly.
 
 ## What happens during a build
 
-1. **Validate** — Checks all definitions for type correctness, required fields, path existence, dependency cycles, MCP secret references, and archive safety rules
-2. **Resolve dependencies** — Walks the dependency tree, resolves package references against the lockfile or registry, detects conflicts
-3. **Merge** — Combines configuration from all resolved packages using [merge rules](/docs/packages/merge-rules) (prompts concatenate, rules append, MCP servers merge by key)
-4. **Produce layers** — Creates deterministic OCI layers for each content type (config, prompt, persona, MCP, skills, rules, knowledge, secrets, memory)
-5. **Write lockfile** — Updates `stax.lock` if any dependency digests changed
-6. **Cache** — Stores the artifact in `~/.stax/cache/` indexed by content digest
+1. **Load entry** — Imports the selected definition file
+2. **Validate references** — Ensures required fields and referenced paths exist
+3. **Package layers** — Canonicalizes JSON layers and creates deterministic tar+gzip directory layers
+4. **Write artifact** — Emits `manifest.json` plus content-addressed blobs under `.stax/artifacts/`
 
 ## Example output
 
 ```text
-✓ validated agent definition
-✓ resolved 3 packages
-  @acme/compliance-rules (sha256:f8a1c3…)
-  @acme/mcp-bundle (sha256:4d2e7b…)
-  @acme/shared-knowledge (sha256:9c0f1a…)
-✓ built 8 layers (14.7 KB)
-✓ artifact cached — sha256:a3f8c1…e7d2
+Built artifact: sha256:a3f8c1…e7d2
+  path: /repo/.stax/artifacts
+  layers: 6
+    application/vnd.stax.prompt.v1+markdown (412 bytes)
+    application/vnd.stax.rules.v1.tar+gzip (828 bytes)
+    application/vnd.stax.skills.v1.tar+gzip (0 bytes)
 ```
 
-## Deterministic builds
+## Notes
 
-Builds are deterministic — the same inputs always produce byte-identical artifacts. This is achieved through canonical JSON serialization (sorted keys, consistent formatting), sorted tar archive entries with fixed metadata, and locked dependency digests in `stax.lock`.
-
-Two developers building the same project at different times will produce the same output digest, enabling reliable verification and caching.
-
-## Building with personas
-
-When an agent defines multiple personas, you can target a specific one or build all of them:
-
-```bash
-stax build                        # Default persona
-stax build --persona maya-chen    # Named persona
-stax build --all-personas         # All personas as separate artifacts
-```
-
-Each persona produces a distinct artifact with its own identity, prompt template variables, and potentially different model parameters.
-
-## Common errors
-
-| Exit code | Cause                                  | Fix                                           |
-| --------- | -------------------------------------- | --------------------------------------------- |
-| 1         | Validation failed                      | Run `stax validate` for details               |
-| 2         | Build error (layer exceeds size limit) | Reduce layer content or use workspace sources |
-| 4         | Dependency cycle or missing package    | Check `dependencies` in your definition       |
-
-See [Troubleshooting](/docs/cli/troubleshooting) for detailed error recovery.
+- The current reference CLI does **not** implement `--dry-run` or `--refresh-lock`.
+- Lockfile support is documented in the spec as forward work, but this build command currently writes only the local artifact directory.
 
 ## Related commands
 

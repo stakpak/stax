@@ -153,19 +153,19 @@ function Home() {
                   stax build
                 </TermLine>
                 <TermLine delay={1.3} color="green">
-                  {"  "}✓ artifact built — sha256:a3f8c1…e7d2
+                  {"  "}Built artifact: sha256:a3f8c1…e7d2
                 </TermLine>
                 <TermLine delay={1.8} prompt>
                   stax push ghcr.io/acme/backend-engineer:3.1.0
                 </TermLine>
                 <TermLine delay={2.3} color="cyan">
-                  {"  "}↑ pushing 7 layers (12.4 KB)
+                  {"  "}Pushed ghcr.io/acme/backend-engineer:3.1.0
                 </TermLine>
                 <TermLine delay={2.8} prompt>
                   stax materialize ghcr.io/acme/backend-engineer:3.1.0
                 </TermLine>
                 <TermLine delay={3.3} color="green">
-                  {"  "}✓ materialized for claude-code — 9 files written
+                  {"  "}Materialized backend-engineer@3.1.0
                 </TermLine>
               </div>
             </div>

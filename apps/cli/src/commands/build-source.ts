@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { hasFlag, parseArgs, renderCommandHelp } from "../command-helpers.ts";
+import { hasFlag, parseArgs, rejectUnknownFlags, renderCommandHelp } from "../command-helpers.ts";
 import type { CommandModule } from "../command-types.ts";
 
 export const buildSourceCommand: CommandModule = {
@@ -15,6 +15,11 @@ export const buildSourceCommand: CommandModule = {
 
     if (hasFlag(parsed, "help")) {
       return { code: 0, stdout: renderCommandHelp(buildSourceCommand) };
+    }
+
+    const unknownFlagResult = rejectUnknownFlags(parsed, buildSourceCommand);
+    if (unknownFlagResult) {
+      return unknownFlagResult;
     }
 
     const sourcePath = parsed.positionals[0];

@@ -561,7 +561,7 @@ describe("build", () => {
         // Read file size from octal at offset 124, length 12
         const sizeStr = new TextDecoder()
           .decode(header.subarray(124, 135))
-          .replace(/\u0000/g, "")
+          .replaceAll("\0", "")
           .trim();
         const size = parseInt(sizeStr, 8) || 0;
         const blocks = Math.ceil(size / 512);
@@ -589,19 +589,19 @@ describe("build", () => {
       // Check mtime at offset 136-147 (octal, should be 0)
       const mtimeStr = new TextDecoder()
         .decode(tarData.subarray(136, 147))
-        .replace(/\u0000/g, "")
+        .replaceAll("\0", "")
         .trim();
       expect(parseInt(mtimeStr, 8)).toBe(0);
       // Check uid at offset 108-115
       const uidStr = new TextDecoder()
         .decode(tarData.subarray(108, 115))
-        .replace(/\u0000/g, "")
+        .replaceAll("\0", "")
         .trim();
       expect(parseInt(uidStr, 8)).toBe(0);
       // Check gid at offset 116-123
       const gidStr = new TextDecoder()
         .decode(tarData.subarray(116, 123))
-        .replace(/\u0000/g, "")
+        .replaceAll("\0", "")
         .trim();
       expect(parseInt(gidStr, 8)).toBe(0);
     });
@@ -750,7 +750,7 @@ describe("build", () => {
         if (name.length > 0) filenames.push(name);
         const sizeStr = new TextDecoder()
           .decode(header.subarray(124, 135))
-          .replace(/\u0000/g, "")
+          .replaceAll("\0", "")
           .trim();
         const size = parseInt(sizeStr, 8) || 0;
         const blocks = Math.ceil(size / 512);
@@ -854,7 +854,9 @@ describe("build", () => {
       expect(configContent.adapter.modelParams).toEqual({ temperature: 0.5 });
       expect(configContent.adapter.importMode).toBe("filesystem");
       expect(configContent.adapter.fidelity).toBe("best-effort");
-      expect(configContent.adapter.targets).toEqual([{ kind: "file", path: "CLAUDE.md", scope: "project" }]);
+      expect(configContent.adapter.targets).toEqual([
+        { kind: "file", path: "CLAUDE.md", scope: "project" },
+      ]);
     });
 
     it("should include author, license, url, tags in config blob when declared", async () => {
@@ -937,8 +939,13 @@ describe("build", () => {
       const configDigest = manifest.config.digest.replace("sha256:", "");
       const configBlobPath = path.join(dir, "out", "blobs", "sha256", configDigest);
       const configContent = JSON.parse(await readFile(configBlobPath, "utf-8"));
-      expect(configContent.hints).toEqual({ isolation: "container", capabilities: { shell: true } });
-      expect(configContent.workspaceSources).toEqual([{ id: "src", ref: "ghcr.io/org/src:1.0", mountPath: "./src", required: true }]);
+      expect(configContent.hints).toEqual({
+        isolation: "container",
+        capabilities: { shell: true },
+      });
+      expect(configContent.workspaceSources).toEqual([
+        { id: "src", ref: "ghcr.io/org/src:1.0", mountPath: "./src", required: true },
+      ]);
     });
   });
 
@@ -953,7 +960,13 @@ describe("build", () => {
         (l) => l.mediaType === "application/vnd.stax.packages.v1+json",
       )!;
       expect(layer).toBeDefined();
-      const blobPath = path.join(dir, "out", "blobs", "sha256", layer.digest.replace("sha256:", ""));
+      const blobPath = path.join(
+        dir,
+        "out",
+        "blobs",
+        "sha256",
+        layer.digest.replace("sha256:", ""),
+      );
       const content = JSON.parse(await readFile(blobPath, "utf-8"));
       expect(content.specVersion).toBe("1.0.0");
       expect(Array.isArray(content.packages)).toBe(true);

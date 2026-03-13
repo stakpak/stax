@@ -89,11 +89,11 @@ If the same package reference resolves to different digests in one dependency gr
 Builders SHOULD suggest resolution strategies in the error output, such as:
 
 - pinning a specific digest in the agent's `packages` list
-- running `stax build --refresh-lock` to resolve to the latest compatible version
+- pinning an explicit digest in the consuming artifact until lockfile refresh support lands in the reference CLI
 
 ### Floating version resolution
 
-Package references in `packages` arrays in `definePackage()` follow the same rules as agent manifests: semver ranges and `latest` SHOULD NOT appear in committed source files. Builders MAY allow them interactively but MUST resolve and pin them in `stax.lock`.
+Package references in `packages` arrays in `definePackage()` follow the same rules as agent manifests: semver ranges and `latest` SHOULD NOT appear in committed source files. Builders MAY allow them interactively, and lockfile-capable implementations SHOULD resolve and pin them in `stax.lock`.
 
 ## Merge semantics
 
@@ -107,16 +107,16 @@ Precedence order:
 
 ### Merge table
 
-| Layer     | Merge unit                | Conflict key                            | Rule                                                                           |
-| --------- | ------------------------- | --------------------------------------- | ------------------------------------------------------------------------------ |
-| MCP       | server object             | server name                             | Replace entire server object at the highest-precedence definition              |
-| Skills    | top-level skill directory | skill name                              | Higher precedence replaces the entire skill directory                          |
-| Rules     | rule file                 | rule `id` if present, else archive path | Higher precedence replaces matching rule; otherwise append in precedence order |
-| Knowledge | archive path              | normalized path                         | Higher precedence replaces matching path                                       |
-| Surfaces  | surface file              | basename                                | Higher precedence replaces the entire file                                     |
-| Secrets   | secret key                | `key`                                   | Higher precedence replaces entire declaration                                  |
-| Instruction Trees | instruction file  | normalized archive path                 | Higher precedence replaces matching path                                       |
-| Subagents | agent definition          | agent name                              | Higher precedence replaces entire agent definition                             |
+| Layer             | Merge unit                | Conflict key                            | Rule                                                                           |
+| ----------------- | ------------------------- | --------------------------------------- | ------------------------------------------------------------------------------ |
+| MCP               | server object             | server name                             | Replace entire server object at the highest-precedence definition              |
+| Skills            | top-level skill directory | skill name                              | Higher precedence replaces the entire skill directory                          |
+| Rules             | rule file                 | rule `id` if present, else archive path | Higher precedence replaces matching rule; otherwise append in precedence order |
+| Knowledge         | archive path              | normalized path                         | Higher precedence replaces matching path                                       |
+| Surfaces          | surface file              | basename                                | Higher precedence replaces the entire file                                     |
+| Secrets           | secret key                | `key`                                   | Higher precedence replaces entire declaration                                  |
+| Instruction Trees | instruction file          | normalized archive path                 | Higher precedence replaces matching path                                       |
+| Subagents         | agent definition          | agent name                              | Higher precedence replaces entire agent definition                             |
 
 ### Rationale
 
@@ -161,7 +161,7 @@ Higher precedence replaces the full declaration, including:
 
 ## Lock file
 
-`stax build` MUST produce `stax.lock` when package resolution occurs.
+The spec model includes `stax.lock` for package resolution. The current reference CLI does not yet emit `stax.lock` automatically during `stax build`.
 
 ### Lockfile goals
 
@@ -188,7 +188,7 @@ Higher precedence replaces the full declaration, including:
 }
 ```
 
-Builders SHOULD fail in CI when `stax.lock` is out of date unless explicitly told to refresh it.
+Builders SHOULD fail in CI when `stax.lock` is out of date unless explicitly told to refresh it. Automatic refresh remains future work in the current reference CLI.
 
 ## Package source directory structure
 

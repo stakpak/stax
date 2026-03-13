@@ -71,7 +71,7 @@ A company publishes multiple persona variants of one base agent.
 
 ```bash
 stax build --all-personas
-stax push --all-personas ghcr.io/myorg/agents/engineer
+# publish each resulting artifact explicitly with stax push <reference>
 ```
 
 Result:
@@ -82,7 +82,7 @@ ghcr.io/myorg/agents/engineer:1.0.0-alex-rivera
 ghcr.io/myorg/agents/engineer:1.0.0-jordan-park
 ```
 
-Only the persona layer changes; all other layers are deduplicated by digest.
+Only the persona layer changes; all other layers are deduplicated by digest. The current reference CLI does not yet automate persona fan-out publishing with a single `stax push` flag.
 
 ---
 
@@ -149,7 +149,7 @@ jobs:
       - uses: actions/setup-node@v4
       - run: npm install
       - run: npx stax build --all-personas
-      - run: npx stax push --all-personas ghcr.io/${{ github.repository }}
+      # publish each resulting artifact explicitly with npx stax push <reference>
 ```
 
 ---

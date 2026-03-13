@@ -3,72 +3,44 @@ title: stax validate
 description: Validate definitions without producing an artifact
 ---
 
-Check agent or package definitions against the specification's structural and semantic rules without producing an artifact. Use this for fast feedback during development or as a CI gate.
+Check agent or package definitions against the current CLI validation rules without producing an artifact.
 
 ## Usage
 
 ```bash
 stax validate
-stax validate agent.ts
-stax validate package.ts
+stax validate .stax/backend/agent.ts
+stax validate .stax/shared/package.ts
 ```
 
-When run without arguments, `stax validate` discovers and validates all definition files in the current directory.
+When run without arguments, `stax validate` auto-discovers entries only from:
+
+- `.stax/<name>/agent.ts`
+- `.stax/<name>/package.ts`
 
 ## What gets validated
 
-Validation covers the full specification surface:
+Validation currently checks:
 
-| Check                 | What it catches                                         |
-| --------------------- | ------------------------------------------------------- |
-| Type correctness      | Wrong field types, unknown properties                   |
-| Required fields       | Missing `name`, `version`, `runtime`, `prompt`          |
-| Path existence        | Referenced files or directories that don't exist        |
-| Path safety           | Symlinks escaping the project root, absolute paths      |
-| Package references    | Malformed dependency specifiers, invalid version ranges |
-| Dependency cycles     | Circular dependencies between packages                  |
-| MCP secret references | MCP servers referencing undeclared secrets              |
-| Frontmatter validity  | Skill and rule files with invalid YAML frontmatter      |
-| Archive safety        | Files that would violate tar archive safety rules       |
-| Size limits           | Layers that would exceed the 10 MB limit                |
+| Check              | What it catches                                     |
+| ------------------ | --------------------------------------------------- |
+| Required fields    | Missing `name`, `version`, `description`, `adapter` |
+| Path existence     | Referenced files or directories that don't exist    |
+| Path type          | File-vs-directory mismatches for known layer fields |
+| Name / version     | Invalid names and semver values                     |
+| Tag uniqueness     | Duplicate tag entries                               |
+| Symlink policy     | Rejected symlinks when `symlinkMode` is `reject`    |
+| Package references | Empty or malformed package reference strings        |
 
 ## Example output
 
-A clean validation:
-
 ```text
-✓ validated agent.ts — backend-engineer v3.1.0
-  6 layers, 3 packages, 0 warnings
+Validation passed.
+Warnings:
+  [OPTIONAL_MISSING_PATH] /repo/.stax/backend/memory: Optional path for "memory" does not exist
 ```
-
-A failing validation:
-
-```text
-✗ validation failed — agent.ts
-
-  ✗ required field "version" is missing
-  ✗ prompt path "./prompt.md" does not exist
-  ✗ MCP server "database" references undeclared secret "DB_PASSWORD"
-  ⚠ rules glob "./rules/*.md" matched 0 files
-
-  3 errors, 1 warning
-```
-
-## Using in CI
-
-Run validation as a pre-merge check to catch issues before they reach production:
-
-```yaml
-# GitHub Actions example
-- name: Validate stax definitions
-  run: stax validate
-```
-
-Validation exits with code `1` on any error, making it suitable for CI gating.
 
 ## Related commands
 
-- [`stax build`](/docs/cli/build) — Build includes validation as its first step
-- [`stax build --dry-run`](/docs/cli/build) — Full build preview without writing artifacts
-
-See also: [Troubleshooting](/docs/cli/troubleshooting) for common validation errors and fixes.
+- [`stax build`](/docs/cli/build) — Build after validation succeeds
+- [`stax inspect`](/docs/cli/inspect) — Inspect a built artifact

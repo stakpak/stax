@@ -85,26 +85,19 @@ stax build
 ```
 
 ```text
-✓ validated agent definition
-✓ resolved 0 packages
-✓ built 6 layers (8.2 KB)
-✓ artifact cached — sha256:a3f8c1…e7d2
+Built artifact: sha256:a3f8c1…e7d2
+  path: /repo/.stax/artifacts
+  layers: 6
 ```
 
-The build compiles your TypeScript definitions, resolves any package dependencies, produces deterministic OCI layers, and stores the artifact in your local cache at `~/.stax/cache/`.
-
-Use `--dry-run` to preview without writing:
-
-```bash
-stax build --dry-run
-```
+The build compiles your TypeScript definitions, validates referenced layer paths, produces deterministic OCI layers, and writes the artifact locally under `.stax/artifacts/`.
 
 ## Inspect the artifact
 
 Before pushing, verify what you built:
 
 ```bash
-stax inspect sha256:a3f8c1…e7d2
+stax inspect ./.stax/artifacts
 ```
 
 ```text
@@ -136,8 +129,7 @@ stax push ghcr.io/yourorg/backend-engineer:1.0.0
 ```
 
 ```text
-↑ pushing 6 layers (8.2 KB)
-✓ pushed ghcr.io/yourorg/backend-engineer:1.0.0
+Pushed ghcr.io/yourorg/backend-engineer:1.0.0
   digest: sha256:a3f8c1…e7d2
 ```
 
@@ -152,9 +144,11 @@ stax materialize ghcr.io/yourorg/backend-engineer:1.0.0 --out ./workspace
 ```
 
 ```text
-✓ pulled ghcr.io/yourorg/backend-engineer:1.0.0
-✓ selected adapter: claude-code
-✓ materialized — 4 files written to ./workspace
+Materialized backend-engineer@1.0.0
+  adapter: claude-code
+  fidelity: best-effort
+  files written: 4
+  output: ./workspace
 ```
 
 The output depends on the target runtime. For Claude Code, you get:
@@ -168,7 +162,13 @@ workspace/
 └── .mcp.json           # MCP server definitions
 ```
 
-To preview without writing files:
+To preview the render without writing files:
+
+```bash
+stax materialize ghcr.io/yourorg/backend-engineer:1.0.0 --plan --consumer claude-code
+```
+
+To inspect machine-readable output after writing files:
 
 ```bash
 stax materialize ghcr.io/yourorg/backend-engineer:1.0.0 --json

@@ -16,7 +16,8 @@ export interface CommandModule {
   name: string;
   summary: string;
   usage: string;
+  booleanFlags?: readonly string[];
   valueFlags?: readonly string[];
   repeatableValueFlags?: readonly string[];
-  run(args: string[]): CommandResult;
+  run(args: string[]): CommandResult | Promise<CommandResult>;
 }

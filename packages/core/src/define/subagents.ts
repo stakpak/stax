@@ -1,6 +1,5 @@
 import type { SubagentsDefinition } from "../types.ts";
-
-const NAME_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+import { NAME_REGEX } from "../validation.ts";
 
 export function defineSubagents(definition: SubagentsDefinition): SubagentsDefinition {
   if (!definition.agents || Object.keys(definition.agents).length === 0) {

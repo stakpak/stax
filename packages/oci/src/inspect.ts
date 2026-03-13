@@ -1,4 +1,5 @@
 import type { OciManifest } from "./types.ts";
+import { getRegistryAuthorizationHeader } from "./auth.ts";
 import { parseReference } from "./reference.ts";
 import { registryUrl } from "./registry.ts";
 
@@ -15,9 +16,13 @@ export async function inspect(reference: string): Promise<InspectResult> {
   const ref = parseReference(reference);
   const baseUrl = registryUrl(ref.registry);
   const tagOrDigest = ref.digest ?? ref.tag ?? "latest";
+  const authorization = await getRegistryAuthorizationHeader(ref.registry);
 
   const manifestRes = await fetch(`${baseUrl}/v2/${ref.repository}/manifests/${tagOrDigest}`, {
-    headers: { Accept: "application/vnd.oci.image.manifest.v1+json" },
+    headers: {
+      Accept: "application/vnd.oci.image.manifest.v1+json",
+      ...(authorization ? { Authorization: authorization } : {}),
+    },
   });
   if (!manifestRes.ok) {
     throw new Error(`Failed to inspect: ${manifestRes.status}`);

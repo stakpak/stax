@@ -1,6 +1,5 @@
 import { z } from "zod";
-
-const nameRegex = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+import { NAME_REGEX } from "../validation.ts";
 
 const subagentDefinitionSchema = z
   .object({
@@ -27,7 +26,7 @@ export const subagentsSchema = z.object({
     .refine(
       (agents) => {
         for (const name of Object.keys(agents)) {
-          if (!nameRegex.test(name)) return false;
+          if (!NAME_REGEX.test(name)) return false;
         }
         return true;
       },

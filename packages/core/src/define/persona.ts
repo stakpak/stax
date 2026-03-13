@@ -1,6 +1,6 @@
 import type { PersonaDefinition } from "../types.ts";
+import { NAME_REGEX } from "../validation.ts";
 
-const NAME_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const VALID_COMMUNICATION_STYLES = ["direct", "diplomatic", "academic", "casual", "formal"];
 const VALID_VERBOSITY = ["minimal", "concise", "balanced", "detailed", "verbose"];
 const VALID_CODE_COMMENTS = ["none", "minimal", "moderate", "thorough"];

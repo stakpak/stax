@@ -1,11 +1,10 @@
 import { z } from "zod";
-
-const nameRegex = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+import { NAME_REGEX } from "../validation.ts";
 
 export const personaSchema = z
   .object({
     specVersion: z.string().optional(),
-    name: z.string().regex(nameRegex, "Name must match ^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"),
+    name: z.string().regex(NAME_REGEX, "Name must match ^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"),
     displayName: z.string().min(1),
     role: z.string().min(1),
     background: z.string().optional(),

@@ -1,4 +1,7 @@
-import type { CommandModule, ParsedArgs, ParsedFlags } from "./command-types.ts";
+import { existsSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+
+import type { CommandModule, CommandResult, ParsedArgs, ParsedFlags } from "./command-types.ts";
 
 export const VERSION = "0.0.1";
 
@@ -104,6 +107,36 @@ export function renderCommandHelp(command: CommandModule): string {
   return [`stax ${command.name}`, "", command.summary, "", `Usage: ${command.usage}`].join("\n");
 }
 
+export function getUnknownFlags(parsed: ParsedArgs, command: CommandModule): string[] {
+  const allowed = new Set([
+    "help",
+    ...(command.booleanFlags ?? []),
+    ...(command.valueFlags ?? []),
+    ...(command.repeatableValueFlags ?? []),
+  ]);
+
+  return Object.keys(parsed.flags)
+    .filter((name) => !allowed.has(name))
+    .sort();
+}
+
+export function rejectUnknownFlags(
+  parsed: ParsedArgs,
+  command: CommandModule,
+): CommandResult | undefined {
+  const unknownFlags = getUnknownFlags(parsed, command);
+  if (unknownFlags.length === 0) {
+    return undefined;
+  }
+
+  const formatted = unknownFlags.map((name) => `--${name}`).join(", ");
+  const suffix = unknownFlags.length === 1 ? "" : "s";
+  return {
+    code: 1,
+    stderr: `${command.name}: unknown flag${suffix} ${formatted}`,
+  };
+}
+
 export function looksLikeLocalPath(reference: string): boolean {
   return reference.startsWith("./") || reference.startsWith("../") || reference.startsWith("/");
 }
@@ -114,4 +147,54 @@ export function isInvalidReference(reference: string): boolean {
 
 export function isRegistryFailure(reference: string): boolean {
   return reference.includes("nonexistent.registry.invalid");
+}
+
+export interface DetectedEntry {
+  path: string;
+  name: string;
+}
+
+/**
+ * Auto-detect stax entry files in the given directory.
+ * Search order:
+ *   1. .stax/[name]/agent.ts or package.ts
+ *
+ * Returns all found entries. When exactly one is found, callers can use it directly.
+ * When multiple are found, callers should ask the user to pick one.
+ */
+export function detectEntries(cwd: string): DetectedEntry[] {
+  const entries: DetectedEntry[] = [];
+
+  // 1. Scan .stax/*/
+  const staxDir = join(cwd, ".stax");
+  if (existsSync(staxDir)) {
+    try {
+      for (const name of readdirSync(staxDir)) {
+        if (name === "artifacts" || name === "cache") continue;
+        const dir = join(staxDir, name);
+        if (!statSync(dir).isDirectory()) continue;
+        for (const candidate of ["agent.ts", "package.ts"]) {
+          const p = join(dir, candidate);
+          if (existsSync(p)) {
+            entries.push({ path: p, name });
+            break;
+          }
+        }
+      }
+    } catch {
+      // ignore read errors
+    }
+  }
+
+  return entries;
+}
+
+/**
+ * Auto-detect a single stax entry file. Returns path or undefined.
+ * When multiple agents exist, returns undefined (caller must handle disambiguation).
+ */
+export function detectEntry(cwd: string): string | undefined {
+  const entries = detectEntries(cwd);
+  if (entries.length === 1) return entries[0]!.path;
+  return undefined;
 }

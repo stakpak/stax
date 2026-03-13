@@ -45,17 +45,15 @@ Exit code: 4
 
 **Fix:** Break the cycle by extracting shared configuration into a new package that both can depend on without circularity. See [Dependencies](/docs/packages/dependencies).
 
-### "Lockfile out of date"
+### "build-source not available yet"
 
 ```text
-Warning: stax.lock is out of date — 2 packages changed
-  @acme/tools: sha256:abc123 → sha256:def456
-  @acme/rules: (new dependency)
+build-source: source artifact generation is not available yet for ./repo
 ```
 
-**Cause:** Your dependencies have changed since the lockfile was last written.
+**Cause:** `stax build-source` is reserved in the CLI, but the current reference implementation does not generate source artifacts yet.
 
-**Fix:** Run `stax build --refresh-lock` to update the lockfile, then commit the updated `stax.lock`.
+**Fix:** Use regular `stax build` for agent/package artifacts today, or track workspace source support as future work.
 
 ### "Layer exceeds size limit"
 

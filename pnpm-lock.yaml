@@ -53,6 +53,46 @@ importers:
         version: 5.9.3
 
   apps/cli:
+    dependencies:
+      '@clack/core':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@clack/prompts':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@stax/build':
+        specifier: workspace:*
+        version: link:../../packages/build
+      '@stax/claude-code':
+        specifier: workspace:*
+        version: link:../../packages/adapter/claude-code
+      '@stax/codex':
+        specifier: workspace:*
+        version: link:../../packages/adapter/codex
+      '@stax/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@stax/cursor':
+        specifier: workspace:*
+        version: link:../../packages/adapter/cursor
+      '@stax/github-copilot':
+        specifier: workspace:*
+        version: link:../../packages/adapter/github-copilot
+      '@stax/materialize':
+        specifier: workspace:*
+        version: link:../../packages/materialize
+      '@stax/oci':
+        specifier: workspace:*
+        version: link:../../packages/oci
+      '@stax/openclaw':
+        specifier: workspace:*
+        version: link:../../packages/adapter/openclaw
+      '@stax/opencode':
+        specifier: workspace:*
+        version: link:../../packages/adapter/opencode
+      '@stax/windsurf':
+        specifier: workspace:*
+        version: link:../../packages/adapter/windsurf
     devDependencies:
       '@types/bun':
         specifier: ^1.2.18
@@ -349,6 +389,9 @@ importers:
       '@stax/core':
         specifier: workspace:*
         version: link:../core
+      '@stax/oci':
+        specifier: workspace:*
+        version: link:../oci
     devDependencies:
       '@stax/config':
         specifier: workspace:*
@@ -363,7 +406,11 @@ importers:
         specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.4.0)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)
 
-  packages/config: {}
+  packages/config:
+    devDependencies:
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.1(@types/node@25.4.0)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)
 
   packages/core:
     dependencies:
@@ -405,15 +452,39 @@ importers:
 
   packages/materialize:
     dependencies:
+      '@stax/adapter-core':
+        specifier: workspace:*
+        version: link:../adapter/core
+      '@stax/claude-code':
+        specifier: workspace:*
+        version: link:../adapter/claude-code
+      '@stax/codex':
+        specifier: workspace:*
+        version: link:../adapter/codex
       '@stax/core':
         specifier: workspace:*
         version: link:../core
+      '@stax/cursor':
+        specifier: workspace:*
+        version: link:../adapter/cursor
+      '@stax/github-copilot':
+        specifier: workspace:*
+        version: link:../adapter/github-copilot
       '@stax/oci':
         specifier: workspace:*
         version: link:../oci
+      '@stax/openclaw':
+        specifier: workspace:*
+        version: link:../adapter/openclaw
+      '@stax/opencode':
+        specifier: workspace:*
+        version: link:../adapter/opencode
       '@stax/resolve':
         specifier: workspace:*
         version: link:../resolve
+      '@stax/windsurf':
+        specifier: workspace:*
+        version: link:../adapter/windsurf
     devDependencies:
       '@stax/config':
         specifier: workspace:*
@@ -471,6 +542,9 @@ importers:
 
   packages/stax:
     dependencies:
+      '@stax/adapter-core':
+        specifier: workspace:*
+        version: link:../adapter/core
       '@stax/core':
         specifier: workspace:*
         version: link:../core

@@ -3,7 +3,7 @@ title: Lockfile
 description: How stax.lock ensures reproducible builds
 ---
 
-`stax build` produces a `stax.lock` file when package resolution occurs. The lockfile pins exact digests to make builds reproducible and surface dependency conflicts early.
+`stax.lock` is the intended lockfile format for package resolution. The current reference CLI ships lockfile types and merge semantics, but does not yet write `stax.lock` automatically during `stax build`.
 
 ## Goals
 
@@ -47,13 +47,9 @@ Each package entry contains:
 
 ## CI Behavior
 
-Builders should fail in CI when `stax.lock` is out of date unless explicitly told to refresh it. This prevents unintentional dependency drift.
+Lockfile-capable builders should fail in CI when `stax.lock` is out of date unless explicitly told to refresh it. This prevents unintentional dependency drift.
 
-To refresh the lockfile:
-
-```bash
-stax build --refresh-lock
-```
+Automatic lockfile refresh is planned future work for the reference CLI.
 
 ## Committing the Lockfile
 

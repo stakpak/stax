@@ -1,4 +1,10 @@
-import { VERSION, hasFlag, parseArgs, renderCommandHelp } from "../command-helpers.ts";
+import {
+  VERSION,
+  hasFlag,
+  parseArgs,
+  rejectUnknownFlags,
+  renderCommandHelp,
+} from "../command-helpers.ts";
 import type { CommandModule } from "../command-types.ts";
 
 export const versionCommand: CommandModule = {
@@ -10,6 +16,11 @@ export const versionCommand: CommandModule = {
 
     if (hasFlag(parsed, "help")) {
       return { code: 0, stdout: renderCommandHelp(versionCommand) };
+    }
+
+    const unknownFlagResult = rejectUnknownFlags(parsed, versionCommand);
+    if (unknownFlagResult) {
+      return unknownFlagResult;
     }
 
     return { code: 0, stdout: `stax ${VERSION}` };

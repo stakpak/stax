@@ -9,6 +9,21 @@
     "test": "bun --config ./bunfig.toml test src/__tests__/",
     "check-types": "tsc --noEmit"
   },
+  "dependencies": {
+    "@clack/core": "^1.1.0",
+    "@clack/prompts": "^1.1.0",
+    "@stax/build": "workspace:*",
+    "@stax/claude-code": "workspace:*",
+    "@stax/codex": "workspace:*",
+    "@stax/core": "workspace:*",
+    "@stax/cursor": "workspace:*",
+    "@stax/github-copilot": "workspace:*",
+    "@stax/materialize": "workspace:*",
+    "@stax/oci": "workspace:*",
+    "@stax/openclaw": "workspace:*",
+    "@stax/opencode": "workspace:*",
+    "@stax/windsurf": "workspace:*"
+  },
   "devDependencies": {
     "@types/bun": "^1.2.18",
     "typescript": "catalog:"

@@ -3,17 +3,17 @@ title: stax inspect
 description: Display artifact metadata, identity, and layer information
 ---
 
-Display an artifact's metadata, identity, persona, runtime configuration, and layer breakdown. Use this to understand what's inside an artifact before pushing, pulling, or materializing it.
+Display an artifact's metadata and layer breakdown. Use this to understand what's inside an artifact before pushing, pulling, or materializing it.
 
 ## Usage
 
 ```bash
 stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0
 stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0 --json
-stax inspect sha256:a3f8c1…e7d2
+stax inspect ./.stax/artifacts
 ```
 
-Accepts registry references (with tag or digest) or local cache digests.
+Accepts registry references (with tag or digest) or local artifact directories.
 
 ## Options
 
@@ -26,29 +26,18 @@ Accepts registry references (with tag or digest) or local cache digests.
 ### Human-readable
 
 ```text
-Agent: backend-engineer v3.1.0
-Runtime: claude-code (claude-opus-4-1)
-Persona: maya-chen (Maya Chen, Senior Backend Engineer)
-
-Layers:
-  config     application/vnd.stax.config.v1+json          1.5 KB
-  prompt     application/vnd.stax.prompt.v1+markdown      2.1 KB
-  persona    application/vnd.stax.persona.v1+json         0.8 KB
-  mcp        application/vnd.stax.mcp.v1+json             0.5 KB
-  skills     application/vnd.stax.skills.v1.tar+gzip      4.3 KB  (3 skills)
-  rules      application/vnd.stax.rules.v1.tar+gzip       1.7 KB  (4 rules)
-  secrets    application/vnd.stax.secrets.v1+json         0.3 KB  (3 secrets)
-
-Packages:
-  @acme/compliance-rules  sha256:f8a1c3…
-  @acme/mcp-bundle        sha256:4d2e7b…
-
-Total: 11.2 KB (7 layers)
+Artifact: backend-engineer@3.1.0
+  type: application/vnd.stax.agent.v1
+  layers: 7
+  total size: 11468 bytes
+    application/vnd.stax.config.v1+json (1536 bytes) sha256:...
+    application/vnd.stax.prompt.v1+markdown (2150 bytes) sha256:...
+    application/vnd.stax.skills.v1.tar+gzip (4300 bytes) sha256:...
 ```
 
 ### JSON output
 
-The `--json` flag returns the full OCI manifest, config blob, annotations, and layer metadata as structured JSON:
+The `--json` flag returns the structured inspection payload. For local artifact directories that includes `{ manifest, config }`; for registry references it returns the remote inspection result.
 
 ```bash
 stax inspect ghcr.io/myorg/agents/backend-engineer:3.1.0 --json | jq '.config.persona'
@@ -58,11 +47,10 @@ This is useful for scripting, CI pipelines, and building tools on top of stax ar
 
 ## What you can learn from inspect
 
-- **Identity** — Agent name, version, and persona
-- **Runtime** — Target runtime and model
-- **Layer breakdown** — Each layer's media type, size, and content summary
-- **Dependencies** — Resolved packages with their locked digests
-- **Annotations** — OCI manifest annotations (build timestamp, source URL, etc.)
+- **Identity** — Artifact name and version when present in config
+- **Artifact type** — The OCI artifact type recorded in the manifest
+- **Layer breakdown** — Each layer's media type, size, and digest
+- **Config blob** — Local artifact config content when present
 
 ## Related commands
 

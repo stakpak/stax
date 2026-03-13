@@ -8,7 +8,13 @@ export {
   defineMcp,
   defineSubagents,
   schemas,
+  NAME_REGEX,
+  SEMVER_REGEX,
+  createPackageLayerPayload,
+  decodePackageLayerReferences,
 } from "@stax/core";
+
+export { defineAdapter } from "@stax/adapter-core";
 
 export type {
   AgentDefinition,
@@ -32,4 +38,6 @@ export type {
   SkillDefinition,
   SurfaceDefinition,
   InstructionTree,
+  PackageLayerEntry,
+  PackageLayerPayload,
 } from "@stax/core";

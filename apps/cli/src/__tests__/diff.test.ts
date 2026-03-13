@@ -18,6 +18,7 @@ describe("diff", () => {
       "ghcr.io/myorg/agents/backend:3.0.0",
       "ghcr.io/myorg/agents/backend:3.1.0",
     ]);
+    // code 3 = remote unavailable (expected in test env), code 0 = success
     expect([0, 3]).toContain(exitCode);
   });
 

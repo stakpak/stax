@@ -2,14 +2,14 @@ import { describe, expect, it } from "bun:test";
 import { run } from "./helpers.ts";
 
 describe("login", () => {
-  it("should accept registry argument", async () => {
+  it("should require --username", async () => {
     const { exitCode } = await run(["login", "ghcr.io"]);
-    expect([0, 3]).toContain(exitCode);
+    expect(exitCode).toBe(1);
   });
 
-  it("should accept --username flag", async () => {
+  it("should require password with --username", async () => {
     const { exitCode } = await run(["login", "--username", "testuser", "ghcr.io"]);
-    expect([0, 3]).toContain(exitCode);
+    expect(exitCode).toBe(1);
   });
 
   it("should accept --password-stdin flag", async () => {
@@ -17,35 +17,25 @@ describe("login", () => {
       ["login", "--username", "testuser", "--password-stdin", "ghcr.io"],
       { stdin: "testpassword\n" },
     );
-    expect([0, 3]).toContain(exitCode);
+    expect(exitCode).toBe(0);
   });
 
-  it("should accept login without registry (default)", async () => {
+  it("should require --username when no flags given", async () => {
     const { exitCode } = await run(["login"]);
-    expect([0, 3]).toContain(exitCode);
+    expect(exitCode).toBe(1);
   });
 
-  it("should accept registry with port", async () => {
+  it("should require --username for registry with port", async () => {
     const { exitCode } = await run(["login", "localhost:5000"]);
-    expect([0, 3]).toContain(exitCode);
+    expect(exitCode).toBe(1);
   });
 
-  it("should exit with code 3 on authentication failure", async () => {
-    const { exitCode } = await run(["login", "--username", "invalid", "ghcr.io"]);
-    expect([0, 3]).toContain(exitCode);
-  });
-
-  it("should support Docker credential store", async () => {
-    const { exitCode } = await run(["login", "ghcr.io"]);
-    expect([0, 3]).toContain(exitCode);
-  });
-
-  it("should read password from stdin with --password-stdin", async () => {
+  it("should succeed with valid credentials via stdin", async () => {
     const { exitCode } = await run(
       ["login", "--username", "testuser", "--password-stdin", "ghcr.io"],
       { stdin: "mypassword\n" },
     );
-    expect([0, 3]).toContain(exitCode);
+    expect(exitCode).toBe(0);
   });
 
   it("should reject --password-stdin without --username", async () => {

@@ -1,15 +1,5 @@
-import { resolve } from "node:path";
-import { defineConfig } from "vite";
+import { defineLibraryViteConfig } from "@stax/config/vite.lib";
 
-export default defineConfig({
-  build: {
-    lib: {
-      entry: resolve(__dirname, "src/index.ts"),
-      formats: ["es"],
-      fileName: "index",
-    },
-    rollupOptions: {
-      external: ["zod"],
-    },
-  },
+export default defineLibraryViteConfig(import.meta.url, {
+  external: ["zod"],
 });

@@ -311,6 +311,30 @@ export interface InstructionTree {
     | undefined;
 }
 
+// ─── Detection ─────────────────────────────────────────
+
+export interface DetectedFile {
+  /** Absolute path to the found file/directory */
+  path: string;
+  /** Relative path as declared in the adapter target */
+  targetPath: string;
+  /** What kind of content this represents */
+  kind: "prompt" | "rules" | "mcp" | "skills" | "config" | "other";
+  /** Whether this is a project-local or user-global file */
+  scope: "project" | "user";
+  /** Human-readable description from the adapter target */
+  description: string;
+}
+
+export interface DetectionResult {
+  /** Which adapter performed the detection */
+  adapter: string;
+  /** All found files/directories */
+  files: DetectedFile[];
+  /** Whether any files were found */
+  found: boolean;
+}
+
 // ─── Package Reference ──────────────────────────────────
 
 export type PackageReference = string;

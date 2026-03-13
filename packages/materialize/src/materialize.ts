@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
+import { decodePackageLayerReferences } from "@stax/core";
 import { pull, LAYER_MEDIA_TYPES } from "@stax/oci";
 import type { OciManifest } from "@stax/oci";
 import { resolvePackages, mergeLayers } from "@stax/resolve";
@@ -54,14 +55,11 @@ function extractTar(data: Uint8Array): Map<string, Uint8Array> {
         break;
       }
     }
-    const name = new TextDecoder().decode(header.slice(0, nameEnd)).replace(/\u0000+$/, "");
+    const name = new TextDecoder().decode(header.slice(0, nameEnd)).replaceAll("\0", "");
     if (!name) break;
 
     // Extract size (bytes 124-135, octal, null-terminated)
-    const sizeStr = new TextDecoder()
-      .decode(header.slice(124, 136))
-      .replace(/\u0000+$/, "")
-      .trim();
+    const sizeStr = new TextDecoder().decode(header.slice(124, 136)).replaceAll("\0", "").trim();
     const size = parseInt(sizeStr, 8) || 0;
 
     // Type flag (byte 156)
@@ -260,16 +258,7 @@ function processLayers(manifest: OciManifest, blobs: Map<string, Uint8Array>): P
         break;
 
       case LAYER_MEDIA_TYPES.packages: {
-        const packagesData = decodeJson<
-          | string[]
-          | { specVersion?: string; packages: Array<{ ref: string; digest?: string; kind?: string }> }
-        >(blob);
-        // Support both legacy plain string[] and spec-compliant structured format
-        if (Array.isArray(packagesData)) {
-          result.packageRefs = packagesData;
-        } else {
-          result.packageRefs = packagesData.packages.map((p) => p.ref);
-        }
+        result.packageRefs = decodePackageLayerReferences(decodeJson<unknown>(blob));
         break;
       }
 

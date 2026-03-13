@@ -3,24 +3,17 @@ title: stax push
 description: Publish a built artifact to an OCI registry
 ---
 
-Push a built artifact from your local cache to an OCI-compatible registry. Once pushed, the artifact is available to anyone with registry access for pulling, materializing, or inspecting.
+Push a built artifact from the local artifact directory to an OCI-compatible registry. Once pushed, the artifact is available to anyone with registry access for pulling, materializing, or inspecting.
 
 ## Usage
 
 ```bash
 stax push ghcr.io/myorg/agents/backend-engineer:3.1.0
-stax push --all-personas ghcr.io/myorg/agents/backend-engineer
 ```
-
-## Options
-
-| Flag             | Description                                                  |
-| ---------------- | ------------------------------------------------------------ |
-| `--all-personas` | Push all persona variant artifacts under the same repository |
 
 ## How pushing works
 
-1. The CLI locates the artifact in your local cache (`~/.stax/cache/`)
+1. The CLI locates the built artifact in `.stax/artifacts/`
 2. Each layer is uploaded to the registry as a content-addressed blob
 3. The OCI manifest is pushed with the specified tag
 4. The registry returns the manifest digest for verification
@@ -42,12 +35,7 @@ stax push ghcr.io/myorg/agents/backend-engineer:staging
 stax push ghcr.io/myorg/agents/backend-engineer:latest
 ```
 
-For multi-persona agents, `--all-personas` pushes each persona as a separate manifest under the same repository, typically tagged with the persona name:
-
-```bash
-stax push --all-personas ghcr.io/myorg/agents/backend-engineer
-# Pushes: backend-engineer:maya-chen, backend-engineer:alex-rivera, etc.
-```
+The current reference CLI pushes the single artifact present in `.stax/artifacts/`. Multi-persona publishing workflows are future work.
 
 ## Authentication
 
@@ -56,8 +44,7 @@ You must be authenticated with the target registry before pushing. See [`stax lo
 ## Example output
 
 ```text
-↑ pushing 7 layers (12.4 KB)
-✓ pushed ghcr.io/myorg/agents/backend-engineer:3.1.0
+Pushed ghcr.io/myorg/agents/backend-engineer:3.1.0
   digest: sha256:a3f8c1…e7d2
 ```
 

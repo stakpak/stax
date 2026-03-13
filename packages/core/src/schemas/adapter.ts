@@ -1,7 +1,5 @@
 import { z } from "zod";
-
-const semverRegex =
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+import { SEMVER_REGEX } from "../validation.ts";
 
 const adapterFeatureMapSchema = z
   .object({
@@ -33,7 +31,7 @@ export const adapterSchema = z
   .object({
     type: z.string().min(1),
     runtime: z.string().min(1),
-    adapterVersion: z.string().regex(semverRegex, "Must be valid semver"),
+    adapterVersion: z.string().regex(SEMVER_REGEX, "Must be valid semver"),
     runtimeVersionRange: z.string().optional(),
     model: z.string().optional(),
     modelParams: z.record(z.string(), z.unknown()).optional(),

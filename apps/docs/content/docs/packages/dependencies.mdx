@@ -15,7 +15,7 @@ Package references can be one of three forms:
 | OCI tag reference    | `ghcr.io/myorg/packages/github-workflow:2.0.0`   |
 | OCI digest reference | `ghcr.io/myorg/packages/git-utils@sha256:abc...` |
 
-Semver ranges, globs, and floating selectors such as `^1`, `~2`, or `latest` should not appear in committed manifests. Builders may allow them interactively but must resolve them into `stax.lock` and will warn.
+Semver ranges, globs, and floating selectors such as `^1`, `~2`, or `latest` should not appear in committed manifests. Builders may allow them interactively; lockfile-capable implementations should resolve them into `stax.lock` and warn.
 
 ## Resolution Algorithm
 
@@ -41,7 +41,7 @@ If the same package reference resolves to different digests in one dependency gr
 The builder suggests resolution strategies in the error output, such as:
 
 - Pinning a specific digest in the agent's `packages` list
-- Running `stax build --refresh-lock` to resolve to the latest compatible version
+- Pinning an explicit digest in the consuming artifact until lockfile refresh support lands in the reference CLI
 
 ## Example
 

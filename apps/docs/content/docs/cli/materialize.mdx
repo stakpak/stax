@@ -1,76 +1,51 @@
 ---
 title: stax materialize
-description: Translate an artifact into runtime-native files for any supported adapter
+description: Render an artifact into runtime-native files
 ---
 
-Resolve an artifact and translate it into runtime-native files using the appropriate adapter. This is how a canonical stax artifact becomes usable by a specific runtime like Claude Code, Codex, Cursor, or any other supported consumer.
+Resolve an artifact, render it through a runtime adapter, and write the resulting files to an output directory. This is how a canonical stax artifact becomes concrete runtime files such as `CLAUDE.md`, `.cursor/rules/*`, or `opencode.jsonc`.
 
 ## Usage
 
 ```bash
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --out ./output
-stax materialize ./dist/backend-engineer.oci --adapter codex --out ./codex-output
+stax materialize ./artifact-dir --adapter codex --out ./codex-output
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --json
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --plan --consumer codex
 ```
 
 ## Options
 
-| Flag               | Description                                          |
-| ------------------ | ---------------------------------------------------- |
-| `--out <dir>`      | Output directory for materialized files              |
-| `--adapter <name>` | Override adapter selection (e.g., `codex`, `cursor`) |
-| `--json`           | Output machine-readable JSON instead of files        |
-| `--plan`           | Preview materialization without writing files        |
-| `--consumer <id>`  | Target consumer for plan output                      |
+| Flag               | Description                                                      |
+| ------------------ | ---------------------------------------------------------------- |
+| `--out <dir>`      | Output directory for rendered files                              |
+| `--adapter <name>` | Override adapter selection                                       |
+| `--consumer <id>`  | Alias for adapter selection when used with `--plan`              |
+| `--plan`           | Preview rendered actions without writing files                   |
+| `--json`           | Emit machine-readable output                                     |
+| `--exact`          | Require non-lossy output for the selected adapter when supported |
 
-## How materialization works
+## What `stax materialize` does
 
-1. **Pull** — Fetch the artifact from a registry or local cache
-2. **Select adapter** — Choose the adapter matching the artifact's declared runtime, or use `--adapter` to override
-3. **Translate** — Convert canonical layers into the runtime's native file format
-4. **Write** — Emit files to the output directory (or JSON to stdout)
+1. **Load artifact** — Pull from OCI or read a local artifact directory
+2. **Decode canonical layers** — Parse prompt, persona, rules, MCP, package layers, and more
+3. **Merge packages** — Resolve package references and merge canonical content
+4. **Render adapter files** — Produce runtime-native files through the selected adapter
+5. **Write output** — Materialize those files into `--out`
 
 ## Example output
 
-For a Claude Code artifact:
-
 ```text
-✓ pulled ghcr.io/myorg/agents/backend-engineer:3.1.0
-✓ selected adapter: claude-code
-✓ materialized — 4 files written to ./output
-
-  output/
-  ├── CLAUDE.md
-  ├── .claude/
-  │   ├── settings.json
-  │   └── skills/
-  └── .mcp.json
+Materialized backend-engineer@3.1.0
+  adapter: claude-code
+  fidelity: best-effort
+  files written: 4
+  output: ./output
 ```
 
-For Codex:
+## Planning instead of writing
 
-```text
-✓ selected adapter: codex
-✓ materialized — 3 files written to ./output
-
-  output/
-  ├── AGENTS.md
-  ├── codex.toml
-  └── .codex/skills/
-```
-
-## Lossy translations
-
-Not every runtime supports every feature. When information is lost during translation, the CLI emits warnings:
-
-```text
-⚠ lossy translation for adapter "codex"
-  ⚠ memory seeds not supported — skipped
-  ⚠ 2 skill template variables have no equivalent — rendered as literals
-```
-
-Use `--plan` to preview fidelity before writing files:
+Use `--plan` to preview the same rendered output without touching the filesystem:
 
 ```bash
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --plan --consumer codex
@@ -78,7 +53,19 @@ stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --plan --consumer c
 
 ## Machine-readable output
 
-The `--json` flag outputs the full materialization result as structured JSON, suitable for piping into other tools or platform integrations:
+`--json` returns a summary of the applied materialization, including:
+
+- `name`
+- `version`
+- `adapter`
+- `targets`
+- `fidelity`
+- `lossy`
+- `warnings`
+- `files`
+- `outputDir`
+
+Example:
 
 ```bash
 stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --json | jq '.files'
@@ -86,8 +73,6 @@ stax materialize ghcr.io/myorg/agents/backend-engineer:3.1.0 --json | jq '.files
 
 ## Related commands
 
-- [`stax plan-install`](/docs/cli/plan-install) — Generate an install plan without materializing
-- [`stax inspect`](/docs/cli/inspect) — View artifact metadata before materializing
-- [`stax pull`](/docs/cli/pull) — Pull the artifact without materializing
-
-See also: [Materialization specification](/docs/spec/materialization) and [Runtime adapters](/docs/spec/adapters)
+- [`stax plan-install`](/docs/cli/plan-install) — Preview rendered actions without writing files
+- [`stax inspect`](/docs/cli/inspect) — View artifact metadata first
+- [`stax pull`](/docs/cli/pull) — Pull into the local cache

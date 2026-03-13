@@ -88,6 +88,25 @@ export interface MaterializationWarning {
   layer?: string;
 }
 
+export interface RenderedFile {
+  path: string;
+  content: string | Uint8Array;
+}
+
+export interface RenderedMaterialization {
+  agent: MaterializedAgent;
+  adapter: AdapterConfig;
+  files: RenderedFile[];
+  warnings: MaterializationWarning[];
+  fidelity: "byte-exact" | "schema-exact" | "best-effort" | "unsupported";
+  lossy: boolean;
+}
+
+export interface ApplyMaterializationResult {
+  outDir: string;
+  written: string[];
+}
+
 export interface InstallPlan {
   /** Selected adapter after fallback resolution */
   selectedAdapter?: string;

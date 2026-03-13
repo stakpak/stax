@@ -1,15 +1,12 @@
 import { access, lstat, readdir } from "node:fs/promises";
 import path from "node:path";
+import { NAME_REGEX, SEMVER_REGEX } from "@stax/core";
 import type {
   BuildOptions,
   ValidationResult,
   ValidationError,
   ValidationWarning,
 } from "./types.ts";
-
-const NAME_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
-const SEMVER_REGEX =
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
 /** Path fields that are required (error if missing) */
 const REQUIRED_PATH_FIELDS = [

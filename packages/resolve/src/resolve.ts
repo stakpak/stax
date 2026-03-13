@@ -1,3 +1,4 @@
+import { decodePackageLayerReferences } from "@stax/core";
 import { pull, sha256hex } from "@stax/oci";
 import type { ResolveResult, ResolvedPackage } from "./types.ts";
 
@@ -62,7 +63,7 @@ export async function resolvePackages(references: string[]): Promise<ResolveResu
     if (packagesLayer) {
       const blob = blobs.get(packagesLayer.digest);
       if (blob) {
-        const depRefs: string[] = JSON.parse(new TextDecoder().decode(blob));
+        const depRefs = decodePackageLayerReferences(JSON.parse(new TextDecoder().decode(blob)));
         dependencies.push(...depRefs);
 
         // Resolve dependencies first (depth-first)

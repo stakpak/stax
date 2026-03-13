@@ -1,9 +1,9 @@
 ---
 title: stax pull
-description: Download an artifact from a registry into the local cache
+description: Download an artifact from a registry into the project-local cache
 ---
 
-Pull an artifact from an OCI registry into your local cache. Once cached, the artifact can be inspected, materialized, or extracted without additional network requests.
+Pull an artifact from an OCI registry into the project-local cache. Once cached, the artifact can be inspected, materialized, or extracted without additional network requests.
 
 ## Usage
 
@@ -21,7 +21,7 @@ Pull accepts two forms of reference:
 
 ## Caching behavior
 
-Pulled artifacts are stored in the local cache at `~/.stax/cache/`, indexed by content digest:
+Pulled artifacts are stored in the project-local cache at `.stax/cache/`:
 
 - If an artifact with the same digest already exists locally, the pull is a no-op
 - Layers shared between artifacts are deduplicated — pulling a new version only downloads changed layers
@@ -34,9 +34,9 @@ Private registries require authentication. See [`stax login`](/docs/cli/login).
 ## Example output
 
 ```text
-↓ pulling ghcr.io/myorg/agents/backend-engineer:3.1.0
-  ↓ 3 new layers (8.1 KB), 4 cached
-✓ pulled — sha256:a3f8c1…e7d2
+Pulled ghcr.io/myorg/agents/backend-engineer:3.1.0
+  layers: 6
+  cached: /repo/.stax/cache
 ```
 
 ## Related commands

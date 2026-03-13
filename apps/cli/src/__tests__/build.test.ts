@@ -18,14 +18,16 @@ describe("build", () => {
     expect([0, 2]).toContain(exitCode);
   });
 
-  it("should accept --dry-run flag", async () => {
-    const { exitCode } = await run(["build", "--dry-run"]);
-    expect([0, 2]).toContain(exitCode);
+  it("should reject unsupported --dry-run flag", async () => {
+    const { exitCode, stderr } = await run(["build", "--dry-run"]);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain("unknown flag --dry-run");
   });
 
-  it("should accept --refresh-lock flag", async () => {
-    const { exitCode } = await run(["build", "--refresh-lock"]);
-    expect([0, 2]).toContain(exitCode);
+  it("should reject unsupported --refresh-lock flag", async () => {
+    const { exitCode, stderr } = await run(["build", "--refresh-lock"]);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain("unknown flag --refresh-lock");
   });
 
   it("should accept --symlink-mode reject", async () => {
@@ -60,10 +62,10 @@ describe("build", () => {
     }
   });
 
-  it("should store artifact in local cache on success", async () => {
+  it("should report artifact directory on success", async () => {
     const { stdout, exitCode } = await run(["build"]);
     if (exitCode === 0) {
-      expect(stdout).toContain("cache");
+      expect(stdout).toContain(".stax/artifacts");
     }
   });
 
@@ -81,18 +83,10 @@ describe("build", () => {
     }
   });
 
-  it("should not produce files with --dry-run", async () => {
-    const { exitCode } = await run(["build", "--dry-run"]);
-    expect([0, 2]).toContain(exitCode);
-  });
-
-  it("should generate stax.lock when packages are resolved", async () => {
-    const { exitCode } = await run(["build"]);
-    expect([0, 2]).toContain(exitCode);
-  });
-
-  it("should regenerate stax.lock with --refresh-lock", async () => {
-    const { exitCode } = await run(["build", "--refresh-lock"]);
-    expect([0, 2]).toContain(exitCode);
+  it("should not claim lockfile generation support", async () => {
+    const { stdout, exitCode } = await run(["build"]);
+    if (exitCode === 0) {
+      expect(stdout).not.toContain("stax.lock");
+    }
   });
 });

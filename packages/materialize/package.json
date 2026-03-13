@@ -15,9 +15,17 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@stax/adapter-core": "workspace:*",
+    "@stax/claude-code": "workspace:*",
+    "@stax/codex": "workspace:*",
     "@stax/core": "workspace:*",
+    "@stax/cursor": "workspace:*",
+    "@stax/github-copilot": "workspace:*",
     "@stax/oci": "workspace:*",
-    "@stax/resolve": "workspace:*"
+    "@stax/openclaw": "workspace:*",
+    "@stax/opencode": "workspace:*",
+    "@stax/resolve": "workspace:*",
+    "@stax/windsurf": "workspace:*"
   },
   "devDependencies": {
     "@stax/config": "workspace:*",

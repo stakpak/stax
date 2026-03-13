@@ -1,5 +1,13 @@
 {
   "name": "@stax/config",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./vite.lib": "./vite.lib.ts"
+  },
+  "devDependencies": {
+    "vite": "catalog:"
+  }
 }

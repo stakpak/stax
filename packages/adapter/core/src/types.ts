@@ -35,6 +35,8 @@ export interface MaterializeContext {
   secrets?: unknown[];
   memory?: unknown[];
   instructionTree?: unknown[];
+  adapterType?: string;
+  adapterConfig?: Record<string, unknown>;
 }
 
 export interface MaterializeResult {

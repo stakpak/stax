@@ -260,7 +260,7 @@ Each entry in `packages` MUST be either:
 2. An OCI reference with an explicit tag: `<registry>/<repo>:<tag>`
 3. An OCI digest reference: `<registry>/<repo>@sha256:<digest>`
 
-Semver ranges, globs, and floating selectors such as `^1`, `~2`, or `latest` SHOULD NOT be used in committed manifests. Builders MAY allow them interactively, but MUST resolve them into `stax.lock` and SHOULD warn.
+Semver ranges, globs, and floating selectors such as `^1`, `~2`, or `latest` SHOULD NOT be used in committed manifests. Builders MAY allow them interactively, and lockfile-capable implementations SHOULD resolve them into `stax.lock` and warn.
 
 ### Adapter fallback
 
