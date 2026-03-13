@@ -135,6 +135,25 @@ stax does not package that runtime-generated prompt directly. Instead:
 
 This is the correct boundary.
 
+## Feature map
+
+```json
+{
+  "prompt": "native",
+  "persona": "native",
+  "rules": "native",
+  "skills": "native",
+  "mcp": "unsupported",
+  "surfaces": "native",
+  "secrets": "consumer-only",
+  "subagents": "unsupported",
+  "instructionTree": "unsupported",
+  "toolPermissions": "unsupported",
+  "modelConfig": "unsupported",
+  "exactMode": true
+}
+```
+
 ## Exactness requirements
 
 An implementation claiming exact OpenClaw support SHOULD:

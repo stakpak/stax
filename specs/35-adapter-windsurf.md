@@ -80,6 +80,16 @@ The adapter SHOULD choose the first available source in this order:
 
 In `exact` mode, if composition is required because no exact source document exists, the consumer MUST warn or fail according to policy.
 
+## Persona mapping
+
+Windsurf does not have a dedicated persona configuration surface. The persona is **embedded** into the primary instruction file (`AGENTS.md`) during materialization.
+
+When a persona layer is present, the adapter SHOULD:
+
+1. render the persona's `displayName`, `role`, and `personality` into a preamble section at the top of `AGENTS.md`
+2. use the persona template if available, falling back to a default "You are {displayName}, {role}" format
+3. warn in `exact` mode that persona metadata fields beyond the rendered text are lost
+
 ## Rules mapping
 
 Windsurf uses `.md` files in `.windsurf/rules/` with YAML frontmatter.
@@ -203,6 +213,8 @@ When `legacyWindsurfrules: true` is set, the adapter SHOULD:
   "mcp": "translated",
   "surfaces": "embedded",
   "secrets": "consumer-only",
+  "subagents": "unsupported",
+  "instructionTree": "unsupported",
   "toolPermissions": "unsupported",
   "modelConfig": "unsupported",
   "exactMode": true

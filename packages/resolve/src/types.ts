@@ -30,6 +30,8 @@ export interface MergeResult {
   knowledge?: unknown[];
   surfaces?: unknown[];
   secrets?: unknown[];
+  instructionTree?: unknown[];
+  subagents?: unknown[];
   /** Merge warnings */
   warnings: string[];
 }

@@ -86,6 +86,11 @@ export default function codex(options?: CodexOptions): AdapterConfig {
       mcp: "translated",
       surfaces: "embedded",
       secrets: "consumer-only",
+      subagents: "native",
+      instructionTree: "native",
+      toolPermissions: "unsupported",
+      modelConfig: "unsupported",
+      exactMode: true,
     },
     targets: scope === "user" ? userTargets : projectTargets,
   };

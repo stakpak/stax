@@ -25,6 +25,8 @@ export default function cursor(options?: CursorOptions): AdapterConfig {
       mcp: "translated",
       surfaces: "embedded",
       secrets: "consumer-only",
+      subagents: "unsupported",
+      instructionTree: "unsupported",
       toolPermissions: "unsupported",
       modelConfig: "unsupported",
       exactMode: true,

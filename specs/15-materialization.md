@@ -22,7 +22,7 @@ In `exact` mode, a consumer MUST fail if the runtime file contract cannot be rep
 A conforming consumer SHOULD execute materialization in this order:
 
 1. **Load artifact** — read the OCI manifest and config blob
-2. **Validate compatibility** — check `specVersion`, artifact type, adapter support, and layer constraints
+2. **Validate compatibility** — check `specVersion`, artifact type, adapter support, and layer constraints. If the primary `adapter` is not compatible, try each `adapterFallback` entry in order as described in [01 — Agent Manifest](./01-agent-manifest.md)
 3. **Resolve packages** — if consuming source projects, resolve package dependencies; if consuming built artifacts, read the resolved packages layer
 4. **Resolve workspace sources** — pull and prepare any referenced source artifacts described in [22 — Workspace Sources](./22-workspace-sources.md)
 5. **Merge canonical layers** — apply package merge semantics from [05 — Packages](./05-packages.md)

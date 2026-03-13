@@ -122,6 +122,8 @@ export default function opencode(options?: OpenCodeOptions): AdapterConfig {
       mcp: "translated",
       surfaces: "embedded",
       secrets: "consumer-only",
+      subagents: "native",
+      instructionTree: "translated",
       toolPermissions: "translated",
       modelConfig: "native",
       exactMode: true,

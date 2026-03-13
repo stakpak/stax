@@ -37,6 +37,8 @@ export default function githubCopilot(options?: GitHubCopilotOptions): AdapterCo
       mcp: "translated",
       surfaces: "embedded",
       secrets: "consumer-only",
+      subagents: "native",
+      instructionTree: "native",
       toolPermissions: "unsupported",
       modelConfig: "native",
       exactMode: true,

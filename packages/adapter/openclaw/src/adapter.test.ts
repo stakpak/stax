@@ -89,4 +89,29 @@ describe("openclaw adapter", () => {
     const hasCredentials = paths.some((p) => p.includes("credentials"));
     expect(hasCredentials).toBe(false);
   });
+
+  it("should include exactMode in features (spec 12)", () => {
+    const config = openclaw();
+    expect(config.features.exactMode).toBe(true);
+  });
+
+  it("should set subagents as unsupported", () => {
+    const config = openclaw();
+    expect(config.features.subagents).toBe("unsupported");
+  });
+
+  it("should set instructionTree as unsupported", () => {
+    const config = openclaw();
+    expect(config.features.instructionTree).toBe("unsupported");
+  });
+
+  it("should set toolPermissions as unsupported", () => {
+    const config = openclaw();
+    expect(config.features.toolPermissions).toBe("unsupported");
+  });
+
+  it("should set modelConfig as unsupported", () => {
+    const config = openclaw();
+    expect(config.features.modelConfig).toBe("unsupported");
+  });
 });

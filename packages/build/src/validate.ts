@@ -27,6 +27,19 @@ const REQUIRED_PATH_FIELDS = [
 /** Path fields that are optional (warning if missing) */
 const OPTIONAL_PATH_FIELDS = ["memory"] as const;
 
+/** Fields that MUST resolve to files (spec 01) */
+const FILE_PATH_FIELDS = new Set(["prompt", "persona", "mcp", "subagents"]);
+
+/** Fields that MUST resolve to directories (spec 01) */
+const DIR_PATH_FIELDS = new Set([
+  "skills",
+  "rules",
+  "knowledge",
+  "memory",
+  "surfaces",
+  "instructionTree",
+]);
+
 export async function validate(
   options: Pick<BuildOptions, "entry" | "symlinkMode" | "allowOutsideRoot">,
 ): Promise<ValidationResult> {
@@ -149,6 +162,22 @@ export async function validate(
           message: `Referenced path for "${field}" does not exist: ${resolved}`,
           code: "MISSING_PATH",
         });
+        continue;
+      }
+      // Check file vs directory type (spec 01)
+      const stats = await lstat(resolved);
+      if (FILE_PATH_FIELDS.has(field) && !stats.isFile()) {
+        errors.push({
+          path: resolved,
+          message: `"${field}" MUST resolve to a file, but found a directory: ${resolved}`,
+          code: "WRONG_PATH_TYPE",
+        });
+      } else if (DIR_PATH_FIELDS.has(field) && !stats.isDirectory()) {
+        errors.push({
+          path: resolved,
+          message: `"${field}" MUST resolve to a directory, but found a file: ${resolved}`,
+          code: "WRONG_PATH_TYPE",
+        });
       }
     }
   }
@@ -165,6 +194,22 @@ export async function validate(
           path: resolved,
           message: `Optional path for "${field}" does not exist: ${resolved}`,
           code: "OPTIONAL_MISSING_PATH",
+        });
+        continue;
+      }
+      // Check file vs directory type (spec 01)
+      const stats = await lstat(resolved);
+      if (FILE_PATH_FIELDS.has(field) && !stats.isFile()) {
+        errors.push({
+          path: resolved,
+          message: `"${field}" MUST resolve to a file, but found a directory: ${resolved}`,
+          code: "WRONG_PATH_TYPE",
+        });
+      } else if (DIR_PATH_FIELDS.has(field) && !stats.isDirectory()) {
+        errors.push({
+          path: resolved,
+          message: `"${field}" MUST resolve to a directory, but found a file: ${resolved}`,
+          code: "WRONG_PATH_TYPE",
         });
       }
     }

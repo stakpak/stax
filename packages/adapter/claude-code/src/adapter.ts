@@ -111,6 +111,11 @@ export default function claudeCode(options?: ClaudeCodeOptions): AdapterConfig {
       mcp: "native",
       surfaces: "embedded",
       secrets: "consumer-only",
+      subagents: "native",
+      instructionTree: "native",
+      toolPermissions: "native",
+      modelConfig: "native",
+      exactMode: true,
     },
     targets: scope === "user" ? userTargets : projectTargets,
   };

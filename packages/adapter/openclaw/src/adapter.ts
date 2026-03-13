@@ -25,6 +25,11 @@ export default function openclaw(options?: OpenClawOptions): AdapterConfig {
       mcp: "unsupported",
       surfaces: "native",
       secrets: "consumer-only",
+      subagents: "unsupported",
+      instructionTree: "unsupported",
+      toolPermissions: "unsupported",
+      modelConfig: "unsupported",
+      exactMode: true,
     },
     targets: [
       { kind: "file", path: "AGENTS.md", scope: "project", description: "Instructions" },

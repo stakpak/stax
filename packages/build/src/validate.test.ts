@@ -206,6 +206,89 @@ describe("validate", () => {
     });
   });
 
+  describe("path type validation (spec 01: file vs directory)", () => {
+    it("should return valid: false when prompt points to a directory instead of a file", async () => {
+      const dir = await createTempDir();
+      await mkdir(path.join(dir, "prompt-dir"));
+      const entry = await writeValidAgentTs(dir, { prompt: '"prompt-dir"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+
+    it("should return valid: false when persona points to a directory instead of a file", async () => {
+      const dir = await createTempDir();
+      await mkdir(path.join(dir, "persona-dir"));
+      const entry = await writeValidAgentTs(dir, { persona: '"persona-dir"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+
+    it("should return valid: false when mcp points to a directory instead of a file", async () => {
+      const dir = await createTempDir();
+      await mkdir(path.join(dir, "mcp-dir"));
+      const entry = await writeValidAgentTs(dir, { mcp: '"mcp-dir"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+
+    it("should return valid: false when subagents points to a directory instead of a file", async () => {
+      const dir = await createTempDir();
+      await mkdir(path.join(dir, "subagents-dir"));
+      const entry = await writeValidAgentTs(dir, { subagents: '"subagents-dir"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+
+    it("should return valid: false when skills points to a file instead of a directory", async () => {
+      const dir = await createTempDir();
+      await writeFile(path.join(dir, "skills.md"), "# Skills", "utf-8");
+      const entry = await writeValidAgentTs(dir, { skills: '"skills.md"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+
+    it("should return valid: false when rules points to a file instead of a directory", async () => {
+      const dir = await createTempDir();
+      await writeFile(path.join(dir, "rules.md"), "# Rules", "utf-8");
+      const entry = await writeValidAgentTs(dir, { rules: '"rules.md"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+
+    it("should return valid: false when knowledge points to a file instead of a directory", async () => {
+      const dir = await createTempDir();
+      await writeFile(path.join(dir, "knowledge.md"), "# Knowledge", "utf-8");
+      const entry = await writeValidAgentTs(dir, { knowledge: '"knowledge.md"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+
+    it("should return valid: false when surfaces points to a file instead of a directory", async () => {
+      const dir = await createTempDir();
+      await writeFile(path.join(dir, "surfaces.json"), "{}", "utf-8");
+      const entry = await writeValidAgentTs(dir, { surfaces: '"surfaces.json"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+
+    it("should return valid: false when instructionTree points to a file instead of a directory", async () => {
+      const dir = await createTempDir();
+      await writeFile(path.join(dir, "instructions.md"), "# Instructions", "utf-8");
+      const entry = await writeValidAgentTs(dir, { instructionTree: '"instructions.md"' });
+      const result = await validate({ entry });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "WRONG_PATH_TYPE")).toBe(true);
+    });
+  });
+
   describe("symlink validation", () => {
     it("should return valid: false when symlinks exist and symlinkMode is reject", async () => {
       const dir = await createTempDir();

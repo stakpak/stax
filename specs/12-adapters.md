@@ -36,11 +36,13 @@ interface AdapterConfig {
 interface AdapterFeatureMap {
   prompt?: "native" | "embedded" | "unsupported";
   persona?: "native" | "embedded" | "unsupported";
-  rules?: "native" | "embedded" | "unsupported";
-  skills?: "native" | "unsupported";
+  rules?: "native" | "embedded" | "translated" | "unsupported";
+  skills?: "native" | "translated" | "unsupported";
   mcp?: "native" | "translated" | "unsupported";
-  surfaces?: "native" | "translated" | "unsupported";
+  surfaces?: "native" | "embedded" | "translated" | "unsupported";
   secrets?: "native" | "consumer-only";
+  subagents?: "native" | "translated" | "unsupported";
+  instructionTree?: "native" | "translated" | "unsupported";
   toolPermissions?: "native" | "translated" | "unsupported";
   modelConfig?: "native" | "translated" | "unsupported";
   exactMode?: boolean;

@@ -82,6 +82,8 @@ export default function windsurf(options?: WindsurfOptions): AdapterConfig {
       mcp: "translated",
       surfaces: "embedded",
       secrets: "consumer-only",
+      subagents: "unsupported",
+      instructionTree: "unsupported",
       toolPermissions: "unsupported",
       modelConfig: "unsupported",
       exactMode: true,

@@ -14,6 +14,9 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  optimizeDeps: {
+    exclude: ["fumadocs-core", "fumadocs-mdx", "fumadocs-ui", "lucide-react"],
+  },
   plugins: [
     mdx(await import("./source.config")),
     tailwindcss(),

@@ -71,6 +71,16 @@ The compiled adapter config SHOULD use:
 | MCP layer                                     | user-level MCP config via VS Code settings                  |
 | skills                                        | `~/.copilot/skills/`                                        |
 
+## Persona mapping
+
+GitHub Copilot does not have a dedicated persona configuration surface. The persona is **embedded** into the primary instruction file (`.github/copilot-instructions.md`) during materialization.
+
+When a persona layer is present, the adapter SHOULD:
+
+1. render the persona's `displayName`, `role`, and `personality` into a preamble section at the top of `.github/copilot-instructions.md`
+2. use the persona template if available, falling back to a default "You are {displayName}, {role}" format
+3. warn in `exact` mode that persona metadata fields beyond the rendered text are lost
+
 ## Instructions generation
 
 ### Repo-wide instructions
@@ -182,6 +192,8 @@ Consumers SHOULD preserve the compiled instruction bytes and warn when a canonic
   "mcp": "translated",
   "surfaces": "embedded",
   "secrets": "consumer-only",
+  "subagents": "native",
+  "instructionTree": "native",
   "toolPermissions": "unsupported",
   "modelConfig": "native",
   "exactMode": true

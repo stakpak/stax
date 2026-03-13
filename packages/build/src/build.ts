@@ -239,9 +239,18 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
     layers.push({ mediaType: LAYER_MEDIA_TYPES.secrets, ...blob });
   }
 
-  // Packages (inline in definition)
+  // Packages (inline in definition) — spec 03 requires structured format
   if (Array.isArray(def.packages) && def.packages.length > 0) {
-    const canonical = canonicalJson(def.packages);
+    const packagesPayload = {
+      specVersion: (def.specVersion as string) ?? "1.0.0",
+      packages: (def.packages as (string | Record<string, unknown>)[]).map((pkg) => {
+        if (typeof pkg === "string") {
+          return { ref: pkg, kind: "package" };
+        }
+        return pkg;
+      }),
+    };
+    const canonical = canonicalJson(packagesPayload);
     const blob = await writeBlob(canonical);
     layers.push({ mediaType: LAYER_MEDIA_TYPES.packages, ...blob });
   }
@@ -288,17 +297,44 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
   layers.sort((a, b) => orderIndex(a.mediaType) - orderIndex(b.mediaType));
 
   // 6. Build config blob
-  const config = {
+  const adapterDef = def.adapter as Record<string, unknown>;
+  const config: Record<string, unknown> = {
     specVersion: (def.specVersion as string) ?? "1.0.0",
+    kind: "agent",
     name: def.name as string,
     version: def.version as string,
     description: def.description as string,
-    adapter: {
-      type: (def.adapter as Record<string, unknown>)?.type as string,
-      runtime: (def.adapter as Record<string, unknown>)?.runtime as string,
-      adapterVersion: (def.adapter as Record<string, unknown>)?.adapterVersion as string,
-    },
   };
+
+  // Include optional identity fields when declared
+  if (def.author !== undefined) config.author = def.author;
+  if (def.license !== undefined) config.license = def.license;
+  if (def.url !== undefined) config.url = def.url;
+  if (def.tags !== undefined) config.tags = def.tags;
+
+  // Include full adapter config
+  const adapterConfig: Record<string, unknown> = {
+    type: adapterDef?.type as string,
+    runtime: adapterDef?.runtime as string,
+    adapterVersion: adapterDef?.adapterVersion as string,
+  };
+  if (adapterDef?.model !== undefined) adapterConfig.model = adapterDef.model;
+  if (adapterDef?.modelParams !== undefined) adapterConfig.modelParams = adapterDef.modelParams;
+  if (adapterDef?.importMode !== undefined) adapterConfig.importMode = adapterDef.importMode;
+  if (adapterDef?.fidelity !== undefined) adapterConfig.fidelity = adapterDef.fidelity;
+  if (adapterDef?.config !== undefined) adapterConfig.config = adapterDef.config;
+  if (adapterDef?.features !== undefined) adapterConfig.features = adapterDef.features;
+  if (adapterDef?.targets !== undefined) adapterConfig.targets = adapterDef.targets;
+  if (adapterDef?.runtimeVersionRange !== undefined)
+    adapterConfig.runtimeVersionRange = adapterDef.runtimeVersionRange;
+  config.adapter = adapterConfig;
+
+  // Include adapter fallback when declared
+  if (def.adapterFallback !== undefined) config.adapterFallback = def.adapterFallback;
+
+  // Include runtime hints and workspace sources when declared
+  if (def.hints !== undefined) config.hints = def.hints;
+  if (def.workspaceSources !== undefined) config.workspaceSources = def.workspaceSources;
   const configCanonical = canonicalJson(config);
   const configBlob = await writeBlob(configCanonical);
 

@@ -80,6 +80,16 @@ The compiled adapter config SHOULD use:
 | adapter settings/config                       | `~/.claude/settings.json` |
 | MCP layer                                     | `~/.claude.json`          |
 
+## Persona mapping
+
+Claude Code does not have a dedicated persona configuration surface. The persona is **embedded** into the primary instruction file (`CLAUDE.md`) during materialization.
+
+When a persona layer is present, the adapter SHOULD:
+
+1. render the persona's `displayName`, `role`, and `personality` into a preamble section at the top of `CLAUDE.md`
+2. use the persona template if available, falling back to a default "You are {displayName}, {role}" format
+3. warn in `exact` mode that persona metadata fields beyond the rendered text are lost
+
 ## `CLAUDE.md` generation
 
 Claude Code has one main instruction document at a given scope.
@@ -171,6 +181,25 @@ When a subagents layer is present, the adapter SHOULD materialize each named sub
 - `~/.claude/agents/<name>.md` in user scope
 
 Consumers SHOULD preserve the compiled instruction bytes and warn when Claude-specific metadata cannot represent a canonical subagent field exactly.
+
+## Feature map
+
+```json
+{
+  "prompt": "native",
+  "persona": "embedded",
+  "rules": "native",
+  "skills": "native",
+  "mcp": "native",
+  "surfaces": "embedded",
+  "secrets": "consumer-only",
+  "subagents": "native",
+  "instructionTree": "native",
+  "toolPermissions": "native",
+  "modelConfig": "native",
+  "exactMode": true
+}
+```
 
 ## Exactness requirements
 

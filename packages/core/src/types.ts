@@ -202,6 +202,8 @@ export interface AdapterFeatureMap {
   mcp?: "native" | "translated" | "unsupported";
   surfaces?: "native" | "embedded" | "translated" | "unsupported";
   secrets?: "native" | "consumer-only";
+  subagents?: "native" | "translated" | "unsupported";
+  instructionTree?: "native" | "translated" | "unsupported";
   toolPermissions?: "native" | "translated" | "unsupported";
   modelConfig?: "native" | "translated" | "unsupported";
   exactMode?: boolean;

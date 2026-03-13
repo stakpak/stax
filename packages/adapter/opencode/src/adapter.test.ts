@@ -99,4 +99,14 @@ describe("opencode adapter", () => {
     });
     expect(config.config.agent).toBeDefined();
   });
+
+  it("should set subagents as native", () => {
+    const config = opencode();
+    expect(config.features.subagents).toBe("native");
+  });
+
+  it("should set instructionTree as translated", () => {
+    const config = opencode();
+    expect(config.features.instructionTree).toBe("translated");
+  });
 });

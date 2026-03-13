@@ -12,6 +12,8 @@ A package MAY contain any combination of:
 - Knowledge
 - Surfaces
 - Secrets
+- Instruction trees
+- Subagents
 - Dependencies on other packages
 
 Packages do not contain a prompt or persona in spec `1.0.0`.
@@ -113,6 +115,8 @@ Precedence order:
 | Knowledge | archive path              | normalized path                         | Higher precedence replaces matching path                                       |
 | Surfaces  | surface file              | basename                                | Higher precedence replaces the entire file                                     |
 | Secrets   | secret key                | `key`                                   | Higher precedence replaces entire declaration                                  |
+| Instruction Trees | instruction file  | normalized archive path                 | Higher precedence replaces matching path                                       |
+| Subagents | agent definition          | agent name                              | Higher precedence replaces entire agent definition                             |
 
 ### Rationale
 

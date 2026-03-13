@@ -157,7 +157,7 @@ The major draft dependencies are:
 - 24 depends on referrer conventions from 02
 - 25 depends on adapter/materialization concepts from 12 and 15
 - 26 depends on adapters from 12 and hosted import ideas from 25
-- 27 depends on discovery structures from 23 and compatibility/trust summaries from 24 and 26
+- 27 depends on discovery structures from 23, compatibility summaries from 26, and trust/attestation from 24
 - 28 depends on the normative core and the exact runtime contracts in 17–20 and 33–38
 - 29 depends on source artifacts from 22 and trust/provenance from 24
 - 30 depends on packages from 05, MCP from 06, and trust policy from 24

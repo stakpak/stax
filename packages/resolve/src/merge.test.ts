@@ -170,4 +170,74 @@ describe("mergeLayers", () => {
 
     expect(result.skills).toHaveLength(2);
   });
+
+  it("should sort rules by byte-wise UTF-8 ordering, not locale (spec 05/08)", () => {
+    // Uppercase 'Z' (0x5A) sorts before lowercase 'a' (0x61) in byte order
+    // but localeCompare may sort 'a' before 'Z' depending on locale
+    const result = mergeLayers([
+      {
+        rules: [
+          { id: "a-rule", archivePath: "a-rule.md", priority: 0, content: "a" },
+          { id: "Z-rule", archivePath: "Z-rule.md", priority: 0, content: "Z" },
+        ],
+      },
+    ]);
+
+    const ids = (result.rules as { id: string }[])!.map((r) => r.id);
+    // In byte-wise order: 'Z' (0x5A) < 'a' (0x61)
+    expect(ids).toEqual(["Z-rule", "a-rule"]);
+  });
+
+  it("should merge instruction trees — higher priority replaces by path (spec 05)", () => {
+    const result = mergeLayers([
+      { instructionTree: [{ path: "src/AGENTS.md", content: "old" }] },
+      { instructionTree: [{ path: "src/AGENTS.md", content: "new" }] },
+    ]);
+
+    const item = (result.instructionTree as any[])!.find((i) => i.path === "src/AGENTS.md");
+    expect(item.content).toBe("new");
+  });
+
+  it("should append non-conflicting instruction tree entries", () => {
+    const result = mergeLayers([
+      { instructionTree: [{ path: "src/AGENTS.md", content: "src" }] },
+      { instructionTree: [{ path: "lib/AGENTS.md", content: "lib" }] },
+    ]);
+
+    expect(result.instructionTree).toHaveLength(2);
+  });
+
+  it("should merge subagents — higher priority replaces by name (spec 05)", () => {
+    const result = mergeLayers([
+      { subagents: [{ name: "reviewer", instructions: "old" }] },
+      { subagents: [{ name: "reviewer", instructions: "new" }] },
+    ]);
+
+    const agent = (result.subagents as any[])!.find((a) => a.name === "reviewer");
+    expect(agent.instructions).toBe("new");
+  });
+
+  it("should append non-conflicting subagents", () => {
+    const result = mergeLayers([
+      { subagents: [{ name: "reviewer", instructions: "review" }] },
+      { subagents: [{ name: "deployer", instructions: "deploy" }] },
+    ]);
+
+    expect(result.subagents).toHaveLength(2);
+  });
+
+  it("should sort rules with non-ASCII paths by raw byte order (spec 05/08)", () => {
+    const result = mergeLayers([
+      {
+        rules: [
+          { id: "ü-rule", archivePath: "ü-rule.md", priority: 0, content: "ü" },
+          { id: "b-rule", archivePath: "b-rule.md", priority: 0, content: "b" },
+        ],
+      },
+    ]);
+
+    const ids = (result.rules as { id: string }[])!.map((r) => r.id);
+    // 'b' is 0x62, 'ü' in UTF-8 is 0xC3 0xBC — so 'b' sorts first
+    expect(ids).toEqual(["b-rule", "ü-rule"]);
+  });
 });

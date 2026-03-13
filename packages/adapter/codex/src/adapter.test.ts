@@ -99,4 +99,29 @@ describe("codex adapter", () => {
     // When not exact, should be best-effort
     expect(config.fidelity).toBe("best-effort");
   });
+
+  it("should include exactMode in features (spec 12)", () => {
+    const config = codex();
+    expect(config.features.exactMode).toBe(true);
+  });
+
+  it("should set subagents as native", () => {
+    const config = codex();
+    expect(config.features.subagents).toBe("native");
+  });
+
+  it("should set instructionTree as native", () => {
+    const config = codex();
+    expect(config.features.instructionTree).toBe("native");
+  });
+
+  it("should set toolPermissions as unsupported", () => {
+    const config = codex();
+    expect(config.features.toolPermissions).toBe("unsupported");
+  });
+
+  it("should set modelConfig as unsupported", () => {
+    const config = codex();
+    expect(config.features.modelConfig).toBe("unsupported");
+  });
 });

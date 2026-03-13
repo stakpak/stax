@@ -86,4 +86,14 @@ describe("windsurf adapter", () => {
     const config = windsurf();
     expect(config.features.exactMode).toBe(true);
   });
+
+  it("should set subagents as unsupported", () => {
+    const config = windsurf();
+    expect(config.features.subagents).toBe("unsupported");
+  });
+
+  it("should set instructionTree as unsupported", () => {
+    const config = windsurf();
+    expect(config.features.instructionTree).toBe("unsupported");
+  });
 });

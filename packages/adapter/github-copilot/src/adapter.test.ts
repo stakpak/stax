@@ -98,4 +98,14 @@ describe("githubCopilot adapter", () => {
     const paths = config.targets?.map((t) => t.path) ?? [];
     expect(paths).toContain("AGENTS.md");
   });
+
+  it("should set subagents as native", () => {
+    const config = githubCopilot();
+    expect(config.features.subagents).toBe("native");
+  });
+
+  it("should set instructionTree as native", () => {
+    const config = githubCopilot();
+    expect(config.features.instructionTree).toBe("native");
+  });
 });

@@ -16,7 +16,7 @@ In the current market, stax is best understood first as a standard for **coding-
 
 This specification describes **stax spec version `1.0.0`**.
 
-All compiled JSON payloads defined by stax SHOULD include `specVersion: "1.0.0"` unless the relevant layer format says otherwise.
+All compiled JSON payloads defined by stax MUST include `specVersion: "1.0.0"` unless the relevant layer format says otherwise.
 
 ### Normative language
 

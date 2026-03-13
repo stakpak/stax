@@ -18,6 +18,8 @@ export function mergeLayers(packages: unknown[]): MergeResult {
   let knowledge: { path: string; [k: string]: unknown }[] | undefined;
   let surfaces: { name: string; [k: string]: unknown }[] | undefined;
   let secrets: { key: string; [k: string]: unknown }[] | undefined;
+  let instructionTree: { path: string; [k: string]: unknown }[] | undefined;
+  let subagents: { name: string; [k: string]: unknown }[] | undefined;
   const warnings: string[] = [];
 
   for (let pkgIdx = 0; pkgIdx < packages.length; pkgIdx++) {
@@ -106,6 +108,40 @@ export function mergeLayers(packages: unknown[]): MergeResult {
       }
     }
 
+    // Instruction trees: merge by path (spec 05)
+    if (p.instructionTree) {
+      const incoming = p.instructionTree as { path: string }[];
+      if (!instructionTree) {
+        instructionTree = [...incoming];
+      } else {
+        for (const item of incoming) {
+          const idx = instructionTree.findIndex((i) => i.path === item.path);
+          if (idx !== -1) {
+            instructionTree[idx] = item;
+          } else {
+            instructionTree.push(item);
+          }
+        }
+      }
+    }
+
+    // Subagents: merge by name (spec 05)
+    if (p.subagents) {
+      const incoming = p.subagents as { name: string }[];
+      if (!subagents) {
+        subagents = [...incoming];
+      } else {
+        for (const item of incoming) {
+          const idx = subagents.findIndex((a) => a.name === item.name);
+          if (idx !== -1) {
+            subagents[idx] = item;
+          } else {
+            subagents.push(item);
+          }
+        }
+      }
+    }
+
     // Secrets: merge by key
     if (p.secrets) {
       const incoming = p.secrets as { key: string }[];
@@ -137,7 +173,8 @@ export function mergeLayers(packages: unknown[]): MergeResult {
 
       const pathA = a.archivePath ?? a.id ?? "";
       const pathB = b.archivePath ?? b.id ?? "";
-      return pathA.localeCompare(pathB);
+      // Spec requires byte-wise UTF-8 ordering, not locale-aware comparison
+      return pathA < pathB ? -1 : pathA > pathB ? 1 : 0;
     });
 
     // Clean up internal _precedence field
@@ -153,6 +190,8 @@ export function mergeLayers(packages: unknown[]): MergeResult {
     ...(knowledge !== undefined && { knowledge }),
     ...(surfaces !== undefined && { surfaces }),
     ...(secrets !== undefined && { secrets }),
+    ...(instructionTree !== undefined && { instructionTree }),
+    ...(subagents !== undefined && { subagents }),
     warnings,
   };
 }

@@ -814,6 +814,153 @@ describe("build", () => {
       expect(configContent.adapter).toBeDefined();
       expect(configContent.adapter.type).toBe("claude-code");
     });
+
+    it("should include kind: agent in config blob (spec 01/02)", async () => {
+      const { entry, dir } = await scaffoldFixture({ prompt: "# P" });
+      await build({ entry, outDir: path.join(dir, "out") });
+      const manifestPath = path.join(dir, "out", "manifest.json");
+      const manifest = JSON.parse(await readFile(manifestPath, "utf-8"));
+      const configDigest = manifest.config.digest.replace("sha256:", "");
+      const configBlobPath = path.join(dir, "out", "blobs", "sha256", configDigest);
+      const configContent = JSON.parse(await readFile(configBlobPath, "utf-8"));
+      expect(configContent.kind).toBe("agent");
+    });
+
+    it("should include full adapter config with features, config, model in config blob", async () => {
+      const { entry, dir } = await scaffoldFixture({
+        prompt: "# P",
+        adapter: {
+          type: "claude-code",
+          runtime: "claude-code",
+          adapterVersion: "1.0.0",
+          model: "claude-opus-4-1",
+          modelParams: { temperature: 0.5 },
+          importMode: "filesystem",
+          fidelity: "best-effort",
+          config: { scope: "project" },
+          features: { prompt: "native", persona: "embedded" },
+          targets: [{ kind: "file", path: "CLAUDE.md", scope: "project" }],
+        },
+      });
+      await build({ entry, outDir: path.join(dir, "out") });
+      const manifestPath = path.join(dir, "out", "manifest.json");
+      const manifest = JSON.parse(await readFile(manifestPath, "utf-8"));
+      const configDigest = manifest.config.digest.replace("sha256:", "");
+      const configBlobPath = path.join(dir, "out", "blobs", "sha256", configDigest);
+      const configContent = JSON.parse(await readFile(configBlobPath, "utf-8"));
+      expect(configContent.adapter.config).toEqual({ scope: "project" });
+      expect(configContent.adapter.features).toEqual({ prompt: "native", persona: "embedded" });
+      expect(configContent.adapter.model).toBe("claude-opus-4-1");
+      expect(configContent.adapter.modelParams).toEqual({ temperature: 0.5 });
+      expect(configContent.adapter.importMode).toBe("filesystem");
+      expect(configContent.adapter.fidelity).toBe("best-effort");
+      expect(configContent.adapter.targets).toEqual([{ kind: "file", path: "CLAUDE.md", scope: "project" }]);
+    });
+
+    it("should include author, license, url, tags in config blob when declared", async () => {
+      const dir = await createTempDir();
+      await writeFile(path.join(dir, "prompt.md"), "# P", "utf-8");
+      await writeFile(
+        path.join(dir, "agent.ts"),
+        `export default {
+  name: "test-agent",
+  version: "1.0.0",
+  description: "A test agent",
+  author: "stakpak",
+  license: "MIT",
+  url: "https://example.com",
+  tags: ["test", "demo"],
+  adapter: ${validAdapterCode()},
+  prompt: "prompt.md",
+};\n`,
+        "utf-8",
+      );
+      await build({ entry: path.join(dir, "agent.ts"), outDir: path.join(dir, "out") });
+      const manifestPath = path.join(dir, "out", "manifest.json");
+      const manifest = JSON.parse(await readFile(manifestPath, "utf-8"));
+      const configDigest = manifest.config.digest.replace("sha256:", "");
+      const configBlobPath = path.join(dir, "out", "blobs", "sha256", configDigest);
+      const configContent = JSON.parse(await readFile(configBlobPath, "utf-8"));
+      expect(configContent.author).toBe("stakpak");
+      expect(configContent.license).toBe("MIT");
+      expect(configContent.url).toBe("https://example.com");
+      expect(configContent.tags).toEqual(["test", "demo"]);
+    });
+
+    it("should include adapterFallback in config blob when declared (spec 01)", async () => {
+      const dir = await createTempDir();
+      await writeFile(path.join(dir, "prompt.md"), "# P", "utf-8");
+      await writeFile(
+        path.join(dir, "agent.ts"),
+        `export default {
+  name: "test-agent",
+  version: "1.0.0",
+  description: "A test agent",
+  adapter: ${validAdapterCode()},
+  adapterFallback: [
+    { type: "generic", runtime: "generic", adapterVersion: "1.0.0", config: {}, features: {} },
+  ],
+  prompt: "prompt.md",
+};\n`,
+        "utf-8",
+      );
+      await build({ entry: path.join(dir, "agent.ts"), outDir: path.join(dir, "out") });
+      const manifestPath = path.join(dir, "out", "manifest.json");
+      const manifest = JSON.parse(await readFile(manifestPath, "utf-8"));
+      const configDigest = manifest.config.digest.replace("sha256:", "");
+      const configBlobPath = path.join(dir, "out", "blobs", "sha256", configDigest);
+      const configContent = JSON.parse(await readFile(configBlobPath, "utf-8"));
+      expect(configContent.adapterFallback).toBeDefined();
+      expect(configContent.adapterFallback).toHaveLength(1);
+      expect(configContent.adapterFallback[0].type).toBe("generic");
+    });
+
+    it("should include hints and workspaceSources in config blob when declared", async () => {
+      const dir = await createTempDir();
+      await writeFile(path.join(dir, "prompt.md"), "# P", "utf-8");
+      await writeFile(
+        path.join(dir, "agent.ts"),
+        `export default {
+  name: "test-agent",
+  version: "1.0.0",
+  description: "A test agent",
+  adapter: ${validAdapterCode()},
+  prompt: "prompt.md",
+  hints: { isolation: "container", capabilities: { shell: true } },
+  workspaceSources: [{ id: "src", ref: "ghcr.io/org/src:1.0", mountPath: "./src", required: true }],
+};\n`,
+        "utf-8",
+      );
+      await build({ entry: path.join(dir, "agent.ts"), outDir: path.join(dir, "out") });
+      const manifestPath = path.join(dir, "out", "manifest.json");
+      const manifest = JSON.parse(await readFile(manifestPath, "utf-8"));
+      const configDigest = manifest.config.digest.replace("sha256:", "");
+      const configBlobPath = path.join(dir, "out", "blobs", "sha256", configDigest);
+      const configContent = JSON.parse(await readFile(configBlobPath, "utf-8"));
+      expect(configContent.hints).toEqual({ isolation: "container", capabilities: { shell: true } });
+      expect(configContent.workspaceSources).toEqual([{ id: "src", ref: "ghcr.io/org/src:1.0", mountPath: "./src", required: true }]);
+    });
+  });
+
+  describe("packages layer format", () => {
+    it("should produce packages layer as structured object with specVersion (spec 03)", async () => {
+      const { entry, dir } = await scaffoldFixture({
+        prompt: "# P",
+        packages: ["ghcr.io/myorg/pkg:1.0.0"],
+      });
+      const result = await build({ entry, outDir: path.join(dir, "out") });
+      const layer = result.layers.find(
+        (l) => l.mediaType === "application/vnd.stax.packages.v1+json",
+      )!;
+      expect(layer).toBeDefined();
+      const blobPath = path.join(dir, "out", "blobs", "sha256", layer.digest.replace("sha256:", ""));
+      const content = JSON.parse(await readFile(blobPath, "utf-8"));
+      expect(content.specVersion).toBe("1.0.0");
+      expect(Array.isArray(content.packages)).toBe(true);
+      expect(content.packages[0]).toEqual(
+        expect.objectContaining({ ref: "ghcr.io/myorg/pkg:1.0.0" }),
+      );
+    });
   });
 
   describe("error handling", () => {

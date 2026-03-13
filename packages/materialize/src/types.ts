@@ -18,6 +18,7 @@ export interface MaterializedAgent {
     version: string;
     description: string;
     adapter: AdapterConfig;
+    adapterFallback?: AdapterConfig[];
   };
   prompt?: string;
   persona?: PersonaDefinition;
@@ -88,6 +89,14 @@ export interface MaterializationWarning {
 }
 
 export interface InstallPlan {
+  /** Selected adapter after fallback resolution */
+  selectedAdapter?: string;
+  /** Fidelity class of the materialization */
+  fidelity?: "byte-exact" | "schema-exact" | "best-effort" | "unsupported";
+  /** Whether any lossy translations occurred */
+  lossy?: boolean;
+  /** Package provenance — which packages contributed to the final output */
+  mergedPackageProvenance?: string[];
   actions: InstallAction[];
   warnings: MaterializationWarning[];
 }

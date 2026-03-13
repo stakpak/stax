@@ -259,9 +259,19 @@ function processLayers(manifest: OciManifest, blobs: Map<string, Uint8Array>): P
         result.secrets = decodeJson<SecretDeclaration[]>(blob);
         break;
 
-      case LAYER_MEDIA_TYPES.packages:
-        result.packageRefs = decodeJson<string[]>(blob);
+      case LAYER_MEDIA_TYPES.packages: {
+        const packagesData = decodeJson<
+          | string[]
+          | { specVersion?: string; packages: Array<{ ref: string; digest?: string; kind?: string }> }
+        >(blob);
+        // Support both legacy plain string[] and spec-compliant structured format
+        if (Array.isArray(packagesData)) {
+          result.packageRefs = packagesData;
+        } else {
+          result.packageRefs = packagesData.packages.map((p) => p.ref);
+        }
         break;
+      }
 
       case LAYER_MEDIA_TYPES.skills: {
         const files = decodeTarGz(blob);
@@ -452,7 +462,7 @@ export async function materialize(options: MaterializeOptions): Promise<Material
   const finalKnowledge = mergedKnowledge ?? agentLayers.knowledge;
 
   // 8. Render prompt with persona
-  const features = config.adapter.features as Record<string, unknown>;
+  const features = (config.adapter.features ?? {}) as Record<string, unknown>;
   let renderedPrompt = agentLayers.prompt;
   if (renderedPrompt) {
     renderedPrompt = renderPromptTemplates(renderedPrompt, {

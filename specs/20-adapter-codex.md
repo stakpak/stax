@@ -76,6 +76,16 @@ The compiled adapter config SHOULD use:
 | MCP layer                                     | `~/.codex/config.toml` under `[mcp_servers.*]` |
 | adapter config                                | `~/.codex/config.toml`                         |
 
+## Persona mapping
+
+Codex does not have a dedicated persona configuration surface. The persona is **embedded** into the primary instruction file (`AGENTS.md`) during materialization.
+
+When a persona layer is present, the adapter SHOULD:
+
+1. render the persona's `displayName`, `role`, and `personality` into a preamble section at the top of `AGENTS.md`
+2. use the persona template if available, falling back to a default "You are {displayName}, {role}" format
+3. warn in `exact` mode that persona metadata fields beyond the rendered text are lost
+
 ## `AGENTS.md` behavior
 
 Codex instruction discovery is hierarchical.
@@ -173,6 +183,25 @@ Example policy:
 - logs and caches
 - ephemeral trust or approval state
 - admin-wide `/etc/codex/**` files unless explicitly requested by an administrator
+
+## Feature map
+
+```json
+{
+  "prompt": "native",
+  "persona": "embedded",
+  "rules": "native",
+  "skills": "native",
+  "mcp": "translated",
+  "surfaces": "embedded",
+  "secrets": "consumer-only",
+  "subagents": "native",
+  "instructionTree": "native",
+  "toolPermissions": "unsupported",
+  "modelConfig": "unsupported",
+  "exactMode": true
+}
+```
 
 ## Exactness requirements
 

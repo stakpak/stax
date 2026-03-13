@@ -106,6 +106,21 @@ describe("claudeCode adapter", () => {
     expect(config.features.surfaces).toBe("embedded");
   });
 
+  it("should include exactMode in features (spec 12)", () => {
+    const config = claudeCode();
+    expect(config.features.exactMode).toBe(true);
+  });
+
+  it("should include subagents feature in feature map (spec 12)", () => {
+    const config = claudeCode();
+    expect(config.features.subagents).toBe("native");
+  });
+
+  it("should include instructionTree feature in feature map (spec 12)", () => {
+    const config = claudeCode();
+    expect(config.features.instructionTree).toBe("native");
+  });
+
   it("should set features.secrets to consumer-only", () => {
     const config = claudeCode();
     expect(config.features.secrets).toBe("consumer-only");
@@ -155,5 +170,15 @@ describe("claudeCode adapter", () => {
     const config = claudeCode({ scope: "user" });
     const paths = config.targets?.map((t) => t.path) ?? [];
     expect(paths).toContain("~/.claude/settings.json");
+  });
+
+  it("should set toolPermissions as native", () => {
+    const config = claudeCode();
+    expect(config.features.toolPermissions).toBe("native");
+  });
+
+  it("should set modelConfig as native", () => {
+    const config = claudeCode();
+    expect(config.features.modelConfig).toBe("native");
   });
 });

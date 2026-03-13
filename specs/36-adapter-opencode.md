@@ -112,6 +112,16 @@ The adapter SHOULD choose the first available source in this order:
 
 In `exact` mode, if composition is required, the consumer MUST warn or fail according to policy.
 
+## Persona mapping
+
+OpenCode does not have a dedicated persona configuration surface. The persona is **embedded** into the primary instruction file (`AGENTS.md`) during materialization.
+
+When a persona layer is present, the adapter SHOULD:
+
+1. render the persona's `displayName`, `role`, and `personality` into a preamble section at the top of `AGENTS.md`
+2. use the persona template if available, falling back to a default "You are {displayName}, {role}" format
+3. warn in `exact` mode that persona metadata fields beyond the rendered text are lost
+
 ## `opencode.jsonc` generation
 
 OpenCode uses JSONC (JSON with Comments) for configuration. Config files are deep-merged across scopes, with project config overriding user config.
@@ -161,6 +171,23 @@ OpenCode uses JSONC (JSON with Comments) for configuration. Config files are dee
 - environment variables use `environment` key (not `env`)
 - the `{env:VAR}` substitution syntax is native to OpenCode JSONC parsing
 - model identifiers use `provider/model` format (e.g., `anthropic/claude-sonnet-4-20250514`)
+
+## Rules mapping
+
+OpenCode does not have a dedicated rules file format. Canonical stax rules are **embedded** into the primary instruction file (`AGENTS.md`) during materialization.
+
+The adapter MUST:
+
+- append each rule's content to the instruction file, preserving the canonical order (precedence → priority → archive path, byte-wise)
+- include the rule `id` as a section heading for traceability
+- include `scope` and `globs` metadata as a comment or heading annotation when present
+
+The adapter SHOULD:
+
+- warn when `priority`, `severity`, or `triggers` fields are present, as these cannot be faithfully represented in a flat instruction file
+- in `exact` mode, fail if any rule metadata would be lost
+
+Rules with `scope: "manual"` SHOULD be excluded from automatic embedding and MAY be appended to a separate section clearly marked as manual-activation rules.
 
 ## Skills mapping
 
@@ -234,6 +261,8 @@ When a canonical subagents layer is present, the adapter SHOULD use it as the pr
   "mcp": "translated",
   "surfaces": "embedded",
   "secrets": "consumer-only",
+  "subagents": "native",
+  "instructionTree": "translated",
   "toolPermissions": "translated",
   "modelConfig": "native",
   "exactMode": true
